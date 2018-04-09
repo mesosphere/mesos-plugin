@@ -27,6 +27,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.*;
@@ -400,8 +401,12 @@ public class JenkinsScheduler implements Scheduler {
             @Override
             public void run() {
                 LOGGER.info("Started offer processing thread: " + threadName);
-                while(true) {
-                    processOffers();
+                try {
+                    while (true) {
+                        processOffers();
+                    }
+                } catch (Throwable t) {
+                    LOGGER.severe("Offer processing thread failed with exception: " + ExceptionUtils.getStackTrace(t));
                 }
             }
         }, threadName);
