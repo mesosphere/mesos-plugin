@@ -372,9 +372,9 @@ public class JenkinsScheduler implements Scheduler {
             if (!queued) {
                 LOGGER.warning("Offer queue is full.");
                 declineShort(offer);
+            } else {
+                LOGGER.info("Queued offer " + offer.getId().getValue());
             }
-
-            LOGGER.info("Queued offer " + offer.getId().getValue());
         }
 
         if (!multiThreaded) {
