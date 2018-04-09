@@ -63,6 +63,7 @@ public class JenkinsScheduler implements Scheduler {
     private static final String JNLP_SECRET_FORMAT = "-secret %s";
     public static final String PORT_RESOURCE_NAME = "ports";
     public static final String MESOS_DEFAULT_ROLE = "*";
+    public static final String NULL_FRAMEWORK_ID = "null-framework-id";
     private final boolean multiThreaded;
 
     private Queue<Request> requests;
@@ -362,7 +363,7 @@ public class JenkinsScheduler implements Scheduler {
 
     @Override
     public synchronized void resourceOffers(SchedulerDriver driver, List<Offer> offers) {
-        if (multiThreaded && !processing()) {
+        if (multiThreaded && !isProcessing()) {
             startProcessing();
         }
 
@@ -381,7 +382,17 @@ public class JenkinsScheduler implements Scheduler {
         }
     }
 
-    private void startProcessing() {
+    @VisibleForTesting
+    String getFrameworkId() {
+        if (frameworkId != null) {
+            return frameworkId.getValue();
+        } else {
+            return NULL_FRAMEWORK_ID;
+        }
+    }
+
+    @VisibleForTesting
+    void startProcessing() {
         String threadName = "mesos-offer-processor-" + getFrameworkId();
         LOGGER.info("Starting offer processing thread: " + threadName);
 
@@ -397,15 +408,8 @@ public class JenkinsScheduler implements Scheduler {
         offerProcessingThread.start();
     }
 
-    private String getFrameworkId() {
-        if (frameworkId != null) {
-            return frameworkId.getValue();
-        } else {
-            return "null-framework-id";
-        }
-    }
-
-    private boolean processing() {
+    @VisibleForTesting
+    boolean isProcessing() {
         if (offerProcessingThread == null) {
             LOGGER.info("Initializing offer processing thread.");
             return false;
