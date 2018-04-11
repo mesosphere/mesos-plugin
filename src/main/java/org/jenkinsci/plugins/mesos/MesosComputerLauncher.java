@@ -129,7 +129,7 @@ public class MesosComputerLauncher extends JNLPLauncher {
   }
 
   private void waitForSlaveConnection(MesosComputer computer, PrintStream logger) {
-    while (computer.isOffline() && computer.isConnecting()) {
+    while (computer.isOffline() && computer.isConnecting() && computer.getOfflineCause() == null) {
       try {
         logger.println("Waiting for slave computer connection " + name);
         Thread.sleep(5000);
