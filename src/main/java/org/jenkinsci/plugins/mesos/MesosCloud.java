@@ -396,7 +396,12 @@ public class MesosCloud extends Cloud {
   }
 
   private String getMetricName(Label label, String method, String metric) {
-    return String.format("mesos.cloud.%s.%s.%s", label.getDisplayName(), method, metric);
+    String labelName = "default";
+    if (!label.equals(null)) {
+      labelName = label.getDisplayName();
+    }
+
+    return String.format("mesos.cloud.%s.%s.%s", labelName, method, metric);
   }
 
   @Override
@@ -430,13 +435,13 @@ public class MesosCloud extends Cloud {
         LOGGER.info("Provisioning Jenkins Slave on Mesos with " + numExecutors +
                     " executors. Remaining excess workload: " + excessWorkload + " executors)");
 
-        // start timer here
+        // Create a context that can be passed down through the provisioning process and finalized when
+        // the request is completely fulfilled.
         Timer.Context context = Metrics.metricRegistry().timer(getMetricName(label, "provision", "submit")).time();
         list.add(new PlannedNode(this.getDisplayName(), Computer.threadPoolForRemoting
             .submit(new Callable<Node>() {
               public Node call() throws Exception {
-                MesosSlave s = doProvision(numExecutors, slaveInfo);
-                context.stop();
+                MesosSlave s = doProvision(numExecutors, slaveInfo, context);
 
                 // We do not need to explicitly add the Node here because that is handled by
                 // hudson.slaves.NodeProvisioner::update() that checks the result from the
@@ -454,8 +459,8 @@ public class MesosCloud extends Cloud {
     return list;
   }
 
-  private MesosSlave doProvision(int numExecutors, MesosSlaveInfo slaveInfo) throws Descriptor.FormException, IOException {
-    return new MesosSlave(this, MesosUtils.buildNodeName(slaveInfo.getLabelString()), numExecutors, slaveInfo);
+  private MesosSlave doProvision(int numExecutors, MesosSlaveInfo slaveInfo, Timer.Context provisioningContext) throws Descriptor.FormException, IOException {
+    return new MesosSlave(this, MesosUtils.buildNodeName(slaveInfo.getLabelString()), numExecutors, slaveInfo, provisioningContext);
   }
 
   public List<MesosSlaveInfo> getSlaveInfos() {

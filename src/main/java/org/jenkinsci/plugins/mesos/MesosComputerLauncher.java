@@ -129,6 +129,7 @@ public class MesosComputerLauncher extends JNLPLauncher {
       // we were waiting for resources to be available
       node.setPendingDelete(false);
       waitForSlaveConnection(computer, logger);
+      computer.getNode().getProvisioningContext().stop();
       context.stop();
       logger.println("Successfully launched slave " + name);
     }
