@@ -22,6 +22,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.util.Secret;
+import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections4.OrderedMapIterator;
@@ -295,6 +296,7 @@ public class JenkinsScheduler implements Scheduler {
     }
 
     private void declineShort(Offer offer) {
+        Metrics.metricRegistry().meter("jenkins.scheduler.decline.short").mark(1);
         declineOffer(offer, MesosCloud.SHORT_DECLINE_OFFER_DURATION_SEC);
     }
 
@@ -315,6 +317,7 @@ public class JenkinsScheduler implements Scheduler {
                 // Decline offer for a longer period if no slave is waiting to get spawned.
                 // This prevents unnecessarily getting offers every few seconds and causing
                 // starvation when running a lot of frameworks.
+                Metrics.metricRegistry().meter("jenkins.scheduler.decline.long").mark(1);
                 LOGGER.info("No slave in queue.");
                 declineOffer(offer, mesosCloud.getDeclineOfferDurationDouble());
                 continue;
@@ -364,6 +367,8 @@ public class JenkinsScheduler implements Scheduler {
 
     @Override
     public synchronized void resourceOffers(SchedulerDriver driver, List<Offer> offers) {
+        Metrics.metricRegistry().meter("jenkins.scheduler.offers.received").mark(offers.size());
+
         if (multiThreaded && !isProcessing()) {
             startProcessing();
         }
