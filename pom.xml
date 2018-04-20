@@ -102,6 +102,7 @@
     <assertj.version>2.1.0</assertj.version>
     <guava.version>18.0</guava.version>
     <apache-commons-collections.version>4.1</apache-commons-collections.version>
+    <dropwizard.metrics.version>3.1.2</dropwizard.metrics.version>
   </properties>
 
   <dependencies>
@@ -170,6 +171,11 @@
           <artifactId>metrics</artifactId>
           <version>3.1.2.6</version>
           <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>io.dropwizard.metrics</groupId>
+        <artifactId>metrics-core</artifactId>
+        <version>${dropwizard.metrics.version}</version>
       </dependency>
   </dependencies>
   <dependencyManagement>
