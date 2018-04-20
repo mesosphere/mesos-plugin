@@ -203,8 +203,9 @@ public class JenkinsScheduler implements Scheduler {
         if (driver != null) {
             // Ask mesos to send all offers, even the those we declined earlier.
             // See comment in resourceOffers() for further details.
-            Metrics.metricRegistry().meter("mesos.scheduler.revives").mark();
+            Timer.Context ctx = Metrics.metricRegistry().timer("mesos.scheduler.revives").time();
             driver.reviveOffers();
+            ctx.stop();
         }
     }
 
@@ -334,19 +335,19 @@ public class JenkinsScheduler implements Scheduler {
                     for (Request request : requests) {
                         // TODO: Dirty modification of list while traversing it.
                         if (matches(offer, request)) {
+                            Timer.Context ctx = Metrics.metricRegistry().timer("mesos.scheduler.offer.matched").time();
                             LOGGER.info("Offer matched! Creating mesos task " + request.request.slave.name);
                             try {
                                 createMesosTask(offer, request);
                                 unmatchedLabels.remove(request.request.slaveInfo.getLabelString());
                                 taskCreated = true;
                                 recentlyAcceptedOffers.put(offer.getSlaveId().getValue(), IGNORE);
-
                             } catch (Exception e) {
                                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                            } finally {
+                                ctx.stop();
                             }
                             requests.remove(request);
-
-                            Metrics.metricRegistry().meter("mesos.scheduler.offer.matched").mark();
                             processedRequests++;
                             break;
                         }
