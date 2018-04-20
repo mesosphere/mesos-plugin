@@ -317,7 +317,6 @@ public class MesosCloud extends Cloud {
   }
 
   public void restartMesos() {
-    Metrics.metricRegistry().counter("mesos.cloud.restartMesos").inc();
     initNativeLibrary(nativeLibraryPath);
 
     // Default to root URL in Jenkins global configuration.
@@ -339,6 +338,8 @@ public class MesosCloud extends Cloud {
 
       Mesos.getInstance(this).stopScheduler(true);
       Mesos.getInstance(this).startScheduler(jenkinsRootURL, this);
+
+      Metrics.metricRegistry().counter("mesos.cloud.restartMesos").inc();
     } else {
       Mesos.getInstance(this).updateScheduler(jenkinsRootURL, this);
       if(onDemandRegistration) {

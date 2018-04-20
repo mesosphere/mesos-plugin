@@ -78,9 +78,9 @@ public class OfferQueue {
         boolean success = queue.offer(offer);
 
         if (success) {
-            Metrics.metricRegistry().meter("offer.queue.added").mark(1);
+            Metrics.metricRegistry().meter("mesos.offer.queue.added").mark();
         } else {
-            Metrics.metricRegistry().meter("offer.queue.dropped").mark(1);
+            Metrics.metricRegistry().meter("mesos.offer.queue.dropped").mark();
         }
 
         return success;
@@ -103,7 +103,7 @@ public class OfferQueue {
         } else {
             logger.info(String.format("Removed offer: %s", offerID.getValue()));
 
-            Metrics.metricRegistry().meter("offer.queue.removed").mark(1);
+            Metrics.metricRegistry().meter("mesos.offer.queue.removed").mark();
         }
     }
 
