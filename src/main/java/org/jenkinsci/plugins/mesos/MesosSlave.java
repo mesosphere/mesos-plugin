@@ -42,7 +42,7 @@ public class MesosSlave extends Slave {
   private final double cpus;
   private final int mem;
   private final double diskNeeded;
-  private final Timer.Context provisioningContext;
+  private transient final Timer.Context provisioningContext;
 
 
   private boolean pendingDelete;

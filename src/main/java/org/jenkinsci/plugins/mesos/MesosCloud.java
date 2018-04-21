@@ -396,12 +396,8 @@ public class MesosCloud extends Cloud {
   }
 
   private String getMetricName(Label label, String method, String metric) {
-    String labelName = "default";
-    if (!label.equals(null)) {
-      labelName = label.getDisplayName();
-    }
-
-    return String.format("mesos.cloud.%s.%s.%s", labelName, method, metric);
+    String labelText = (label == null) ? "nolabel" : label.getDisplayName();
+    return String.format("mesos.cloud.%s.%s.%s", labelText, method, metric);
   }
 
   @Override

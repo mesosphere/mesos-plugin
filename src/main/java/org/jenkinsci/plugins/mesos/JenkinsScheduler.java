@@ -316,6 +316,7 @@ public class JenkinsScheduler implements Scheduler {
         reArrangeOffersBasedOnAffinity(offers);
         int processedRequests = 0;
         for (Offer offer : offers) {
+            Metrics.metricRegistry().meter("mesos.scheduler.offer.processed").mark();
             final Timer.Context offerContext = Metrics.metricRegistry().timer("mesos.scheduler.offer.processing.time").time();
             try {
                 if (requests.isEmpty() && !buildsInQueue(Jenkins.getInstance().getQueue())) {
