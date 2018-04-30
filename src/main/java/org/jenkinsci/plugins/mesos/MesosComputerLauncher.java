@@ -145,6 +145,7 @@ public class MesosComputerLauncher extends JNLPLauncher {
     }
     if (computer.isOnline()) {
       logger.println("Slave computer connected " + name);
+      LOGGER.info(String.format("Slave %s connected", computer.getNode().getUuid()));
     } else {
       LOGGER.warning("Slave computer offline " + name);
     }

@@ -24,6 +24,7 @@ import hudson.slaves.ComputerLauncher;
 import jenkins.model.Jenkins;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,6 +44,7 @@ public class MesosSlave extends Slave {
   private final double cpus;
   private final int mem;
   private final double diskNeeded;
+  private final UUID uuid = UUID.randomUUID();
   private transient final Timer.Context provisionToReady;
   private transient final Timer.Context provisionToMesos;
   private transient final Timer mesosToReady;
@@ -127,6 +129,10 @@ public class MesosSlave extends Slave {
   public void provisionedToMesos() {
     provisionToMesos.stop();
     mesosHandoffTime = System.currentTimeMillis();
+  }
+
+  public UUID getUuid() {
+    return uuid;
   }
 
   public void terminate() {
