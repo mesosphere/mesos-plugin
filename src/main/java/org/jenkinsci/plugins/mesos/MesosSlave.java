@@ -49,6 +49,7 @@ public class MesosSlave extends Slave {
   private transient final Timer.Context provisionToMesos;
   private transient final Timer mesosToReady;
   private transient long mesosHandoffTime;
+  private boolean singleUse;
 
 
   private boolean pendingDelete;
@@ -82,6 +83,7 @@ public class MesosSlave extends Slave {
     this.provisionToReady = provisionToReadyContext;
     this.provisionToMesos = provisionToMesosContext;
     this.mesosToReady = mesosToReady;
+    this.singleUse = false;
     LOGGER.fine("Constructing Mesos slave " + name + " from cloud " + cloud.getDescription());
   }
 
@@ -181,6 +183,14 @@ public class MesosSlave extends Slave {
 
   public void setPendingDelete(boolean pendingDelete) {
       this.pendingDelete = pendingDelete;
+  }
+
+  public boolean isSingleUse() {
+    return singleUse;
+  }
+
+  public void setSingleUse(boolean singleUse) {
+    this.singleUse = singleUse;
   }
 
   public void idleTimeout() {

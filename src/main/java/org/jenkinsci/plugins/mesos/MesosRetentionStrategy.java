@@ -80,6 +80,13 @@ public class MesosRetentionStrategy extends RetentionStrategy<MesosComputer> {
       return 1;
     }
 
+    // Terminate if the computer is idle and a single-use agent.
+    if (c.isIdle() && c.isOffline() && node.isSingleUse()) {
+      LOGGER.info("Disconnecting single-use computer " + c.getName());
+      node.setPendingDelete(true);
+      return 1;
+    }
+
     // Terminate the computer if it is idle for longer than
     // 'idleTerminationMinutes'.
     if (isTerminable() && c.isIdle()) {
