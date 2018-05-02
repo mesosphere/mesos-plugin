@@ -37,6 +37,8 @@ public class MesosSlave extends Slave {
 
   private static final long serialVersionUID = 1L;
 
+  private final Object lock = new Object();
+
   private final String cloudName;
   private transient MesosCloud cloud;
   private final MesosSlaveInfo slaveInfo;
@@ -186,11 +188,15 @@ public class MesosSlave extends Slave {
   }
 
   public boolean isSingleUse() {
-    return singleUse;
+    synchronized (lock) {
+      return singleUse;
+    }
   }
 
   public void setSingleUse(boolean singleUse) {
-    this.singleUse = singleUse;
+    synchronized (lock) {
+      this.singleUse = singleUse;
+    }
   }
 
   public void idleTimeout() {
