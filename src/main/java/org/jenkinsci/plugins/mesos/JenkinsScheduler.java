@@ -34,8 +34,10 @@ import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.*;
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
+import org.apache.mesos.Protos.ContainerInfo.MesosInfo;
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo.Network;
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo.PortMapping;
+import org.apache.mesos.Protos.Image.Type;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Volume.Mode;
 import org.apache.mesos.Scheduler;
@@ -853,12 +855,24 @@ public class JenkinsScheduler implements Scheduler {
 
     private void getContainerInfoBuilder(Offer offer, Request request, String slaveName, TaskInfo.Builder taskBuilder) {
         MesosSlaveInfo.ContainerInfo containerInfo = request.request.slaveInfo.getContainerInfo();
-        ContainerInfo.Type containerType = ContainerInfo.Type.valueOf(containerInfo.getType());
+        // Hardcode to MESOS for testing purposes
+        // TODO: Do uh... not this
+        ContainerInfo.Type containerType = ContainerInfo.Type.MESOS;
 
         ContainerInfo.Builder containerInfoBuilder = ContainerInfo.newBuilder() //
                 .setType(containerType); //
 
         switch(containerType) {
+            case MESOS:
+                LOGGER.info(String.format("Launching %s with the Mesos containerizer.", containerInfo.getDockerImage()));
+
+                containerInfoBuilder.setMesos(MesosInfo.newBuilder()
+                                                .setImage(
+                                                    Image.newBuilder()
+                                                        .setType(Type.DOCKER)
+                                                        .setDocker(Image.Docker.newBuilder()
+                                                            .setName(containerInfo.getDockerImage()))
+                                                ));
             case DOCKER:
                 LOGGER.info("Launching in Docker Mode:" + containerInfo.getDockerImage());
                 DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder() //
