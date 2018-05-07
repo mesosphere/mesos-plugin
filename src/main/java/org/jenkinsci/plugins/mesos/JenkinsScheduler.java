@@ -856,7 +856,7 @@ public class JenkinsScheduler implements Scheduler {
     private void getContainerInfoBuilder(Offer offer, Request request, String slaveName, TaskInfo.Builder taskBuilder) {
         MesosSlaveInfo.ContainerInfo containerInfo = request.request.slaveInfo.getContainerInfo();
         // Hardcode to MESOS for testing purposes
-        // TODO: Do uh... not this
+        // TODO (bwood): Do uh... not this
         ContainerInfo.Type containerType = ContainerInfo.Type.MESOS;
 
         ContainerInfo.Builder containerInfoBuilder = ContainerInfo.newBuilder() //
@@ -873,6 +873,14 @@ public class JenkinsScheduler implements Scheduler {
                                                         .setDocker(Image.Docker.newBuilder()
                                                             .setName(containerInfo.getDockerImage()))
                                                 ));
+
+                // To support DinD, it is necessary to use a volume as UCR appears to be configuring `/` as an overlay FS
+                // by default
+                // TODO (bwood): Wrap this in some sort of "is DinD" option.
+                // containerInfoBuilder.addVolumes(Volume.newBuilder()
+                //                                     .setContainerPath("/var/lib/docker")
+                //                                     .setHostPath("docker")
+                //                                     .setMode(Mode.RW));
             case DOCKER:
                 LOGGER.info("Launching in Docker Mode:" + containerInfo.getDockerImage());
                 DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder() //
