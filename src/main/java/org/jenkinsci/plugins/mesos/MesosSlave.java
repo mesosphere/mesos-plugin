@@ -180,11 +180,15 @@ public class MesosSlave extends Slave {
   }
 
   public boolean isPendingDelete() {
+    synchronized (lock) {
       return pendingDelete;
+    }
   }
 
   public void setPendingDelete(boolean pendingDelete) {
+    synchronized (lock) {
       this.pendingDelete = pendingDelete;
+    }
   }
 
   public boolean isSingleUse() {
