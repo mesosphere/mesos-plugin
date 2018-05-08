@@ -877,10 +877,13 @@ public class JenkinsScheduler implements Scheduler {
                 // To support DinD, it is necessary to use a volume as UCR appears to be configuring `/` as an overlay FS
                 // by default
                 // TODO (bwood): Wrap this in some sort of "is DinD" option.
-                // containerInfoBuilder.addVolumes(Volume.newBuilder()
-                //                                     .setContainerPath("/var/lib/docker")
-                //                                     .setHostPath("docker")
-                //                                     .setMode(Mode.RW));
+                containerInfoBuilder.addVolumes(Volume.newBuilder()
+                                                    .setContainerPath("/var/lib/docker")
+                                                    .setHostPath("docker")
+                                                    .setMode(Mode.RW));
+
+                // TODO: The problem lies in https://github.com/mesosphere/dcos-jenkins-dind-agent/blob/master/wrapper.sh
+                // UCR must not be setting $1 $2 correctly or... something
             case DOCKER:
                 LOGGER.info("Launching in Docker Mode:" + containerInfo.getDockerImage());
                 DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder() //
@@ -1016,12 +1019,13 @@ public class JenkinsScheduler implements Scheduler {
             }
 
             LOGGER.fine( String.format( "About to use custom shell: %s " , customShell));
-            commandBuilder.setShell(false);
-            commandBuilder.setValue(customShell);
-            List args = new ArrayList();
+            // commandBuilder.setShell(false);
+            // commandBuilder.setValue(customShell);
+            List<String> args = new ArrayList<>();
+            args.add(customShell);
+            args.add("&&");
             args.add(jenkinsCommand2Run);
-            commandBuilder.addAllArguments( args );
-
+            commandBuilder.setValue(StringUtils.join(args, " "));
         } else {
             LOGGER.fine("About to use default shell ....");
             commandBuilder.setValue(jenkinsCommand2Run);
