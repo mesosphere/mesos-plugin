@@ -84,7 +84,7 @@
     </repository>
       <repository>
           <id>project.local</id>
-          <url>file:${project.basedir}/usi-dev-artifacts</url>
+          <url>file:${project.basedir}/repo</url>
       </repository>
   </repositories>
 
