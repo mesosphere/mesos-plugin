@@ -50,7 +50,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class JenkinsScheduler  {
+public class JenkinsScheduler implements Scheduler  {
     private static final String SLAVE_JAR_URI_SUFFIX = "jnlpJars/slave.jar";
 
     /**
@@ -150,7 +150,6 @@ public class JenkinsScheduler  {
             driver = new MesosSchedulerDriver(JenkinsScheduler.this, framework, mesosCloud.getMaster());
 
         }
-        com.mesosphere.usi.core.Scheduler.fromClient(driver)
 
         // Start the framework.
         Thread frameworkThread = new Thread(new Runnable() {
