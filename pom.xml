@@ -188,6 +188,11 @@
               <artifactId>usi-core-models</artifactId>
               <version>0.1</version>
           </dependency>
+          <dependency>
+              <groupId>com.mesosphere</groupId>
+              <artifactId>usi-core</artifactId>
+              <version>0.1</version>
+          </dependency>
       </dependencies>
   </dependencyManagement>
 
