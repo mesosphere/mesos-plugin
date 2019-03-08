@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.6</version>
+    <version>3.9</version>
     <relativePath />
   </parent>
 
@@ -96,7 +96,7 @@
   </pluginRepositories>
 
   <properties>
-    <jenkins.version>2.7.3</jenkins.version>
+    <jenkins.version>2.150</jenkins.version>
     <java.level>8</java.level>
     <findbugs.failOnError>false</findbugs.failOnError>
     <mesos.version>1.0.0</mesos.version>
@@ -201,7 +201,9 @@
           <plugin>
               <groupId>org.jenkins-ci.tools</groupId>
               <artifactId>maven-hpi-plugin</artifactId>
+	      <version>3.1</version>
               <configuration>
+                  <minimumJavaVersion>1.8</minimumJavaVersion>
                   <compatibleSinceVersion>0.16</compatibleSinceVersion>
                   <systemProperties>
                       <hudson.slaves.NodeProvisioner.initialDelay>0</hudson.slaves.NodeProvisioner.initialDelay>
