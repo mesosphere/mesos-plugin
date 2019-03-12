@@ -13,11 +13,15 @@ ansiColor('xterm') {
   }
   node('mesos-med') {
     stage('Build') {
-      checkout scm
-      if (isUnix()) {
-        sh './gradlew clean check'
-      } else {
-        bat 'gradlew.bat clean check'
+      try {
+        checkout scm
+        if (isUnix()) {
+          sh './gradlew clean check'
+        } else {
+          bat 'gradlew.bat clean check'
+        }
+      } finally {
+        junit(allowEmptyResults: true, testResults: 'build/test-results/test/*.xml')
       }
     } 
   }
