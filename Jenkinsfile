@@ -13,6 +13,7 @@ ansiColor('xterm') {
   }
   node('mesos-med') {
     stage('Build') {
+      checkout scm
       if (isUnix()) {
         sh './gradlew clean check'
       } else {
