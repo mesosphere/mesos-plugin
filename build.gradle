@@ -9,7 +9,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'karsten/define-artifacts'
+    usiBranch = 'master'
 }
 
 dependencies {
