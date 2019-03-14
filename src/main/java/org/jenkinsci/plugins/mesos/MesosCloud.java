@@ -29,7 +29,8 @@ class MesosCloud extends AbstractCloudImpl {
   public MesosCloud(String name) throws InterruptedException, ExecutionException {
     super(name, null);
 
-    mesos = new MesosApi(slavesUser, frameworkName);
+    String masterUrl = null;
+    mesos = new MesosApi(masterUrl, slavesUser, frameworkName);
     throw new NotImplementedException();
   }
 

@@ -8,6 +8,7 @@ import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigValueFactory;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -26,22 +27,26 @@ public class MesosApi {
   private final ActorMaterializer materializer;
 
   /**
-   * Establishs a connection to Mesos and provides a simple interface to start and stop {@link
+   * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
    * MesosSlave} instances.
    *
+   * @param masterUrl The Mesos master address to connect to.
    * @param user The username used for executing Mesos tasks.
    * @param frameworkName The name of the framework the Mesos client should register as.
    * @throws InterruptedException
    * @throws ExecutionException
    */
-  public MesosApi(String user, String frameworkName)
+  public MesosApi(String masterUrl, String user, String frameworkName)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
     this.frameworkId =
         Protos.FrameworkID.newBuilder().setValue(UUID.randomUUID().toString()).build();
     this.slavesUser = user;
 
-    Config conf = ConfigFactory.load().getConfig("mesos-client");
+    Config conf =
+        ConfigFactory.load()
+            .getConfig("mesos-client")
+            .withValue("master-url", ConfigValueFactory.fromAnyRef(masterUrl));
     this.clientSettings = MesosClientSettings.fromConfig(conf);
     system = ActorSystem.create("mesos-scheduler");
     materializer = ActorMaterializer.create(system);
