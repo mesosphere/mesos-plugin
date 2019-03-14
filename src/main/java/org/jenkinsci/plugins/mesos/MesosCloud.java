@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import org.apache.commons.lang.NotImplementedException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -25,7 +26,7 @@ class MesosCloud extends AbstractCloudImpl {
   private final String slavesUser = "example";
 
   @DataBoundConstructor
-  public MesosCloud(String name) {
+  public MesosCloud(String name) throws InterruptedException, ExecutionException {
     super(name, null);
 
     mesos = new MesosApi(slavesUser, frameworkName);

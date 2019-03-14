@@ -23,6 +23,8 @@ dependencies {
     implementation('com.mesosphere.usi:core-models') { version { branch = usiBranch } }
     implementation('com.mesosphere.usi:mesos-client') { version { branch = usiBranch } }
 
+    implementation "com.typesafe.scala-logging:scala-logging_2.12:3.9.2"
+
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
 }
