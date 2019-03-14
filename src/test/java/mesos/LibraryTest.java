@@ -3,12 +3,14 @@
  */
 package mesos;
 
-import org.junit.Test;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.junit.Test;
+
 public class LibraryTest {
-    @Test public void testSomeLibraryMethod() {
-        assertThat(false, is(false));
-    }
+  @Test
+  public void testSomeLibraryMethod() {
+    assertThat(false, is(false));
+  }
 }

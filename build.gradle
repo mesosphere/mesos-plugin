@@ -1,6 +1,7 @@
 plugins {
     id 'idea'
     id 'java-library'
+    id "com.diffplug.gradle.spotless" version "3.19.0"
     id "org.jenkins-ci.jpi" version "0.30.0-SNAPSHOT"
 }
 
@@ -39,6 +40,13 @@ jenkinsPlugin {
     developers {
     }
 }
+
+spotless {
+    java {
+        googleJavaFormat()
+    }
+}
+
 idea {
     project {
         jdkName = '1.8'

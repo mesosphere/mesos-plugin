@@ -6,34 +6,33 @@ import hudson.model.TaskListener;
 import hudson.slaves.AbstractCloudComputer;
 import hudson.slaves.AbstractCloudSlave;
 import hudson.slaves.EphemeralNode;
-import org.apache.commons.lang.NotImplementedException;
-
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import org.apache.commons.lang.NotImplementedException;
 
 public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
 
-    public MesosSlave() throws Descriptor.FormException, IOException {
-        super(null, null, null, null, null, null, null, null, null);
-        throw new NotImplementedException();
-    }
+  public MesosSlave() throws Descriptor.FormException, IOException {
+    super(null, null, null, null, null, null, null, null, null);
+    throw new NotImplementedException();
+  }
 
-    public CompletableFuture<MesosSlave> waitUntilOnlineAsync() {
-        throw new NotImplementedException();
-    }
+  public CompletableFuture<MesosSlave> waitUntilOnlineAsync() {
+    throw new NotImplementedException();
+  }
 
-    @Override
-    public Node asNode() {
-        return this;
-    }
+  @Override
+  public Node asNode() {
+    return this;
+  }
 
-    @Override
-    public AbstractCloudComputer createComputer() {
-        return new MesosComputer(this);
-    }
+  @Override
+  public AbstractCloudComputer createComputer() {
+    return new MesosComputer(this);
+  }
 
-    @Override
-    protected void _terminate(TaskListener listener)  {
-        throw new NotImplementedException();
-    }
+  @Override
+  protected void _terminate(TaskListener listener) {
+    throw new NotImplementedException();
+  }
 }
