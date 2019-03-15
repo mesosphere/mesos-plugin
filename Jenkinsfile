@@ -15,7 +15,7 @@ ansiColor('xterm') {
   node('JenkinsMarathonCI-Debian9-2018-12-17') {
     stage('Provision') {
       checkout scm
-      sh './ci/provision.sh'
+      sh 'sudoe -E ./ci/provision.sh'
     }
     stage('Build') {
       try {
