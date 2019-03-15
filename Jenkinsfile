@@ -20,9 +20,9 @@ ansiColor('xterm') {
     stage('Build') {
       try {
         if (isUnix()) {
-          sh './gradlew clean check'
+          sh './gradlew check --info'
         } else {
-          bat 'gradlew.bat clean check'
+          bat 'gradlew.bat check --info'
         }
       } finally {
         junit(allowEmptyResults: true, testResults: 'build/test-results/test/*.xml')
