@@ -17,4 +17,10 @@ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
 apt-get -y update
 
 # Install Mesos
-apt-get -y install mesos="$MESOS_VERSION-2.0.3" openjdk-11-jdk
+apt-get -y install mesos="$MESOS_VERSION-2.0.3" java-common
+
+wget https://d3pxv6yz143wms.cloudfront.net/11.0.2.9.3/java-11-amazon-corretto-jdk_11.0.2.9-3_amd64.deb
+sudo dpkg --install java-11-amazon-corretto-jdk_11.0.2.9-3_amd64.deb
+update-alternatives --config java
+update-alternatives --config javac
+java -version
