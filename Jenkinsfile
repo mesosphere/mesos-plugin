@@ -11,7 +11,11 @@ ansiColor('xterm') {
       user_is_authorized(master_branches, '8b793652-f26a-422f-a9ba-0d1e47eb9d89', '#orchestration')
     }
   }
-  node('mesos-med') {
+  //node('mesos-med') {
+  node('JenkinsMarathonCI-Debian9-2018-12-17') {
+    state('Provision') {
+      sh './ci/provision.sh'
+    }
     stage('Build') {
       try {
         checkout scm
