@@ -23,9 +23,14 @@ dependencies {
     implementation('com.mesosphere.usi:core-models') { version { branch = usiBranch } }
     implementation('com.mesosphere.usi:mesos-client') { version { branch = usiBranch } }
 
-    // Use JUnit test framework
-    testImplementation 'junit:junit:4.12'
+    // Test dependencie
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
     testImplementation('com.mesosphere.usi:test-utils') { version { branch = usiBranch } }
+}
+
+test {
+    useJUnitPlatform()
 }
 
 group = "org.jenkins-ci.plugins"
