@@ -14,11 +14,11 @@ ansiColor('xterm') {
   //node('mesos-med') {
   node('JenkinsMarathonCI-Debian9-2018-12-17') {
     stage('Provision') {
+      checkout scm
       sh './ci/provision.sh'
     }
     stage('Build') {
       try {
-        checkout scm
         if (isUnix()) {
           sh './gradlew clean check'
         } else {
