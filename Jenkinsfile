@@ -13,7 +13,7 @@ ansiColor('xterm') {
   }
   //node('mesos-med') {
   node('JenkinsMarathonCI-Debian9-2018-12-17') {
-    state('Provision') {
+    stage('Provision') {
       sh './ci/provision.sh'
     }
     stage('Build') {
