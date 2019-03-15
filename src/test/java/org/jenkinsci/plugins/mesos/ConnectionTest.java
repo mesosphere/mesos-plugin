@@ -19,6 +19,7 @@ class ConnectionTest {
   static MesosClusterExtension mesosCluster =
       MesosClusterExtension.builder()
           .withMesosMasterUrl(String.format("zk://%s/mesos", zkServer.getConnectionUrl()))
+          .withLogPrefix(ConnectionTest.class.getCanonicalName())
           .build(system, materializer);
 
   @Test
