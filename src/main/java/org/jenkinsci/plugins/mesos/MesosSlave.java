@@ -10,9 +10,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import org.apache.commons.lang.NotImplementedException;
 
-/**
- * Representation of a Jenkins node on Mesos.
- */
+/** Representation of a Jenkins node on Mesos. */
 public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
 
   public MesosSlave() throws Descriptor.FormException, IOException {
@@ -21,8 +19,9 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   }
 
   /**
-   * Polls the agent until it is online. Note: This is a non-blocking call in contrast to the blocking
-   * {@link AbstractCloudComputer#waitUntilOnline}.
+   * Polls the agent until it is online. Note: This is a non-blocking call in contrast to the
+   * blocking {@link AbstractCloudComputer#waitUntilOnline}.
+   *
    * @return This agent when it's online.
    */
   public CompletableFuture<MesosSlave> waitUntilOnlineAsync() {

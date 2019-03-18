@@ -56,6 +56,7 @@ public class MesosApi {
 
   /**
    * Start a Jekins slave/agent on Mesos.
+   *
    * @return A future reference to the {@link MesosSlave}.
    */
   public CompletableFuture<MesosSlave> startAgent() {

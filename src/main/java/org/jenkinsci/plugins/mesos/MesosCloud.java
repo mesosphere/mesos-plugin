@@ -37,7 +37,7 @@ class MesosCloud extends AbstractCloudImpl {
   /**
    * Provision one or more Jenkins nodes on Mesos.
    *
-   * The provisioning follows the Nomad plugin. The Jenkins agnets is started as a Mesos task and
+   * <p>The provisioning follows the Nomad plugin. The Jenkins agnets is started as a Mesos task and
    * added to the available Jenkins nodes. This differs from the old plugin when the provision
    * method would return immediately.
    *
@@ -61,7 +61,7 @@ class MesosCloud extends AbstractCloudImpl {
   /**
    * Start a Jenkins agent.jar on Mesos.
    *
-   * The future completes when the agent.jar is running on Mesos and the agent became online.
+   * <p>The future completes when the agent.jar is running on Mesos and the agent became online.
    *
    * @return A future reference to the launched node.
    */
