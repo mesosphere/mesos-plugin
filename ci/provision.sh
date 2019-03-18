@@ -18,7 +18,8 @@ apt-get -y update
 
 # Install Mesos
 apt-get -y install mesos="$MESOS_VERSION-2.0.3" java-common
-mesos --version
+mesos master --version
+mesos agent --version
 
 # Install Corretto JDK 11
 wget -q https://d3pxv6yz143wms.cloudfront.net/11.0.2.9.3/java-11-amazon-corretto-jdk_11.0.2.9-3_amd64.deb
