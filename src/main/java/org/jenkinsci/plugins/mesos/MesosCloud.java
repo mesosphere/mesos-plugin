@@ -34,6 +34,17 @@ class MesosCloud extends AbstractCloudImpl {
     throw new NotImplementedException();
   }
 
+  /**
+   * Provision one or more Jenkins nodes on Mesos.
+   *
+   * The provisioning follows the Nomad plugin. The Jenkins agnets is started as a Mesos task and
+   * added to the available Jenkins nodes. This differs from the old plugin when the provision
+   * method would return immediately.
+   *
+   * @param label
+   * @param excessWorkload
+   * @return A collection of future nodes.
+   */
   @Override
   public Collection<NodeProvisioner.PlannedNode> provision(Label label, int excessWorkload) {
     List<NodeProvisioner.PlannedNode> nodes = new ArrayList<>();
@@ -47,6 +58,13 @@ class MesosCloud extends AbstractCloudImpl {
     return nodes;
   }
 
+  /**
+   * Start a Jenkins agent.jar on Mesos.
+   *
+   * The future completes when the agent.jar is running on Mesos and the agent became online.
+   *
+   * @return A future reference to the launched node.
+   */
   private CompletableFuture<Node> startAgent() {
     mesos.startAgent().thenCompose(mesosSlave -> mesosSlave.waitUntilOnlineAsync());
     throw new NotImplementedException();

@@ -5,8 +5,15 @@ import hudson.model.Queue;
 import hudson.slaves.AbstractCloudComputer;
 import org.apache.commons.lang.NotImplementedException;
 
+/**
+ * The running state of a {@link hudson.model.Node} or rather {@link MesosSlave} in our case.
+ */
 public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
 
+  /**
+   * Constructs a new computer. This is called by {@link MesosSlave#createComputer()}.
+   * @param slave The {@link hudson.model.Node} this computer belongs to.
+   */
   public MesosComputer(MesosSlave slave) {
     super(slave);
     throw new NotImplementedException();

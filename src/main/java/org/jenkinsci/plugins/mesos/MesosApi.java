@@ -54,6 +54,10 @@ public class MesosApi {
     client = connectClient().get();
   }
 
+  /**
+   * Start a Jekins slave/agent on Mesos.
+   * @return A future reference to the {@link MesosSlave}.
+   */
   public CompletableFuture<MesosSlave> startAgent() {
     throw new NotImplementedException();
   }
