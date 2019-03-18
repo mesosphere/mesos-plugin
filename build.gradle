@@ -10,7 +10,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'karsten/java-interop'
+    usiBranch = 'master'
 }
 
 dependencies {
