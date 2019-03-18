@@ -18,7 +18,7 @@ apt-get -y update
 
 # Install Mesos
 apt-get -y install mesos="$MESOS_VERSION-2.0.3" java-common
-mesos --help
+mesos help
 mesos-master --help
 
 # Install Corretto JDK 11
