@@ -4,8 +4,8 @@ import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.japi.tuple.Tuple3;
 import akka.stream.ActorMaterializer;
-import akka.stream.javadsl.Sink;
-import akka.stream.javadsl.Source;
+import akka.stream.OverflowStrategy;
+import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
@@ -22,7 +22,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.mesos.v1.Protos;
 import scala.collection.Seq;
 import scala.concurrent.ExecutionContext;
@@ -34,8 +33,10 @@ public class MesosApi {
   private final Protos.FrameworkID frameworkId;
   private final MesosClientSettings clientSettings;
   private final MesosClient client;
-  private final Tuple3<CompletableFuture<StateSnapshot>, Source<StateEvent, NotUsed>, Sink<SpecUpdated, NotUsed>> adapter;
-  private final ConcurrentHashMap<PodId, MesosComputer> stateMap;
+  private final SchedulerAdapter adapter;
+  private final Tuple3<CompletableFuture<StateSnapshot>, SourceQueueWithComplete<SpecUpdated>, SinkQueueWithCancel<StateEvent>> adapterQueues;
+  private final Tuple3<CompletableFuture<StateSnapshot>, Source<StateEvent, NotUsed>, Sink<SpecUpdated, NotUsed>> adapterSourceSink;
+  private final ConcurrentHashMap<PodId, StateEvent> stateMap;
 
   private final ActorSystem system;
   private final ActorMaterializer materializer;
@@ -68,20 +69,20 @@ public class MesosApi {
     materializer = ActorMaterializer.create(system);
     client = connectClient().get();
     stateMap = new ConcurrentHashMap<>();
-    var scheduler = Scheduler.fromClient(client);
-    adapter = new SchedulerAdapter(Scheduler.fromClient(client), materializer, context)
-                .asSourceAndSink(SpecsSnapshot.empty());
-    adapter.t2().runWith(Sink.foreach(this::updateState), materializer);
+    adapter = new SchedulerAdapter(Scheduler.fromClient(client), materializer, context);
+    adapterSourceSink = adapter.asSourceAndSink(SpecsSnapshot.empty());
+    adapterSourceSink.t2().runForeach(this::updateState, materializer);
+    adapterQueues = adapter.asAkkaQueues(SpecsSnapshot.empty(), OverflowStrategy.backpressure());
   }
 
   /**
-   * Start a Jekins slave/agent on Mesos.
-   *
-   * @return A future reference to the {@link MesosSlave}.
+   * Enqueue spec for a jenkins agent that will eventually come online.
    */
-  public void startAgent() {
+  public void enqueueAgent() {
     PodSpec spec = buildMesosAgentTask(0.1, 32);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
+    //async add agent to queue
+    adapterQueues.t2().offer(update);
   }
 
   /** Establish a connection to Mesos via the v1 client. */
@@ -120,11 +121,9 @@ public class MesosApi {
   }
 
   public void updateState(StateEvent event) {
-    throw new NotImplementedException();
-    /*
     if (event instanceof PodStateEvent) {
-      stateMap.put(((PodStateEvent) event).id(), )
-    } */
+      stateMap.put(((PodStateEvent) event).id(), event);
+    }
   }
 
   private <T> Seq<T> convertListToSeq(List<T> inputList) {
