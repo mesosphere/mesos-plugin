@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.mesos;
 
+import com.mesosphere.usi.core.models.PodStateEvent;
 import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.TaskListener;
@@ -27,6 +28,13 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   public CompletableFuture<MesosSlave> waitUntilOnlineAsync() {
     throw new NotImplementedException();
   }
+
+  /**
+   * Updates the state of the slave.
+   *
+   * @param event The state event from USI which informs about the task status.
+   */
+  public void update(PodStateEvent event) {}
 
   @Override
   public Node asNode() {

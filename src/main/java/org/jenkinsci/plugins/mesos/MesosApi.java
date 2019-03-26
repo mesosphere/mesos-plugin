@@ -2,27 +2,31 @@ package org.jenkinsci.plugins.mesos;
 
 import akka.NotUsed;
 import akka.actor.ActorSystem;
-import akka.japi.tuple.Tuple3;
 import akka.stream.ActorMaterializer;
+import akka.stream.FlowShape;
+import akka.stream.Graph;
 import akka.stream.OverflowStrategy;
 import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
+import com.mesosphere.usi.core.Scheduler;
 import com.mesosphere.usi.core.models.*;
+import com.mesosphere.usi.core.models.Goal.Running$;
 import com.mesosphere.usi.core.models.resources.ScalarRequirement;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
-import com.mesosphere.usi.core.javaapi.SchedulerAdapter;
-import com.mesosphere.usi.core.Scheduler;
-import scala.Option;
-import scala.collection.JavaConverters;
+import hudson.model.Descriptor.FormException;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import org.apache.mesos.v1.Protos;
+import scala.Option;
+import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import scala.concurrent.ExecutionContext;
 
@@ -33,10 +37,10 @@ public class MesosApi {
   private final Protos.FrameworkID frameworkId;
   private final MesosClientSettings clientSettings;
   private final MesosClient client;
-  private final SchedulerAdapter adapter;
-  private final Tuple3<CompletableFuture<StateSnapshot>, SourceQueueWithComplete<SpecUpdated>, SinkQueueWithCancel<StateEvent>> adapterQueues;
-  private final Tuple3<CompletableFuture<StateSnapshot>, Source<StateEvent, NotUsed>, Sink<SpecUpdated, NotUsed>> adapterSourceSink;
-  private final ConcurrentHashMap<PodId, StateEvent> stateMap;
+
+  private final Graph<FlowShape<SpecUpdated, StateEvent>, NotUsed> schedulerFlow;
+  private final SourceQueueWithComplete<SpecUpdated> updates;
+  private final ConcurrentHashMap<PodId, MesosSlave> stateMap;
 
   private final ActorSystem system;
   private final ActorMaterializer materializer;
@@ -67,22 +71,31 @@ public class MesosApi {
     system = ActorSystem.create("mesos-scheduler");
     context = system.dispatcher();
     materializer = ActorMaterializer.create(system);
+
     client = connectClient().get();
+
     stateMap = new ConcurrentHashMap<>();
-    adapter = new SchedulerAdapter(Scheduler.fromClient(client), materializer, context);
-    adapterSourceSink = adapter.asSourceAndSink(SpecsSnapshot.empty());
-    adapterSourceSink.t2().runForeach(this::updateState, materializer);
-    adapterQueues = adapter.asAkkaQueues(SpecsSnapshot.empty(), OverflowStrategy.backpressure());
+
+    schedulerFlow =
+        Scheduler.fromClient(client, SpecsSnapshot.empty()).flatMapConcat(pair -> pair._2());
+    updates =
+        Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
+            .via(schedulerFlow)
+            .toMat(Sink.foreach(this::updateState), Keep.left())
+            .run(materializer);
   }
 
-  /**
-   * Enqueue spec for a jenkins agent that will eventually come online.
-   */
-  public void enqueueAgent() {
+  /** Enqueue spec for a Jenkins agent that will eventually come online. */
+  public CompletionStage<MesosSlave> enqueueAgent() throws IOException, FormException {
     PodSpec spec = buildMesosAgentTask(0.1, 32);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
-    //async add agent to queue
-    adapterQueues.t2().offer(update);
+
+    MesosSlave mesosSlave = new MesosSlave();
+
+    stateMap.put(spec.id(), mesosSlave);
+
+    // async add agent to queue
+    return updates.offer(update).thenApply(result -> mesosSlave); // TODO: handle QueueOfferResult.
   }
 
   /** Establish a connection to Mesos via the v1 client. */
@@ -96,7 +109,7 @@ public class MesosApi {
             .addCapabilities(
                 Protos.FrameworkInfo.Capability.newBuilder()
                     .setType(Protos.FrameworkInfo.Capability.Type.MULTI_ROLE))
-            .setFailoverTimeout(0d)
+            .setFailoverTimeout(0d) // Use config from current Mesos plugin.
             .build();
 
     return MesosClient$.MODULE$
@@ -106,23 +119,22 @@ public class MesosApi {
   }
 
   private PodSpec buildMesosAgentTask(double cpu, double mem) {
-    RunSpec spec = new RunSpec(
-        convertListToSeq(Arrays.asList(ScalarRequirement.cpus(cpu), ScalarRequirement.memory(mem))),
-        "echo Hello!",
-        convertListToSeq(Collections.emptyList())
-    );
+    RunSpec spec =
+        new RunSpec(
+            convertListToSeq(
+                Arrays.asList(ScalarRequirement.cpus(cpu), ScalarRequirement.memory(mem))),
+            "echo Hello!",
+            convertListToSeq(Collections.emptyList()));
     String id = UUID.randomUUID().toString();
-    PodSpec podSpec = new PodSpec(
-        new PodId(String.format("jenkins-test-%s", id)),
-        new Goal.Running$(),
-        spec
-    );
+    PodSpec podSpec =
+        new PodSpec(new PodId(String.format("jenkins-test-%s", id)), Running$.MODULE$, spec);
     return podSpec;
   }
 
   public void updateState(StateEvent event) {
-    if (event instanceof PodStateEvent) {
-      stateMap.put(((PodStateEvent) event).id(), event);
+    if (event instanceof PodStatusUpdated) {
+      var podStateEvent = (PodStateEvent) event;
+      stateMap.get(podStateEvent.id()).update(podStateEvent);
     }
   }
 
