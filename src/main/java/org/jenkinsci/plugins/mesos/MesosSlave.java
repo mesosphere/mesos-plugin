@@ -15,9 +15,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Representation of a Jenkins node on Mesos. */
 public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
+
+  private static final Logger logger = LoggerFactory.getLogger(MesosSlave.class);
 
   Optional<PodStatus> currentStatus = Optional.empty();
 
@@ -49,13 +54,27 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
     throw new NotImplementedException();
   }
 
+  public boolean isRunning() {
+    if (currentStatus.isPresent()) {
+      return currentStatus
+          .get()
+          .taskStatuses()
+          .values()
+          .forall(taskStatus -> taskStatus.getState() == TaskState.TASK_RUNNING);
+    } else {
+      return false;
+    }
+  }
+
   /**
    * Updates the state of the slave.
    *
    * @param event The state event from USI which informs about the task status.
    */
   public void update(PodStatusUpdated event) {
+    logger.info("Updating slave for pod {}", event.id().value());
     if (event.newStatus().isDefined()) {
+      logger.info("Received new status for {}", event.id().value());
       this.currentStatus = Optional.of(event.newStatus().get());
     }
   }

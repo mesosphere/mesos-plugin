@@ -25,12 +25,16 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import org.apache.mesos.v1.Protos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import scala.concurrent.ExecutionContext;
 
 public class MesosApi {
+
+  private static final Logger logger = LoggerFactory.getLogger(MesosApi.class);
 
   private final String slavesUser;
   private final String frameworkName;
@@ -76,6 +80,7 @@ public class MesosApi {
 
     stateMap = new ConcurrentHashMap<>();
 
+    logger.info("Starting USI scheduler flow.");
     schedulerFlow =
         Flow.fromGraph(Scheduler.fromClient(client, SpecsSnapshot.empty()))
             .flatMapConcat(pair -> pair._2());
@@ -136,6 +141,10 @@ public class MesosApi {
   public void updateState(StateEvent event) {
     if (event instanceof PodStatusUpdated) {
       var podStateEvent = (PodStatusUpdated) event;
+      logger.info(
+          "Got status update for pod {} with new status",
+          podStateEvent.id().value(),
+          podStateEvent.newStatus().isDefined());
       stateMap.get(podStateEvent.id()).update(podStateEvent);
     }
   }

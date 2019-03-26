@@ -35,8 +35,8 @@ class ConnectionTest {
 
     MesosSlave agent = api.enqueueAgent().toCompletableFuture().get();
 
-    boolean running = agent.currentStatus.isPresent();
-    while (!running) {
+    // Poll state until we get something.
+    while (!agent.isRunning()) {
       Thread.sleep(1000);
       System.out.println("not running yet");
     }
