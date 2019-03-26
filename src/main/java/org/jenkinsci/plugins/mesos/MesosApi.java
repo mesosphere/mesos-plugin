@@ -83,7 +83,7 @@ public class MesosApi {
     logger.info("Starting USI scheduler flow.");
     schedulerFlow =
         Flow.fromGraph(Scheduler.fromClient(client, SpecsSnapshot.empty()))
-            .flatMapConcat(pair -> pair._2());
+            .flatMapConcat(pair -> pair._2()); // Ignoring state snapshot for now.
     updates =
         Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
             .via(schedulerFlow)
@@ -91,7 +91,11 @@ public class MesosApi {
             .run(materializer);
   }
 
-  /** Enqueue spec for a Jenkins agent that will eventually come online. */
+  /**
+   * Enqueue spec for a Jenkins agent that will eventually come online.
+   *
+   * @return a {@link MesosSlave} once it's queued for running.
+   */
   public CompletionStage<MesosSlave> enqueueAgent() throws IOException, FormException {
     PodSpec spec = buildMesosAgentTask(0.1, 32);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
@@ -138,14 +142,24 @@ public class MesosApi {
     return podSpec;
   }
 
+  /**
+   * Callback for USI to process state events.
+   *
+   * <p>This method will filter out {@link PodStatusUpdated} and pass them on to their {@link
+   * MesosSlave}. It should be threadsafe.
+   *
+   * @param event The {@link PodStatusUpdated} for a USI pod.
+   */
   public void updateState(StateEvent event) {
     if (event instanceof PodStatusUpdated) {
       var podStateEvent = (PodStatusUpdated) event;
-      logger.info(
-          "Got status update for pod {} with new status",
-          podStateEvent.id().value(),
-          podStateEvent.newStatus().isDefined());
-      stateMap.get(podStateEvent.id()).update(podStateEvent);
+      logger.info("Got status update for pod {}", podStateEvent.id().value());
+      stateMap.computeIfPresent(
+          podStateEvent.id(),
+          (id, slave) -> {
+            slave.update(podStateEvent);
+            return slave;
+          });
     }
   }
 

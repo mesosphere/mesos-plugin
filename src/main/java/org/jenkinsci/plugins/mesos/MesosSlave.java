@@ -24,6 +24,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosSlave.class);
 
+  // Holds the current USI status for this agent.
   Optional<PodStatus> currentStatus = Optional.empty();
 
   public MesosSlave(
@@ -54,6 +55,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
     throw new NotImplementedException();
   }
 
+  /** @return whether the agent is running or not. */
   public boolean isRunning() {
     if (currentStatus.isPresent()) {
       return currentStatus
@@ -72,7 +74,6 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
    * @param event The state event from USI which informs about the task status.
    */
   public void update(PodStatusUpdated event) {
-    logger.info("Updating slave for pod {}", event.id().value());
     if (event.newStatus().isDefined()) {
       logger.info("Received new status for {}", event.id().value());
       this.currentStatus = Optional.of(event.newStatus().get());
