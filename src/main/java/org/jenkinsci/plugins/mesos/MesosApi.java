@@ -77,7 +77,8 @@ public class MesosApi {
     stateMap = new ConcurrentHashMap<>();
 
     schedulerFlow =
-        Scheduler.fromClient(client, SpecsSnapshot.empty()).flatMapConcat(pair -> pair._2());
+        Flow.fromGraph(Scheduler.fromClient(client, SpecsSnapshot.empty()))
+            .flatMapConcat(pair -> pair._2());
     updates =
         Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
             .via(schedulerFlow)
@@ -90,7 +91,8 @@ public class MesosApi {
     PodSpec spec = buildMesosAgentTask(0.1, 32);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
-    MesosSlave mesosSlave = new MesosSlave();
+    MesosSlave mesosSlave =
+        new MesosSlave(spec.id().value(), "Mesos Jenkins Slave", "label", List.of());
 
     stateMap.put(spec.id(), mesosSlave);
 
@@ -123,7 +125,7 @@ public class MesosApi {
         new RunSpec(
             convertListToSeq(
                 Arrays.asList(ScalarRequirement.cpus(cpu), ScalarRequirement.memory(mem))),
-            "echo Hello!",
+            "echo Hello! && sleep 1000000",
             convertListToSeq(Collections.emptyList()));
     String id = UUID.randomUUID().toString();
     PodSpec podSpec =
@@ -133,7 +135,7 @@ public class MesosApi {
 
   public void updateState(StateEvent event) {
     if (event instanceof PodStatusUpdated) {
-      var podStateEvent = (PodStateEvent) event;
+      var podStateEvent = (PodStatusUpdated) event;
       stateMap.get(podStateEvent.id()).update(podStateEvent);
     }
   }

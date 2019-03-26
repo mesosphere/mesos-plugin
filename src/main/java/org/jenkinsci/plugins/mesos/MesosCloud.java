@@ -67,7 +67,7 @@ class MesosCloud extends AbstractCloudImpl {
    */
   private CompletableFuture<Node> startAgent() {
     // mesos.startAgent().thenCompose(mesosSlave -> mesosSlave.waitUntilOnlineAsync());
-    mesos.enqueueAgent();
+    // mesos.enqueueAgent();
     throw new NotImplementedException();
   }
 
