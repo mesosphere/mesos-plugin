@@ -81,6 +81,15 @@ public class MesosApi {
     updates = runUsi(SpecsSnapshot.empty(), client, materializer);
   }
 
+  /**
+   * Constructs a queue of {@link SpecUpdated} and passes the specs snapshot as the first item. All
+   * updates are processed by {@link MesosApi#updateState(StateEvent)}.
+   *
+   * @param specsSnapshot The initial set of pod specs.
+   * @param client The Mesos client that is used.
+   * @param materializer The {@link ActorMaterializer} used for the source queue.
+   * @return A running source queue.
+   */
   private SourceQueueWithComplete<SpecEvent> runUsi(
       SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
     var schedulerFlow = Scheduler.fromClient(client);
@@ -90,7 +99,7 @@ public class MesosApi {
             .prefixAndTail(1)
             .map(
                 pair -> {
-                  var snapshot = (SpecsSnapshot) pair.first();
+                  var snapshot = (SpecsSnapshot) pair.first().get(0);
                   Source<SpecUpdated, Object> updates =
                       pair.second()
                           .map(event -> (SpecUpdated) event)

@@ -56,7 +56,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   }
 
   /** @return whether the agent is running or not. */
-  public boolean isRunning() {
+  public synchronized boolean isRunning() {
     if (currentStatus.isPresent()) {
       return currentStatus
           .get()
@@ -73,7 +73,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
    *
    * @param event The state event from USI which informs about the task status.
    */
-  public void update(PodStatusUpdated event) {
+  public synchronized void update(PodStatusUpdated event) {
     if (event.newStatus().isDefined()) {
       logger.info("Received new status for {}", event.id().value());
       this.currentStatus = Optional.of(event.newStatus().get());
