@@ -1,16 +1,14 @@
 package org.jenkinsci.plugins.mesos;
 
-import akka.NotUsed;
 import akka.actor.ActorSystem;
+import akka.japi.Pair;
 import akka.stream.ActorMaterializer;
-import akka.stream.FlowShape;
-import akka.stream.Graph;
 import akka.stream.OverflowStrategy;
 import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
-import com.mesosphere.usi.core.Scheduler;
+import com.mesosphere.usi.core.javaapi.Scheduler;
 import com.mesosphere.usi.core.models.*;
 import com.mesosphere.usi.core.models.Goal.Running$;
 import com.mesosphere.usi.core.models.resources.ScalarRequirement;
@@ -42,8 +40,7 @@ public class MesosApi {
   private final MesosClientSettings clientSettings;
   private final MesosClient client;
 
-  private final Graph<FlowShape<SpecUpdated, StateEvent>, NotUsed> schedulerFlow;
-  private final SourceQueueWithComplete<SpecUpdated> updates;
+  private final SourceQueueWithComplete<SpecEvent> updates;
   private final ConcurrentHashMap<PodId, MesosSlave> stateMap;
 
   private final ActorSystem system;
@@ -81,14 +78,32 @@ public class MesosApi {
     stateMap = new ConcurrentHashMap<>();
 
     logger.info("Starting USI scheduler flow.");
-    schedulerFlow =
-        Flow.fromGraph(Scheduler.fromClient(client, SpecsSnapshot.empty()))
-            .flatMapConcat(pair -> pair._2()); // Ignoring state snapshot for now.
-    updates =
-        Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
+    updates = runUsi(SpecsSnapshot.empty(), client, materializer);
+  }
+
+  private SourceQueueWithComplete<SpecEvent> runUsi(
+      SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
+    var schedulerFlow = Scheduler.fromClient(client);
+
+    var queue =
+        Source.<SpecEvent>queue(256, OverflowStrategy.fail())
+            .prefixAndTail(1)
+            .map(
+                pair -> {
+                  var snapshot = (SpecsSnapshot) pair.first();
+                  Source<SpecUpdated, Object> updates =
+                      pair.second()
+                          .map(event -> (SpecUpdated) event)
+                          .mapMaterializedValue(notUsed -> (Object) notUsed);
+                  return new Pair<SpecsSnapshot, Source<SpecUpdated, Object>>(snapshot, updates);
+                })
             .via(schedulerFlow)
+            .flatMapConcat(pair -> pair.second())
             .toMat(Sink.foreach(this::updateState), Keep.left())
             .run(materializer);
+
+    queue.offer(specsSnapshot);
+    return queue;
   }
 
   /**

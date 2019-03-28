@@ -10,7 +10,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'karsten/simple-flow'
+    usiBranch = 'karsten/java-api'
 }
 
 dependencies {
