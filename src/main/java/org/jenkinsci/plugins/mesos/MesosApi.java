@@ -94,6 +94,7 @@ public class MesosApi {
       SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
     var schedulerFlow = Scheduler.fromClient(client);
 
+    // We create a SourceQueue and assume that the very first item is a spec snapshot.
     var queue =
         Source.<SpecEvent>queue(256, OverflowStrategy.fail())
             .prefixAndTail(1)
@@ -107,7 +108,7 @@ public class MesosApi {
                   return new Pair<SpecsSnapshot, Source<SpecUpdated, Object>>(snapshot, updates);
                 })
             .via(schedulerFlow)
-            .flatMapConcat(pair -> pair.second())
+            .flatMapConcat(pair -> pair.second()) // Ignore state snapshot for now.
             .toMat(Sink.foreach(this::updateState), Keep.left())
             .run(materializer);
 
