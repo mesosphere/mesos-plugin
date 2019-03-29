@@ -1,14 +1,13 @@
 package org.jenkinsci.plugins.mesos;
 
 import akka.actor.ActorSystem;
-import akka.japi.Pair;
 import akka.stream.ActorMaterializer;
 import akka.stream.OverflowStrategy;
 import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
-import com.mesosphere.usi.core.javaapi.Scheduler;
+import com.mesosphere.usi.core.japi.Scheduler;
 import com.mesosphere.usi.core.models.*;
 import com.mesosphere.usi.core.models.Goal.Running$;
 import com.mesosphere.usi.core.models.resources.ScalarRequirement;
@@ -40,7 +39,7 @@ public class MesosApi {
   private final MesosClientSettings clientSettings;
   private final MesosClient client;
 
-  private final SourceQueueWithComplete<SpecEvent> updates;
+  private final SourceQueueWithComplete<SpecUpdated> updates;
   private final ConcurrentHashMap<PodId, MesosSlave> stateMap;
 
   private final ActorSystem system;
@@ -90,29 +89,18 @@ public class MesosApi {
    * @param materializer The {@link ActorMaterializer} used for the source queue.
    * @return A running source queue.
    */
-  private SourceQueueWithComplete<SpecEvent> runUsi(
+  private SourceQueueWithComplete<SpecUpdated> runUsi(
       SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
-    var schedulerFlow = Scheduler.fromClient(client);
+    var schedulerFlow = Scheduler.fromSnapshot(specsSnapshot, client);
 
     // We create a SourceQueue and assume that the very first item is a spec snapshot.
     var queue =
-        Source.<SpecEvent>queue(256, OverflowStrategy.fail())
-            .prefixAndTail(1)
-            .map(
-                pair -> {
-                  var snapshot = (SpecsSnapshot) pair.first().get(0);
-                  Source<SpecUpdated, Object> updates =
-                      pair.second()
-                          .map(event -> (SpecUpdated) event)
-                          .mapMaterializedValue(notUsed -> (Object) notUsed);
-                  return new Pair<SpecsSnapshot, Source<SpecUpdated, Object>>(snapshot, updates);
-                })
+        Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
             .via(schedulerFlow)
             .flatMapConcat(pair -> pair.second()) // Ignore state snapshot for now.
             .toMat(Sink.foreach(this::updateState), Keep.left())
             .run(materializer);
 
-    queue.offer(specsSnapshot);
     return queue;
   }
 
