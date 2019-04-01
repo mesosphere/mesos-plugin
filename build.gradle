@@ -10,7 +10,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'karsten/java-api'
+    usiBranch = 'master'
 }
 
 dependencies {
