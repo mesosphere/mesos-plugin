@@ -1,7 +1,10 @@
 package org.jenkinsci.plugins.mesos;
 
+import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
+import akka.stream.KillSwitch;
+import akka.stream.KillSwitches;
 import akka.stream.OverflowStrategy;
 import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
@@ -81,6 +84,30 @@ public class MesosApi {
   }
 
   /**
+   * Helper method that terminates the completes scheduler flow if on internal source or flow stops.
+   * See {@link MesosApi#runUsi(SpecsSnapshot, MesosClient, ActorMaterializer)}.
+   * @param input Source of state events.
+   * @param killSwitch The kill switch that should be triggered.
+   * @return A new source with state events and a kill switch in place.
+   */
+  private Source<StateEvent, NotUsed> triggerKillSwitch(
+      Source<StateEvent, Object> input, KillSwitch killSwitch) {
+    return input.watchTermination(
+        (mat, future) -> {
+          future.whenComplete(
+              (success, failure) -> {
+                if (success != null) {
+                  killSwitch.shutdown();
+                }
+                if (failure != null) {
+                  killSwitch.abort(failure);
+                }
+              });
+          return NotUsed.notUsed();
+        });
+  }
+
+  /**
    * Constructs a queue of {@link SpecUpdated} and passes the specs snapshot as the first item. All
    * updates are processed by {@link MesosApi#updateState(StateEvent)}.
    *
@@ -93,11 +120,17 @@ public class MesosApi {
       SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
     var schedulerFlow = Scheduler.fromSnapshot(specsSnapshot, client);
 
+    var killSwitch = KillSwitches.shared("mesos-jenkins-plugin");
+
     // We create a SourceQueue and assume that the very first item is a spec snapshot.
     var queue =
         Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
+            .via(killSwitch.flow())
             .via(schedulerFlow)
-            .flatMapConcat(pair -> pair.second()) // Ignore state snapshot for now.
+            .flatMapConcat( // Ignore state snapshot for now.
+                pair ->
+                    triggerKillSwitch(pair.second(), killSwitch))
+            .via(killSwitch.flow())
             .toMat(Sink.foreach(this::updateState), Keep.left())
             .run(materializer);
 
@@ -143,12 +176,15 @@ public class MesosApi {
   }
 
   private PodSpec buildMesosAgentTask(double cpu, double mem) {
+    var role = "jenkins";
     RunSpec spec =
         new RunSpec(
             convertListToSeq(
                 Arrays.asList(ScalarRequirement.cpus(cpu), ScalarRequirement.memory(mem))),
             "echo Hello! && sleep 1000000",
-            convertListToSeq(Collections.emptyList()));
+            role,
+            convertListToSeq(Collections.emptyList()))
+        ;
     String id = UUID.randomUUID().toString();
     PodSpec podSpec =
         new PodSpec(new PodId(String.format("jenkins-test-%s", id)), Running$.MODULE$, spec);
