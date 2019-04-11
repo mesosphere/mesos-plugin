@@ -7,9 +7,10 @@ import hudson.slaves.NodeProvisioner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import org.apache.commons.lang.NotImplementedException;
+import java.util.concurrent.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -21,17 +22,30 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 class MesosCloud extends AbstractCloudImpl {
 
+  private static final Logger LOGGER = Logger.getLogger(MesosCloud.class.getName());
+
   private MesosApi mesos;
+
   private final String frameworkName = "JenkinsMesos";
+
   private final String slavesUser = "example";
 
+  private String jenkinsUrl;
+
+  private String mesosUrl;
+
+  private String slaveUrl;
+
   @DataBoundConstructor
-  public MesosCloud(String name) throws InterruptedException, ExecutionException {
+  public MesosCloud(String name, String mesosUrl, String jenkinsUrl, String slaveUrl)
+      throws InterruptedException, ExecutionException {
     super(name, null);
 
     String masterUrl = null;
-    mesos = new MesosApi(masterUrl, slavesUser, frameworkName);
-    throw new NotImplementedException();
+    this.mesos = new MesosApi(masterUrl, slavesUser, frameworkName);
+    this.jenkinsUrl = jenkinsUrl;
+    this.mesosUrl = mesosUrl;
+    this.slaveUrl = slaveUrl;
   }
 
   /**
@@ -49,10 +63,24 @@ class MesosCloud extends AbstractCloudImpl {
   public Collection<NodeProvisioner.PlannedNode> provision(Label label, int excessWorkload) {
     List<NodeProvisioner.PlannedNode> nodes = new ArrayList<>();
 
-    String slaveName = "undefined";
     while (excessWorkload > 0) {
-      nodes.add(new NodeProvisioner.PlannedNode(slaveName, startAgent(), 1));
-      excessWorkload--;
+      try {
+        LOGGER.log(
+            Level.INFO,
+            "Excess workload of "
+                + excessWorkload
+                + ", provisioning new Jenkins slave on Nomad cluster");
+        String slaveName = "undefined";
+
+        nodes.add(
+            new NodeProvisioner.PlannedNode(
+                slaveName,
+                MesosComputer.threadPoolForRemoting.submit(new ProvisioningCallback()),
+                1));
+        excessWorkload--;
+      } catch (Exception ex) {
+        LOGGER.warning("could not create planned Node");
+      }
     }
 
     return nodes;
@@ -65,13 +93,38 @@ class MesosCloud extends AbstractCloudImpl {
    *
    * @return A future reference to the launched node.
    */
-  private CompletableFuture<Node> startAgent() {
-    // mesos.enqueueAgent().thenCompose(mesosSlave -> mesosSlave.waitUntilOnlineAsync());
-    throw new NotImplementedException();
-  }
-
   @Override
   public boolean canProvision(Label label) {
-    throw new NotImplementedException();
+    // TODO: implement executor limits
+    return true;
+  }
+
+  /**
+   * Start a Jenkins agent.jar on Mesos.
+   *
+   * <p>Provide a callback for Jenkins to start a Node.
+   *
+   * @return A future reference to the launched node.
+   */
+  private class ProvisioningCallback implements Callable<Node> {
+
+    @Override
+    public Node call() throws Exception {
+      return mesos
+          .enqueueAgent()
+          .thenApply(
+              mesosSlave -> {
+                try {
+                  Jenkins.getInstanceOrNull().addNode(mesosSlave);
+                  LOGGER.info("waiting for slave to come online...");
+                } catch (Exception e) {
+                  LOGGER.info("error occured when waiting for slave to come online...");
+                }
+                return mesosSlave.waitUntilOnlineAsync();
+              })
+          .toCompletableFuture()
+          .get()
+          .get();
+    }
   }
 }

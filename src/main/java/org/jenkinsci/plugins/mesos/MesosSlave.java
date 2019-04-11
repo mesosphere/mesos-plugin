@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.mesos;
 
+import static org.awaitility.Awaitility.await;
+
 import com.mesosphere.usi.core.models.PodStatus;
 import com.mesosphere.usi.core.models.PodStatusUpdated;
 import hudson.model.Descriptor;
@@ -13,7 +15,7 @@ import hudson.slaves.NodeProperty;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.slf4j.Logger;
@@ -27,7 +29,14 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   // Holds the current USI status for this agent.
   Optional<PodStatus> currentStatus = Optional.empty();
 
+  private final Boolean reusable;
+
+  private final MesosCloud cloud;
+
+  private final ExecutorService executorService;
+
   public MesosSlave(
+      MesosCloud cloud,
       String name,
       String nodeDescription,
       String labelString,
@@ -43,16 +52,31 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
         new JNLPLauncher(),
         null,
         nodeProperties);
+
+    this.reusable = true;
+    this.cloud = cloud;
+    this.executorService = Executors.newSingleThreadExecutor();
   }
 
   /**
    * Polls the agent until it is online. Note: This is a non-blocking call in contrast to the
    * blocking {@link AbstractCloudComputer#waitUntilOnline}.
    *
-   * @return This agent when it's online.
+   * @return The future agent that will come online.
    */
-  public CompletableFuture<MesosSlave> waitUntilOnlineAsync() {
-    throw new NotImplementedException();
+  public Future<MesosSlave> waitUntilOnlineAsync() {
+    return executorService.submit(
+        () -> {
+          await()
+              .with()
+              .pollInterval(2, TimeUnit.SECONDS)
+              .and()
+              .pollDelay(1, TimeUnit.SECONDS)
+              .atMost(5, TimeUnit.MINUTES)
+              .until(this::isRunning);
+
+          return this.isRunning() ? this : null;
+        });
   }
 
   /** @return whether the agent is running or not. */
@@ -93,5 +117,14 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   @Override
   protected void _terminate(TaskListener listener) {
     throw new NotImplementedException();
+  }
+
+  public MesosCloud getCloud() {
+    return cloud;
+  }
+
+  public Boolean getReusable() {
+    // TODO: implement reusable slaves
+    return reusable;
   }
 }

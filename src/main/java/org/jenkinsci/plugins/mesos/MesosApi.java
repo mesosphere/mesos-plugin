@@ -20,10 +20,7 @@ import com.typesafe.config.ConfigValueFactory;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 import org.apache.mesos.v1.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +45,8 @@ public class MesosApi {
   private final ActorSystem system;
   private final ActorMaterializer materializer;
   private final ExecutionContext context;
+
+  private ExecutorService executorService;
 
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
@@ -147,7 +146,7 @@ public class MesosApi {
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
     MesosSlave mesosSlave =
-        new MesosSlave(spec.id().value(), "Mesos Jenkins Slave", "label", List.of());
+        new MesosSlave(null, spec.id().value(), "Mesos Jenkins Slave", "label", List.of());
 
     stateMap.put(spec.id(), mesosSlave);
 

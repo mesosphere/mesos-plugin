@@ -3,11 +3,17 @@ package org.jenkinsci.plugins.mesos;
 import hudson.model.Executor;
 import hudson.model.Queue;
 import hudson.slaves.AbstractCloudComputer;
-import org.apache.commons.lang.NotImplementedException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** The running state of a {@link hudson.model.Node} or rather {@link MesosSlave} in our case. */
 public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
 
+  private static final Logger LOGGER = Logger.getLogger(MesosComputer.class.getName());
+
+  private final MesosCloud cloud;
+
+  private final Boolean reusable;
   /**
    * Constructs a new computer. This is called by {@link MesosSlave#createComputer()}.
    *
@@ -15,23 +21,28 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
    */
   public MesosComputer(MesosSlave slave) {
     super(slave);
-    throw new NotImplementedException();
+
+    this.cloud = slave.getCloud();
+    this.reusable = slave.getReusable();
   }
 
   @Override
   public void taskAccepted(Executor executor, Queue.Task task) {
-    throw new NotImplementedException();
+    super.taskAccepted(executor, task);
+    LOGGER.log(Level.INFO, " Computer " + this + ": task accepted");
   }
 
   @Override
   public void taskCompleted(Executor executor, Queue.Task task, long durationMS) {
-    throw new NotImplementedException();
+    super.taskCompleted(executor, task, durationMS);
+    LOGGER.log(Level.INFO, " Computer " + this + ": task completed");
   }
 
   @Override
   public void taskCompletedWithProblems(
       Executor executor, Queue.Task task, long durationMS, Throwable problems) {
-    throw new NotImplementedException();
+    super.taskCompletedWithProblems(executor, task, durationMS, problems);
+    LOGGER.log(Level.WARNING, " Computer " + this + " task completed with problems");
   }
 
   @Override
