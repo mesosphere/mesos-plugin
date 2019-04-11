@@ -86,6 +86,7 @@ public class MesosApi {
   /**
    * Helper method that terminates the completes scheduler flow if on internal source or flow stops.
    * See {@link MesosApi#runUsi(SpecsSnapshot, MesosClient, ActorMaterializer)}.
+   *
    * @param input Source of state events.
    * @param killSwitch The kill switch that should be triggered.
    * @return A new source with state events and a kill switch in place.
@@ -128,8 +129,7 @@ public class MesosApi {
             .via(killSwitch.flow())
             .via(schedulerFlow)
             .flatMapConcat( // Ignore state snapshot for now.
-                pair ->
-                    triggerKillSwitch(pair.second(), killSwitch))
+                pair -> triggerKillSwitch(pair.second(), killSwitch))
             .via(killSwitch.flow())
             .toMat(Sink.foreach(this::updateState), Keep.left())
             .run(materializer);
@@ -183,8 +183,7 @@ public class MesosApi {
                 Arrays.asList(ScalarRequirement.cpus(cpu), ScalarRequirement.memory(mem))),
             "echo Hello! && sleep 1000000",
             role,
-            convertListToSeq(Collections.emptyList()))
-        ;
+            convertListToSeq(Collections.emptyList()));
     String id = UUID.randomUUID().toString();
     PodSpec podSpec =
         new PodSpec(new PodId(String.format("jenkins-test-%s", id)), Running$.MODULE$, spec);
