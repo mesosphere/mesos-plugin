@@ -6,7 +6,10 @@ import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,17 +31,14 @@ class ConnectionTest {
 
   @Test
   public void startAgent(TestUtils.JenkinsRule j)
-      throws InterruptedException, ExecutionException, IOException, FormException {
+      throws InterruptedException, ExecutionException, IOException, FormException,
+          URISyntaxException {
 
     String mesosUrl = mesosCluster.getMesosUrl();
     MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
 
     MesosSlave agent = api.enqueueAgent().toCompletableFuture().get();
 
-    // Poll state until we get something.
-    while (!agent.isRunning()) {
-      Thread.sleep(1000);
-      System.out.println("not running yet");
-    }
+    Awaitility.await().atMost(1, TimeUnit.SECONDS).until(agent::isRunning);
   }
 }
