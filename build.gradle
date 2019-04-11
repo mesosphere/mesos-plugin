@@ -10,7 +10,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'master'
+    usiBranch = 'nm/scheduler-adapter'
 }
 
 dependencies {
