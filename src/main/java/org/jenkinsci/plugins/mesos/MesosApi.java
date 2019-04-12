@@ -164,7 +164,7 @@ public class MesosApi {
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
     MesosSlave mesosSlave =
-        new MesosSlave(cloud, spec.id().value(), "Mesos Jenkins Slave", "label", List.of());
+        new MesosSlave(cloud, spec.id().value(), "Mesos Jenkins Slave", null, List.of());
 
     stateMap.put(spec.id(), mesosSlave);
     specMap.put(spec.id(), spec);
@@ -210,8 +210,8 @@ public class MesosApi {
   private PodSpec getKillSpec(String podId) {
     PodId id = new PodId(podId);
     PodSpec spec = specMap.get(id);
-    // set goal to terminal to trigger a kill of this task
-    return new PodSpec(spec.id(), Goal.Terminal$.MODULE$, spec.runSpec());
+    // set goal to null to trigger a kill of this task
+    return new PodSpec(spec.id(), null, spec.runSpec());
   }
 
   /**
