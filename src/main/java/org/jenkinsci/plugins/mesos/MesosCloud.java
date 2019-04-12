@@ -123,13 +123,15 @@ class MesosCloud extends AbstractCloudImpl {
           .enqueueAgent(cloud, 0.1, 32)
           .thenApply(
               mesosSlave -> {
+                Future<MesosSlave> agent = null;
                 try {
                   Jenkins.getInstanceOrNull().addNode(mesosSlave);
                   LOGGER.info("waiting for slave to come online...");
+                  agent = mesosSlave.waitUntilOnlineAsync();
                 } catch (Exception e) {
                   LOGGER.info("error occured when waiting for slave to come online...");
                 }
-                return mesosSlave.waitUntilOnlineAsync();
+                return agent;
               })
           .toCompletableFuture()
           .get()
