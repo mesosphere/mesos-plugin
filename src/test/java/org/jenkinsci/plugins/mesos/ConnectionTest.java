@@ -35,9 +35,7 @@ class ConnectionTest {
     String mesosUrl = mesosCluster.getMesosUrl();
     MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
 
-    MesosCloud cloud = Mockito.mock(MesosCloud.class);
-
-    MesosSlave agent = api.enqueueAgent(cloud, 0.1, 32).toCompletableFuture().get();
+    MesosSlave agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
 
     // Poll state until we get something.
     while (!agent.isRunning()) {
@@ -53,9 +51,7 @@ class ConnectionTest {
     String mesosUrl = mesosCluster.getMesosUrl();
     MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
 
-    MesosCloud cloud = Mockito.mock(MesosCloud.class);
-
-    MesosSlave agent = api.enqueueAgent(cloud, 0.1, 32).toCompletableFuture().get();
+    MesosSlave agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
 
     // Poll state until we get something.
     while (!agent.isRunning()) {

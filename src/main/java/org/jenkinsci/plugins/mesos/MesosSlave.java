@@ -131,7 +131,6 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
     return new MesosComputer(this);
   }
 
-  @VisibleForTesting
   @Override
   protected void _terminate(TaskListener listener) {
     try {
