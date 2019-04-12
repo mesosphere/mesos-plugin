@@ -45,7 +45,15 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
       List<? extends NodeProperty<?>> nodeProperties)
       throws Descriptor.FormException, IOException {
     super(
-        id, nodeDescription, "jenkins", 1, Mode.NORMAL, labelString, new JNLPLauncher(), null, nodeProperties);
+        id,
+        nodeDescription,
+        "jenkins",
+        1,
+        Mode.NORMAL,
+        labelString,
+        new JNLPLauncher(),
+        null,
+        nodeProperties);
 
     // pass around the MesosApi connection via MesosCloud
     this.cloud = cloud;
@@ -60,7 +68,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
    *
    * @return The future agent that will come online.
    */
-  public Future<MesosSlave> waitUntilOnlineAsync() {
+  public Future<Node> waitUntilOnlineAsync() {
     return executorService.submit(
         () -> {
           await()
@@ -71,7 +79,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
               .atMost(5, TimeUnit.MINUTES)
               .until(this::isRunning);
 
-          return this.isRunning() ? this : null;
+          return this.asNode();
         });
   }
 
@@ -144,9 +152,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
     return cloud;
   }
 
-  /**
-   * get the podId tied to this task.
-   */
+  /** get the podId tied to this task. */
   public String getPodId() {
     return podId;
   }
