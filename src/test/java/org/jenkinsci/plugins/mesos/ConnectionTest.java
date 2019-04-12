@@ -6,11 +6,7 @@ import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.concurrent.ExecutionException;
-
-import hudson.model.labels.LabelAtom;
-import hudson.slaves.NodeProvisioner;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +48,7 @@ class ConnectionTest {
 
   @Test
   public void stopAgent(TestUtils.JenkinsRule j)
-    throws InterruptedException, ExecutionException, IOException, FormException {
+      throws InterruptedException, ExecutionException, IOException, FormException {
 
     String mesosUrl = mesosCluster.getMesosUrl();
     MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
@@ -69,7 +65,7 @@ class ConnectionTest {
 
     Assert.assertTrue(agent.isRunning());
 
-   api.killAgent(agent.getPodId());
+    api.killAgent(agent.getPodId());
 
     while (!agent.isKilled()) {
       Thread.sleep(1000);

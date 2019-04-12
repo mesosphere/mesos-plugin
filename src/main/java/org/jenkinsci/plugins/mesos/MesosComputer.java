@@ -3,8 +3,10 @@ package org.jenkinsci.plugins.mesos;
 import hudson.model.Executor;
 import hudson.model.Queue;
 import hudson.slaves.AbstractCloudComputer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /** The running state of a {@link hudson.model.Node} or rather {@link MesosSlave} in our case. */
 public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
@@ -25,20 +27,20 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
   @Override
   public void taskAccepted(Executor executor, Queue.Task task) {
     super.taskAccepted(executor, task);
-    LOGGER.log(Level.INFO, " Computer " + this + ": task accepted");
+    logger.info(" Computer " + this + ": task accepted");
   }
 
   @Override
   public void taskCompleted(Executor executor, Queue.Task task, long durationMS) {
     super.taskCompleted(executor, task, durationMS);
-    LOGGER.log(Level.INFO, " Computer " + this + ": task completed");
+    logger.info(" Computer " + this + ": task completed");
   }
 
   @Override
   public void taskCompletedWithProblems(
       Executor executor, Queue.Task task, long durationMS, Throwable problems) {
     super.taskCompletedWithProblems(executor, task, durationMS, problems);
-    LOGGER.log(Level.WARNING, " Computer " + this + " task completed with problems");
+    logger.warn(" Computer " + this + " task completed with problems");
   }
 
   @Override

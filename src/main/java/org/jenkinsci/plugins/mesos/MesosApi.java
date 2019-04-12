@@ -22,7 +22,6 @@ import org.apache.mesos.v1.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import scala.concurrent.ExecutionContext;
 
@@ -236,6 +235,8 @@ public class MesosApi {
   }
 
   private <T> Seq<T> convertListToSeq(List<T> inputList) {
-    return JavaConverters.asScalaIteratorConverter(inputList.iterator()).asScala().toSeq();
+    return scala.collection.JavaConverters.asScalaIteratorConverter(inputList.iterator())
+        .asScala()
+        .toSeq();
   }
 }

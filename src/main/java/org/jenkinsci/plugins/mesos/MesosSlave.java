@@ -68,8 +68,8 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
    *
    * @return The future agent that will come online.
    */
-  public Future<Node> waitUntilOnlineAsync() {
-    return executorService.submit(
+  public CompletableFuture<Node> waitUntilOnlineAsync() {
+    return CompletableFuture.supplyAsync(
         () -> {
           await()
               .with()
