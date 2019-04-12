@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 /** The running state of a {@link hudson.model.Node} or rather {@link MesosSlave} in our case. */
 public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
 
-  private static final Logger LOGGER = Logger.getLogger(MesosComputer.class.getName());
+  private static final Logger logger = LoggerFactory.getLogger(MesosComputer.class);
 
   private final Boolean reusable;
   /**

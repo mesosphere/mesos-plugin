@@ -23,7 +23,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 class MesosCloud extends AbstractCloudImpl {
 
-  private static final Logger LOGGER = Logger.getLogger(MesosCloud.class.getName());
+  private static final Logger logger = LoggerFactory.getLogger(MesosCloud.class);
 
   private MesosApi mesos;
 
