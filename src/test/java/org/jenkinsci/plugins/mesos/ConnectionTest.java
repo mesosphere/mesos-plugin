@@ -6,7 +6,12 @@ import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
+
+import hudson.model.labels.LabelAtom;
+import hudson.slaves.NodeProvisioner;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -45,19 +50,17 @@ class ConnectionTest {
     }
   }
 
-  /* @Test
-  public void stopAgent(TestUtils.JenkinsRule j)
-          throws InterruptedException, ExecutionException, IOException, FormException {
+  @Test
+  public void testProvision() throws Exception {
+    LabelAtom label = Mockito.mock(LabelAtom.class);
 
-    String mesosUrl = mesosCluster.getMesosUrl();
-    MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
+    MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), "jenkinsUrl", "slaveUrl");
 
-    MesosSlave agent = api.enqueueAgent(0.1, 32, Optional.empty()).toCompletableFuture().get();
+    int workload = 3;
+    Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, workload);
 
-    // Poll state until we get something.
-    while (!agent.isRunning()) {
-      Thread.sleep(1000);
-      System.out.println("not running yet");
-    }
-  } */
+    Assert.assertEquals(plannedNodes.size(), workload);
+  }
+
+
 }
