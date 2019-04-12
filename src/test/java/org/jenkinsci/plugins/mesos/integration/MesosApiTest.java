@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.mesos;
+package org.jenkinsci.plugins.mesos.integration;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
@@ -10,12 +10,16 @@ import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
+import org.jenkinsci.plugins.mesos.MesosApi;
+import org.jenkinsci.plugins.mesos.MesosSlave;
+import org.jenkinsci.plugins.mesos.TestUtils.JenkinsParameterResolver;
+import org.jenkinsci.plugins.mesos.TestUtils.JenkinsRule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(TestUtils.JenkinsParameterResolver.class)
-class ConnectionTest {
+@ExtendWith(JenkinsParameterResolver.class)
+class MesosApiTest {
 
   @RegisterExtension static ZookeeperServerExtension zkServer = new ZookeeperServerExtension();
 
@@ -26,11 +30,11 @@ class ConnectionTest {
   static MesosClusterExtension mesosCluster =
       MesosClusterExtension.builder()
           .withMesosMasterUrl(String.format("zk://%s/mesos", zkServer.getConnectionUrl()))
-          .withLogPrefix(ConnectionTest.class.getCanonicalName())
+          .withLogPrefix(MesosApiTest.class.getCanonicalName())
           .build(system, materializer);
 
   @Test
-  public void startAgent(TestUtils.JenkinsRule j)
+  public void startAgent(JenkinsRule j)
       throws InterruptedException, ExecutionException, IOException, FormException,
           URISyntaxException {
 
