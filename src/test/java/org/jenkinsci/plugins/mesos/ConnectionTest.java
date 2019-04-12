@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.mesos;
 
+import static org.awaitility.Awaitility.await;
+
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
@@ -7,6 +9,7 @@ import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,22 +54,11 @@ class ConnectionTest {
     MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
 
     MesosSlave agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
-
     // Poll state until we get something.
-    while (!agent.isRunning()) {
-      Thread.sleep(1000);
-      System.out.println("not running yet");
-    }
-
+    await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
     Assert.assertTrue(agent.isRunning());
-
     api.killAgent(agent.getPodId());
-
-    while (!agent.isKilled()) {
-      Thread.sleep(1000);
-      System.out.println("not killed yet");
-    }
-
+    await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
     Assert.assertTrue(agent.isKilled());
   }
 }
