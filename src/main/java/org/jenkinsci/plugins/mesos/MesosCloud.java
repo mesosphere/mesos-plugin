@@ -7,12 +7,11 @@ import hudson.slaves.NodeProvisioner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Jenkins Cloud implementation for Mesos.
@@ -66,21 +65,16 @@ class MesosCloud extends AbstractCloudImpl {
 
     while (excessWorkload > 0) {
       try {
-        LOGGER.log(
-            Level.INFO,
+        logger.info(
             "Excess workload of "
                 + excessWorkload
                 + ", provisioning new Jenkins slave on Nomad cluster");
         String slaveName = "undefined";
 
-        nodes.add(
-            new NodeProvisioner.PlannedNode(
-                slaveName,
-                MesosComputer.threadPoolForRemoting.submit(new ProvisioningCallback(this)),
-                1));
+        nodes.add(new NodeProvisioner.PlannedNode(slaveName, startAgent(), 1));
         excessWorkload--;
       } catch (Exception ex) {
-        LOGGER.warning("could not create planned Node");
+        logger.warn("could not create planned Node");
       }
     }
 
@@ -111,30 +105,20 @@ class MesosCloud extends AbstractCloudImpl {
    *
    * @return A future reference to the launched node.
    */
-  private class ProvisioningCallback implements Callable<Node> {
-    MesosCloud cloud;
-
-    ProvisioningCallback(MesosCloud cloud) {
-      this.cloud = cloud;
-    }
-
-    @Override
-    public Node call() throws Exception {
-      return mesos
-          .enqueueAgent(cloud, 0.1, 32)
-          .thenApply(
-              mesosSlave -> {
-                try {
-                  Jenkins.getInstanceOrNull().addNode(mesosSlave);
-                  LOGGER.info("waiting for slave to come online...");
-                } catch (Exception e) {
-                  LOGGER.info("error occured when waiting for slave to come online...");
-                }
-                return mesosSlave.waitUntilOnlineAsync();
-              })
-          .toCompletableFuture()
-          .get()
-          .get();
-    }
+  public Future<Node> startAgent() throws Exception {
+    return mesos
+        .enqueueAgent(this, 0.1, 32)
+        .thenApply(
+            mesosSlave -> {
+              try {
+                Jenkins.getInstanceOrNull().addNode(mesosSlave);
+                logger.info("waiting for slave to come online...");
+              } catch (Exception e) {
+                logger.info("error occured when waiting for slave to come online...");
+              }
+              return mesosSlave.waitUntilOnlineAsync();
+            })
+        .toCompletableFuture()
+        .get();
   }
 }
