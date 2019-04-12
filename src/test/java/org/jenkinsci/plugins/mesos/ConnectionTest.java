@@ -37,7 +37,7 @@ class ConnectionTest {
     var jenkinsUrl = j.getURL();
 
     String mesosUrl = mesosCluster.getMesosUrl();
-    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, "example", "MesosTest");
+    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest");
 
     MesosSlave agent = api.enqueueAgent().toCompletableFuture().get();
 
