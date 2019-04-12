@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.mesos;
 
 import static org.awaitility.Awaitility.await;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.mesosphere.usi.core.models.PodStatus;
 import com.mesosphere.usi.core.models.PodStatusUpdated;
 import hudson.model.Descriptor;

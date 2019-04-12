@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.Mockito;
 
 @ExtendWith(TestUtils.JenkinsParameterResolver.class)
 class ConnectionTest {
