@@ -34,8 +34,10 @@ class ConnectionTest {
       throws InterruptedException, ExecutionException, IOException, FormException,
           URISyntaxException {
 
+    var jenkinsUrl = j.getURL();
+
     String mesosUrl = mesosCluster.getMesosUrl();
-    MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
+    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, "example", "MesosTest");
 
     MesosSlave agent = api.enqueueAgent().toCompletableFuture().get();
 

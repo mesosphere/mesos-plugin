@@ -19,6 +19,7 @@ import hudson.slaves.NodeProperty;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -39,9 +40,12 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   // Holds the current USI status for this agent.
   Optional<PodStatus> currentStatus = Optional.empty();
 
+  private final URL jenkinsUrl;
+
   public MesosSlave(
       String name,
       String nodeDescription,
+      URL jenkinsUrl,
       String labelString,
       List<? extends NodeProperty<?>> nodeProperties)
       throws Descriptor.FormException, IOException {
@@ -55,6 +59,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
         new JNLPLauncher(),
         null,
         nodeProperties);
+    this.jenkinsUrl = jenkinsUrl;
   }
 
   /**
@@ -93,14 +98,14 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   }
 
   public PodSpec getPodSpec(double cpu, double mem) throws URISyntaxException {
-    final var role = "jenkins";
-    final var uri = new URI("localhost:80/jnlpJars/agent.jar");
+    final var role = "test";
+    final var uri = new URI(jenkinsUrl + "/jnlpJars/agent.jar");
     final var fetchUri = new FetchUri(uri, false, false, false, Option.empty());
     RunSpec spec =
         new RunSpec(
             convertListToSeq(
                 Arrays.asList(ScalarRequirement.cpus(cpu), ScalarRequirement.memory(mem))),
-            "echo Hello! && sleep 1000000",
+            "echo hello && ls -lah ${MESOS_SANDBOX-.} && java -version && ${MESOS_SANDBOX-.}/agent.jar --help",
             role,
             convertListToSeq(List.of(fetchUri)));
     PodSpec podSpec = new PodSpec(new PodId(this.name), Running$.MODULE$, spec);

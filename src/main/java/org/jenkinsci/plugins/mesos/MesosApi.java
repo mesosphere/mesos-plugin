@@ -18,6 +18,7 @@ import com.typesafe.config.ConfigValueFactory;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -35,6 +36,7 @@ public class MesosApi {
 
   private final String slavesUser;
   private final String frameworkName;
+  private final URL jenkinsUrl;
   private final Protos.FrameworkID frameworkId;
   private final MesosClientSettings clientSettings;
   private final MesosClient client;
@@ -51,17 +53,19 @@ public class MesosApi {
    * MesosSlave} instances.
    *
    * @param masterUrl The Mesos master address to connect to.
+   * @param jenkinsUrl The Jenkins address to fetch the agent jar from.
    * @param user The username used for executing Mesos tasks.
    * @param frameworkName The name of the framework the Mesos client should register as.
    * @throws InterruptedException
    * @throws ExecutionException
    */
-  public MesosApi(String masterUrl, String user, String frameworkName)
+  public MesosApi(String masterUrl, URL jenkinsUrl, String user, String frameworkName)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
     this.frameworkId =
         Protos.FrameworkID.newBuilder().setValue(UUID.randomUUID().toString()).build();
     this.slavesUser = user;
+    this.jenkinsUrl = jenkinsUrl;
 
     Config conf =
         ConfigFactory.load()
@@ -142,7 +146,8 @@ public class MesosApi {
   public CompletionStage<MesosSlave> enqueueAgent()
       throws IOException, FormException, URISyntaxException {
     var name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
-    MesosSlave mesosSlave = new MesosSlave(name, "Mesos Jenkins Slave", "label", List.of());
+    MesosSlave mesosSlave =
+        new MesosSlave(name, "Mesos Jenkins Slave", jenkinsUrl, "label", List.of());
     PodSpec spec = mesosSlave.getPodSpec(0.1, 32);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
