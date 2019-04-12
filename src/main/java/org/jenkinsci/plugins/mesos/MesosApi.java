@@ -144,11 +144,11 @@ public class MesosApi {
    *
    * @return a {@link MesosSlave} once it's queued for running.
    */
-  public CompletionStage<QueueOfferResult> killAgent(String id) throws IOException, FormException {
+  public CompletionStage<Void> killAgent(String id) throws IOException, FormException {
     PodSpec spec = getKillSpec(id);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
     specMap.put(spec.id(), spec);
-    return updates.offer(update);
+    return updates.offer(update).thenRun(() -> {});
   }
 
   /**
@@ -210,8 +210,8 @@ public class MesosApi {
   private PodSpec getKillSpec(String podId) {
     PodId id = new PodId(podId);
     PodSpec spec = specMap.get(id);
-    // set goal to null to trigger a kill of this task
-    return new PodSpec(spec.id(), null, spec.runSpec());
+    // set goal to terminal to trigger a kill of this task
+    return new PodSpec(spec.id(), Goal.Terminal$.MODULE$, spec.runSpec());
   }
 
   /**

@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.mesos;
 
 import static org.awaitility.Awaitility.await;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.mesosphere.usi.core.models.PodStatus;
 import com.mesosphere.usi.core.models.PodStatusUpdated;
 import hudson.model.Descriptor;
@@ -44,7 +45,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
       List<? extends NodeProperty<?>> nodeProperties)
       throws Descriptor.FormException, IOException {
     super(
-        id, nodeDescription, null, 1, null, labelString, new JNLPLauncher(), null, nodeProperties);
+        id, nodeDescription, "jenkins", 1, Mode.NORMAL, labelString, new JNLPLauncher(), null, nodeProperties);
 
     // pass around the MesosApi connection via MesosCloud
     this.cloud = cloud;
@@ -87,6 +88,19 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
     }
   }
 
+  /** @return whether the agent is killed or not. */
+  public synchronized boolean isKilled() {
+    if (currentStatus.isPresent()) {
+      return currentStatus
+          .get()
+          .taskStatuses()
+          .values()
+          .forall(taskStatus -> taskStatus.getState() == TaskState.TASK_KILLED);
+    } else {
+      return false;
+    }
+  }
+
   /**
    * Updates the state of the slave.
    *
@@ -109,6 +123,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
     return new MesosComputer(this);
   }
 
+  @VisibleForTesting
   @Override
   protected void _terminate(TaskListener listener) {
     try {
@@ -127,5 +142,12 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
 
   public MesosCloud getCloud() {
     return cloud;
+  }
+
+  /**
+   * get the podId tied to this task.
+   */
+  public String getPodId() {
+    return podId;
   }
 }

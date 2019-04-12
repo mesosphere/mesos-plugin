@@ -51,16 +51,31 @@ class ConnectionTest {
   }
 
   @Test
-  public void testProvision() throws Exception {
-    LabelAtom label = Mockito.mock(LabelAtom.class);
+  public void stopAgent(TestUtils.JenkinsRule j)
+    throws InterruptedException, ExecutionException, IOException, FormException {
 
-    MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), "jenkinsUrl", "slaveUrl");
+    String mesosUrl = mesosCluster.getMesosUrl();
+    MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
 
-    int workload = 3;
-    Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, workload);
+    MesosCloud cloud = Mockito.mock(MesosCloud.class);
 
-    Assert.assertEquals(plannedNodes.size(), workload);
+    MesosSlave agent = api.enqueueAgent(cloud, 0.1, 32).toCompletableFuture().get();
+
+    // Poll state until we get something.
+    while (!agent.isRunning()) {
+      Thread.sleep(1000);
+      System.out.println("not running yet");
+    }
+
+    Assert.assertTrue(agent.isRunning());
+
+   api.killAgent(agent.getPodId());
+
+    while (!agent.isKilled()) {
+      Thread.sleep(1000);
+      System.out.println("not killed yet");
+    }
+
+    Assert.assertTrue(agent.isKilled());
   }
-
-
 }
