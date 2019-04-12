@@ -11,8 +11,6 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
 
   private static final Logger LOGGER = Logger.getLogger(MesosComputer.class.getName());
 
-  private final MesosCloud cloud;
-
   private final Boolean reusable;
   /**
    * Constructs a new computer. This is called by {@link MesosSlave#createComputer()}.
@@ -21,8 +19,6 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
    */
   public MesosComputer(MesosSlave slave) {
     super(slave);
-
-    this.cloud = slave.getCloud();
     this.reusable = slave.getReusable();
   }
 

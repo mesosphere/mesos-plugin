@@ -6,6 +6,7 @@ import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +34,7 @@ class ConnectionTest {
     String mesosUrl = mesosCluster.getMesosUrl();
     MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
 
-    MesosSlave agent = api.enqueueAgent().toCompletableFuture().get();
+    MesosSlave agent = api.enqueueAgent(null, 0.1, 32, Optional.empty()).toCompletableFuture().get();
 
     // Poll state until we get something.
     while (!agent.isRunning()) {
@@ -41,4 +42,20 @@ class ConnectionTest {
       System.out.println("not running yet");
     }
   }
+
+  /* @Test
+  public void stopAgent(TestUtils.JenkinsRule j)
+          throws InterruptedException, ExecutionException, IOException, FormException {
+
+    String mesosUrl = mesosCluster.getMesosUrl();
+    MesosApi api = new MesosApi(mesosUrl, "example", "MesosTest");
+
+    MesosSlave agent = api.enqueueAgent(0.1, 32, Optional.empty()).toCompletableFuture().get();
+
+    // Poll state until we get something.
+    while (!agent.isRunning()) {
+      Thread.sleep(1000);
+      System.out.println("not running yet");
+    }
+  } */
 }

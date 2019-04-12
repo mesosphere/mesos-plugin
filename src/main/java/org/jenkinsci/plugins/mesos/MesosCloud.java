@@ -7,6 +7,7 @@ import hudson.slaves.NodeProvisioner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,7 +76,7 @@ class MesosCloud extends AbstractCloudImpl {
         nodes.add(
             new NodeProvisioner.PlannedNode(
                 slaveName,
-                MesosComputer.threadPoolForRemoting.submit(new ProvisioningCallback()),
+                MesosComputer.threadPoolForRemoting.submit(new ProvisioningCallback(this)),
                 1));
         excessWorkload--;
       } catch (Exception ex) {
@@ -99,6 +100,10 @@ class MesosCloud extends AbstractCloudImpl {
     return true;
   }
 
+  public MesosApi getMesosClient() {
+    return this.mesos;
+  }
+
   /**
    * Start a Jenkins agent.jar on Mesos.
    *
@@ -107,11 +112,16 @@ class MesosCloud extends AbstractCloudImpl {
    * @return A future reference to the launched node.
    */
   private class ProvisioningCallback implements Callable<Node> {
+    MesosCloud cloud;
+
+    ProvisioningCallback(MesosCloud cloud) {
+      this.cloud = cloud;
+    }
 
     @Override
     public Node call() throws Exception {
       return mesos
-          .enqueueAgent()
+          .enqueueAgent(cloud, 0.1, 32, Optional.empty())
           .thenApply(
               mesosSlave -> {
                 try {

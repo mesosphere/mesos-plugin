@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,27 +34,23 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
 
   private final ExecutorService executorService;
 
+  private final String podId;
+
   public MesosSlave(
       MesosCloud cloud,
-      String name,
+      String id,
       String nodeDescription,
       String labelString,
       List<? extends NodeProperty<?>> nodeProperties)
       throws Descriptor.FormException, IOException {
     super(
-        name,
-        nodeDescription,
-        null,
-        1,
-        null,
-        labelString,
-        new JNLPLauncher(),
-        null,
-        nodeProperties);
+        id, nodeDescription, null, 1, null, labelString, new JNLPLauncher(), null, nodeProperties);
 
-    this.reusable = true;
+    // pass around the MesosApi connection via MesosCloud
     this.cloud = cloud;
+    this.reusable = true;
     this.executorService = Executors.newSingleThreadExecutor();
+    this.podId = id;
   }
 
   /**
@@ -116,15 +111,22 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
 
   @Override
   protected void _terminate(TaskListener listener) {
-    throw new NotImplementedException();
-  }
+    try {
+      logger.info("killing task {}", this.podId);
 
-  public MesosCloud getCloud() {
-    return cloud;
+      // create a terminating spec for this pod
+      this.getCloud().getMesosClient().enqueueAgent(this.getCloud(), 0, 0, Optional.of(this.podId));
+    } catch (Exception ex) {
+      logger.warn("error when killing task {}", this.podId);
+    }
   }
 
   public Boolean getReusable() {
     // TODO: implement reusable slaves
     return reusable;
+  }
+
+  public MesosCloud getCloud() {
+    return cloud;
   }
 }

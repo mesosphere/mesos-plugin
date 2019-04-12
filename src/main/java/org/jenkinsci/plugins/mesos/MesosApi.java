@@ -41,6 +41,7 @@ public class MesosApi {
 
   private final SourceQueueWithComplete<SpecUpdated> updates;
   private final ConcurrentHashMap<PodId, MesosSlave> stateMap;
+  private final ConcurrentHashMap<PodId, PodSpec> specMap;
 
   private final ActorSystem system;
   private final ActorMaterializer materializer;
@@ -77,6 +78,9 @@ public class MesosApi {
     client = connectClient().get();
 
     stateMap = new ConcurrentHashMap<>();
+
+    // required to keep track of pods for kills
+    specMap = new ConcurrentHashMap<>();
 
     logger.info("Starting USI scheduler flow.");
     updates = runUsi(SpecsSnapshot.empty(), client, materializer);
@@ -137,19 +141,28 @@ public class MesosApi {
   }
 
   /**
-   * Enqueue spec for a Jenkins agent that will eventually come online.
+   * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
+   * that pod
    *
    * @return a {@link MesosSlave} once it's queued for running.
    */
-  public CompletionStage<MesosSlave> enqueueAgent() throws IOException, FormException {
-    PodSpec spec = buildMesosAgentTask(0.1, 32);
+  public CompletionStage<MesosSlave> enqueueAgent(
+      MesosCloud cloud, double cpu, double mem, Optional<String> id)
+      throws IOException, FormException {
+    PodSpec spec = buildMesosAgentTask(cpu, mem);
+
+    // override podSpec if an id is specified
+    if (id.isPresent()) {
+      spec = killMesosAgentTask(id.get());
+    }
+
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
     MesosSlave mesosSlave =
-        new MesosSlave(null, spec.id().value(), "Mesos Jenkins Slave", "label", List.of());
+        new MesosSlave(cloud, spec.id().value(), "Mesos Jenkins Slave", "label", List.of());
 
     stateMap.put(spec.id(), mesosSlave);
-
+    specMap.put(spec.id(), spec);
     // async add agent to queue
     return updates.offer(update).thenApply(result -> mesosSlave); // TODO: handle QueueOfferResult.
   }
@@ -187,6 +200,13 @@ public class MesosApi {
     PodSpec podSpec =
         new PodSpec(new PodId(String.format("jenkins-test-%s", id)), Running$.MODULE$, spec);
     return podSpec;
+  }
+
+  private PodSpec killMesosAgentTask(String podId) {
+    PodId id = new PodId(podId);
+    PodSpec spec = specMap.get(id);
+    // set goal to null to trigger a kill of this task
+    return new PodSpec(spec.id(), null, spec.runSpec());
   }
 
   /**
