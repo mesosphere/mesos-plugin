@@ -2,10 +2,7 @@ package org.jenkinsci.plugins.mesos;
 
 import akka.NotUsed;
 import akka.actor.ActorSystem;
-import akka.stream.ActorMaterializer;
-import akka.stream.KillSwitch;
-import akka.stream.KillSwitches;
-import akka.stream.OverflowStrategy;
+import akka.stream.*;
 import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
@@ -80,6 +77,7 @@ public class MesosApi {
     stateMap = new ConcurrentHashMap<>();
 
     // required to keep track of pods for kills
+    // essentially the desired state of our pods
     specMap = new ConcurrentHashMap<>();
 
     logger.info("Starting USI scheduler flow.");
@@ -146,15 +144,22 @@ public class MesosApi {
    *
    * @return a {@link MesosSlave} once it's queued for running.
    */
-  public CompletionStage<MesosSlave> enqueueAgent(
-      MesosCloud cloud, double cpu, double mem, Optional<String> id)
+  public CompletionStage<QueueOfferResult> killAgent(String id) throws IOException, FormException {
+    PodSpec spec = getKillSpec(id);
+    SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
+    specMap.put(spec.id(), spec);
+    return updates.offer(update);
+  }
+
+  /**
+   * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
+   * that pod
+   *
+   * @return a {@link MesosSlave} once it's queued for running.
+   */
+  public CompletionStage<MesosSlave> enqueueAgent(MesosCloud cloud, double cpu, double mem)
       throws IOException, FormException {
     PodSpec spec = buildMesosAgentTask(cpu, mem);
-
-    // override podSpec if an id is specified
-    if (id.isPresent()) {
-      spec = killMesosAgentTask(id.get());
-    }
 
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
@@ -202,11 +207,11 @@ public class MesosApi {
     return podSpec;
   }
 
-  private PodSpec killMesosAgentTask(String podId) {
+  private PodSpec getKillSpec(String podId) {
     PodId id = new PodId(podId);
     PodSpec spec = specMap.get(id);
-    // set goal to null to trigger a kill of this task
-    return new PodSpec(spec.id(), null, spec.runSpec());
+    // set goal to terminal to trigger a kill of this task
+    return new PodSpec(spec.id(), Goal.Terminal$.MODULE$, spec.runSpec());
   }
 
   /**

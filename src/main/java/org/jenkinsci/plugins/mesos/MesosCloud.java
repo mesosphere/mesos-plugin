@@ -7,7 +7,6 @@ import hudson.slaves.NodeProvisioner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,7 +42,7 @@ class MesosCloud extends AbstractCloudImpl {
     super(name, null);
 
     String masterUrl = null;
-    this.mesos = new MesosApi(masterUrl, slavesUser, frameworkName);
+    this.mesos = new MesosApi(mesosUrl, slavesUser, frameworkName);
     this.jenkinsUrl = jenkinsUrl;
     this.mesosUrl = mesosUrl;
     this.slaveUrl = slaveUrl;
@@ -121,7 +120,7 @@ class MesosCloud extends AbstractCloudImpl {
     @Override
     public Node call() throws Exception {
       return mesos
-          .enqueueAgent(cloud, 0.1, 32, Optional.empty())
+          .enqueueAgent(cloud, 0.1, 32)
           .thenApply(
               mesosSlave -> {
                 try {

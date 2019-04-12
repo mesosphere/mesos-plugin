@@ -113,9 +113,8 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   protected void _terminate(TaskListener listener) {
     try {
       logger.info("killing task {}", this.podId);
-
       // create a terminating spec for this pod
-      this.getCloud().getMesosClient().enqueueAgent(this.getCloud(), 0, 0, Optional.of(this.podId));
+      this.getCloud().getMesosClient().killAgent(this.podId);
     } catch (Exception ex) {
       logger.warn("error when killing task {}", this.podId);
     }
