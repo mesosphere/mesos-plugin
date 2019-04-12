@@ -117,7 +117,6 @@ class MesosCloud extends AbstractCloudImpl {
                 logger.info("error occured when waiting for slave to come online...");
               }
               return mesosSlave.waitUntilOnlineAsync();
-
             })
         .toCompletableFuture();
   }

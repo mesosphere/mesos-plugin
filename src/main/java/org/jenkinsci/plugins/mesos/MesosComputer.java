@@ -6,8 +6,6 @@ import hudson.slaves.AbstractCloudComputer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.logging.Level;
-
 /** The running state of a {@link hudson.model.Node} or rather {@link MesosSlave} in our case. */
 public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
 

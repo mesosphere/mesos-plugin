@@ -163,7 +163,7 @@ public class MesosApi {
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
     MesosSlave mesosSlave =
-        new MesosSlave(cloud, spec.id().value(), "Mesos Jenkins Slave", null, List.of());
+        new MesosSlave(cloud, spec.id().value(), "Mesos Jenkins Slave", "label", List.of());
 
     stateMap.put(spec.id(), mesosSlave);
     specMap.put(spec.id(), spec);
