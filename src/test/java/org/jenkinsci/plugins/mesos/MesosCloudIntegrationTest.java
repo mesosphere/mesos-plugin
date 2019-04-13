@@ -48,7 +48,7 @@ public class MesosCloudIntegrationTest {
       MesosSlave agent = (MesosSlave) node.future.get();
 
       // ensure all plannedNodes are now running
-      await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
+      Assert.assertTrue(agent.isRunning());
     }
 
     // check that jenkins knows about all the plannedNodes
