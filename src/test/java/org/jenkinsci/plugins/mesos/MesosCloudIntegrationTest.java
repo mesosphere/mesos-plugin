@@ -32,7 +32,7 @@ public class MesosCloudIntegrationTest {
           .build(system, materializer);
 
   @Test
-  public void testProvision(TestUtils.JenkinsRule j) throws Exception {
+  public void testJekinsProvision(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
 
     MesosCloud cloud =
@@ -42,6 +42,17 @@ public class MesosCloudIntegrationTest {
     Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, workload);
 
     Assert.assertEquals(plannedNodes.size(), workload);
+
+    for (NodeProvisioner.PlannedNode node : plannedNodes) {
+      // resolve all plannedNodes
+      MesosSlave agent = (MesosSlave) node.future.get();
+
+      // ensure all plannedNodes are now running
+      await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
+    }
+
+    // check that jenkins knows about all the plannedNodes
+    Assert.assertEquals(Jenkins.getInstanceOrNull().getNodes().size(), workload);
   }
 
   @Test
