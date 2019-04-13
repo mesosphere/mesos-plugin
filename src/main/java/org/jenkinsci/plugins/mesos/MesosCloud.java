@@ -68,7 +68,7 @@ class MesosCloud extends AbstractCloudImpl {
         logger.info(
             "Excess workload of "
                 + excessWorkload
-                + ", provisioning new Jenkins slave on Nomad cluster");
+                + ", provisioning new Jenkins slave on Mesos cluster");
         String slaveName = "undefined";
 
         nodes.add(new NodeProvisioner.PlannedNode(slaveName, startAgent(), 1));
