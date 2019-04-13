@@ -8,7 +8,6 @@ import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.labels.LabelAtom;
 import java.util.concurrent.TimeUnit;
-
 import jenkins.model.Jenkins;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
@@ -43,11 +42,9 @@ public class MesosSlaveIntegrationTest {
     Assert.assertTrue(agent.isRunning());
     Assert.assertEquals(Jenkins.getInstanceOrNull().getNodes().size(), 1);
 
-
     agent.terminate();
     await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
     Assert.assertTrue(agent.isKilled());
     Assert.assertTrue(Jenkins.getInstanceOrNull().getNodes().isEmpty());
-
   }
 }
