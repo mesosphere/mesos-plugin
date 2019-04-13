@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
+
+import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,6 +137,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
     try {
       logger.info("killing task {}", this.podId);
       // create a terminating spec for this pod
+      Jenkins.getInstanceOrNull().removeNode(this);
       this.getCloud().getMesosClient().killAgent(this.podId);
     } catch (Exception ex) {
       logger.warn("error when killing task {}", this.podId);

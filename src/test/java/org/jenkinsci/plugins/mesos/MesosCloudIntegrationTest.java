@@ -10,6 +10,8 @@ import hudson.model.labels.LabelAtom;
 import hudson.slaves.NodeProvisioner;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+
+import jenkins.model.Jenkins;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,5 +56,7 @@ public class MesosCloudIntegrationTest {
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
 
     Assert.assertTrue(agent.isRunning());
+    //assert jenkins has the 3 added nodes
+    Assert.assertEquals(Jenkins.getInstanceOrNull().getNodes().size(), 1);
   }
 }
