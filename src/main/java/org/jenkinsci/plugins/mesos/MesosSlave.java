@@ -21,7 +21,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.jenkinsci.plugins.mesos.api.MesosSlavePodSpec;
