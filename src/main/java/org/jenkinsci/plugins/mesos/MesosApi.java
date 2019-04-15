@@ -187,6 +187,10 @@ public class MesosApi {
         .toCompletableFuture();
   }
 
+  public ActorMaterializer getMaterializer() {
+    return materializer;
+  }
+
   /**
    * Callback for USI to process state events.
    *

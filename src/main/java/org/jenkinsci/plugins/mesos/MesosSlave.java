@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.mesos;
 
-import static org.awaitility.Awaitility.await;
-
+import akka.stream.javadsl.Sink;
+import akka.stream.javadsl.Source;
 import com.mesosphere.usi.core.models.Goal;
 import com.mesosphere.usi.core.models.PodSpec;
 import com.mesosphere.usi.core.models.PodStatus;
@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -75,18 +76,12 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
    * @return The future agent that will come online.
    */
   public CompletableFuture<Node> waitUntilOnlineAsync() {
-    return CompletableFuture.supplyAsync(
-        () -> {
-          await()
-              .with()
-              .pollInterval(2, TimeUnit.SECONDS)
-              .and()
-              .pollDelay(1, TimeUnit.SECONDS)
-              .atMost(5, TimeUnit.MINUTES)
-              .until(this.getComputer()::isOnline);
-
-          return this.asNode();
-        });
+    return Source.tick(Duration.ofSeconds(0), Duration.ofSeconds(1), 1)
+        .completionTimeout(Duration.ofMinutes(5))
+        .filter(foo -> this.getComputer().isOnline())
+        .map(foo -> this.asNode())
+        .runWith(Sink.head(), this.getCloud().getMesosClient().getMaterializer())
+        .toCompletableFuture();
   }
 
   /** @return whether the agent is running or not. */
