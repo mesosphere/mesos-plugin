@@ -78,8 +78,8 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
   public CompletableFuture<Node> waitUntilOnlineAsync() {
     return Source.tick(Duration.ofSeconds(0), Duration.ofSeconds(1), 1)
         .completionTimeout(Duration.ofMinutes(5))
-        .filter(foo -> this.getComputer().isOnline())
-        .map(foo -> this.asNode())
+        .filter(ignored -> this.getComputer().isOnline())
+        .map(ignored -> this.asNode())
         .runWith(Sink.head(), this.getCloud().getMesosClient().getMaterializer())
         .toCompletableFuture();
   }
