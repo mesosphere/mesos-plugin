@@ -1,6 +1,10 @@
 package org.jenkinsci.plugins.mesos.api;
 
-import com.mesosphere.usi.core.models.*;
+import com.mesosphere.usi.core.models.FetchUri;
+import com.mesosphere.usi.core.models.Goal;
+import com.mesosphere.usi.core.models.PodId;
+import com.mesosphere.usi.core.models.PodSpec;
+import com.mesosphere.usi.core.models.RunSpec;
 import com.mesosphere.usi.core.models.resources.ScalarRequirement;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
