@@ -4,6 +4,9 @@ import hudson.model.Label;
 import hudson.model.Node;
 import hudson.slaves.AbstractCloudImpl;
 import hudson.slaves.NodeProvisioner;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,7 +23,7 @@ import org.slf4j.LoggerFactory;
  *
  * @see https://github.com/jenkinsci/nomad-plugin
  */
-class MesosCloud extends AbstractCloudImpl {
+public class MesosCloud extends AbstractCloudImpl {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosCloud.class);
 
@@ -28,24 +31,18 @@ class MesosCloud extends AbstractCloudImpl {
 
   private final String frameworkName = "JenkinsMesos";
 
-  private final String slavesUser = "example";
+  private final String slavesUser = System.getProperty("user.name");
 
-  private String jenkinsUrl;
-
-  private String mesosUrl;
-
-  private String slaveUrl;
+  private final URL jenkinsUrl;
 
   @DataBoundConstructor
   public MesosCloud(String name, String mesosUrl, String jenkinsUrl, String slaveUrl)
-      throws InterruptedException, ExecutionException {
+      throws InterruptedException, ExecutionException, MalformedURLException {
     super(name, null);
 
-    String masterUrl = null;
-    this.mesos = new MesosApi(mesosUrl, slavesUser, frameworkName);
-    this.jenkinsUrl = jenkinsUrl;
-    this.mesosUrl = mesosUrl;
-    this.slaveUrl = slaveUrl;
+    this.jenkinsUrl = new URL(jenkinsUrl);
+
+    mesos = new MesosApi(mesosUrl, this.jenkinsUrl, slavesUser, frameworkName);
   }
 
   /**
@@ -113,7 +110,7 @@ class MesosCloud extends AbstractCloudImpl {
               try {
                 Jenkins.getInstanceOrNull().addNode(mesosSlave);
                 logger.info("waiting for slave to come online...");
-              } catch (Exception e) {
+              } catch (IOException e) {
                 logger.info("error occured when waiting for slave to come online...");
               }
               return mesosSlave.waitUntilOnlineAsync();

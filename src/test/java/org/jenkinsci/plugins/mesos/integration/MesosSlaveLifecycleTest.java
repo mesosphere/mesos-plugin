@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.mesos;
+package org.jenkinsci.plugins.mesos.integration;
 
 import static org.awaitility.Awaitility.await;
 
@@ -9,6 +9,9 @@ import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.labels.LabelAtom;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.mesos.MesosCloud;
+import org.jenkinsci.plugins.mesos.MesosSlave;
+import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,14 +29,14 @@ public class MesosSlaveLifecycleTest {
   static MesosClusterExtension mesosCluster =
       MesosClusterExtension.builder()
           .withMesosMasterUrl(String.format("zk://%s/mesos", zkServer.getConnectionUrl()))
-          .withLogPrefix(ConnectionTest.class.getCanonicalName())
+          .withLogPrefix(MesosSlaveLifecycleTest.class.getCanonicalName())
           .build(system, materializer);
 
   @Test
   public void testAgentLifecycle(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
     MesosCloud cloud =
-        new MesosCloud("mesos", mesosCluster.getMesosUrl(), "jenkinsUrl", "slaveUrl");
+        new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString(), "slaveUrl");
 
     MesosSlave agent = (MesosSlave) cloud.startAgent().get();
     agent.waitUntilOnlineAsync().get();

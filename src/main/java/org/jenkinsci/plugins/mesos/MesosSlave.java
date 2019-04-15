@@ -2,6 +2,8 @@ package org.jenkinsci.plugins.mesos;
 
 import static org.awaitility.Awaitility.await;
 
+import com.mesosphere.usi.core.models.Goal;
+import com.mesosphere.usi.core.models.PodSpec;
 import com.mesosphere.usi.core.models.PodStatus;
 import com.mesosphere.usi.core.models.PodStatusUpdated;
 import hudson.model.Descriptor;
@@ -13,11 +15,15 @@ import hudson.slaves.EphemeralNode;
 import hudson.slaves.JNLPLauncher;
 import hudson.slaves.NodeProperty;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos.TaskState;
+import org.jenkinsci.plugins.mesos.api.MesosSlavePodSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +39,15 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
 
   private final MesosCloud cloud;
 
-  private final ExecutorService executorService;
-
   private final String podId;
+
+  private final URL jenkinsUrl;
 
   public MesosSlave(
       MesosCloud cloud,
       String id,
       String nodeDescription,
+      URL jenkinsUrl,
       String labelString,
       List<? extends NodeProperty<?>> nodeProperties)
       throws Descriptor.FormException, IOException {
@@ -54,12 +61,11 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
         new JNLPLauncher(),
         null,
         nodeProperties);
-
     // pass around the MesosApi connection via MesosCloud
     this.cloud = cloud;
     this.reusable = true;
-    this.executorService = Executors.newSingleThreadExecutor();
     this.podId = id;
+    this.jenkinsUrl = jenkinsUrl;
   }
 
   /**
@@ -77,7 +83,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
               .and()
               .pollDelay(1, TimeUnit.SECONDS)
               .atMost(5, TimeUnit.MINUTES)
-              .until(this::isRunning);
+              .until(this.getComputer()::isOnline);
 
           return this.asNode();
         });
@@ -107,6 +113,17 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
     } else {
       return false;
     }
+  }
+
+  public PodSpec getPodSpec(Double cpu, int memory, Goal goal)
+      throws MalformedURLException, URISyntaxException {
+    return MesosSlavePodSpec.builder()
+        .withCpu(cpu)
+        .withMemory(memory)
+        .withName(this.name)
+        .withJenkinsUrl(this.jenkinsUrl)
+        .withGoal(goal)
+        .build();
   }
 
   /**

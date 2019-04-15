@@ -2,27 +2,29 @@ package org.jenkinsci.plugins.mesos;
 
 import akka.NotUsed;
 import akka.actor.ActorSystem;
-import akka.stream.*;
+import akka.stream.ActorMaterializer;
+import akka.stream.KillSwitch;
+import akka.stream.KillSwitches;
+import akka.stream.OverflowStrategy;
 import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
 import com.mesosphere.usi.core.japi.Scheduler;
 import com.mesosphere.usi.core.models.*;
-import com.mesosphere.usi.core.models.Goal.Running$;
-import com.mesosphere.usi.core.models.resources.ScalarRequirement;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
 import org.apache.mesos.v1.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
-import scala.collection.Seq;
 import scala.concurrent.ExecutionContext;
 
 public class MesosApi {
@@ -31,36 +33,36 @@ public class MesosApi {
 
   private final String slavesUser;
   private final String frameworkName;
+  private final URL jenkinsUrl;
   private final Protos.FrameworkID frameworkId;
   private final MesosClientSettings clientSettings;
   private final MesosClient client;
 
   private final SourceQueueWithComplete<SpecUpdated> updates;
   private final ConcurrentHashMap<PodId, MesosSlave> stateMap;
-  private final ConcurrentHashMap<PodId, PodSpec> specMap;
 
   private final ActorSystem system;
   private final ActorMaterializer materializer;
   private final ExecutionContext context;
-
-  private ExecutorService executorService;
 
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
    * MesosSlave} instances.
    *
    * @param masterUrl The Mesos master address to connect to.
+   * @param jenkinsUrl The Jenkins address to fetch the agent jar from.
    * @param user The username used for executing Mesos tasks.
    * @param frameworkName The name of the framework the Mesos client should register as.
    * @throws InterruptedException
    * @throws ExecutionException
    */
-  public MesosApi(String masterUrl, String user, String frameworkName)
+  public MesosApi(String masterUrl, URL jenkinsUrl, String user, String frameworkName)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
     this.frameworkId =
         Protos.FrameworkID.newBuilder().setValue(UUID.randomUUID().toString()).build();
     this.slavesUser = user;
+    this.jenkinsUrl = jenkinsUrl;
 
     Config conf =
         ConfigFactory.load()
@@ -74,10 +76,6 @@ public class MesosApi {
     client = connectClient().get();
 
     stateMap = new ConcurrentHashMap<>();
-
-    // required to keep track of pods for kills
-    // essentially the desired state of our pods
-    specMap = new ConcurrentHashMap<>();
 
     logger.info("Starting USI scheduler flow.");
     updates = runUsi(SpecsSnapshot.empty(), client, materializer);
@@ -143,10 +141,9 @@ public class MesosApi {
    *
    * @return a {@link MesosSlave} once it's queued for running.
    */
-  public CompletionStage<Void> killAgent(String id) throws IOException, FormException {
-    PodSpec spec = getKillSpec(id);
+  public CompletionStage<Void> killAgent(String id) throws Exception {
+    PodSpec spec = stateMap.get(new PodId(id)).getPodSpec(0.1, 32, Goal.Terminal$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
-    specMap.put(spec.id(), spec);
     return updates.offer(update).thenRun(() -> {});
   }
 
@@ -157,16 +154,15 @@ public class MesosApi {
    * @return a {@link MesosSlave} once it's queued for running.
    */
   public CompletionStage<MesosSlave> enqueueAgent(MesosCloud cloud, double cpu, double mem)
-      throws IOException, FormException {
-    PodSpec spec = buildMesosAgentTask(cpu, mem);
+      throws IOException, FormException, URISyntaxException {
 
+    var name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
+    MesosSlave mesosSlave =
+        new MesosSlave(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", List.of());
+    PodSpec spec = mesosSlave.getPodSpec(0.1, 32, Goal.Running$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
-    MesosSlave mesosSlave =
-        new MesosSlave(cloud, spec.id().value(), "Mesos Jenkins Slave", "label", List.of());
-
     stateMap.put(spec.id(), mesosSlave);
-    specMap.put(spec.id(), spec);
     // async add agent to queue
     return updates.offer(update).thenApply(result -> mesosSlave); // TODO: handle QueueOfferResult.
   }
@@ -191,28 +187,6 @@ public class MesosApi {
         .toCompletableFuture();
   }
 
-  private PodSpec buildMesosAgentTask(double cpu, double mem) {
-    var role = "jenkins";
-    RunSpec spec =
-        new RunSpec(
-            convertListToSeq(
-                Arrays.asList(ScalarRequirement.cpus(cpu), ScalarRequirement.memory(mem))),
-            "echo Hello! && sleep 1000000",
-            role,
-            convertListToSeq(Collections.emptyList()));
-    String id = UUID.randomUUID().toString();
-    PodSpec podSpec =
-        new PodSpec(new PodId(String.format("jenkins-test-%s", id)), Running$.MODULE$, spec);
-    return podSpec;
-  }
-
-  private PodSpec getKillSpec(String podId) {
-    PodId id = new PodId(podId);
-    PodSpec spec = specMap.get(id);
-    // set goal to terminal to trigger a kill of this task
-    return new PodSpec(spec.id(), Goal.Terminal$.MODULE$, spec.runSpec());
-  }
-
   /**
    * Callback for USI to process state events.
    *
@@ -232,11 +206,5 @@ public class MesosApi {
             return slave;
           });
     }
-  }
-
-  private <T> Seq<T> convertListToSeq(List<T> inputList) {
-    return scala.collection.JavaConverters.asScalaIteratorConverter(inputList.iterator())
-        .asScala()
-        .toSeq();
   }
 }
