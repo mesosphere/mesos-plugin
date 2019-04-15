@@ -1,6 +1,8 @@
 package org.jenkinsci.plugins.mesos.integration;
 
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
@@ -12,7 +14,6 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosSlave;
 import org.jenkinsci.plugins.mesos.TestUtils;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,12 +43,14 @@ public class MesosSlaveLifecycleTest {
     agent.waitUntilOnlineAsync().get();
 
     // verify slave is running when the future completes;
-    Assert.assertTrue(agent.isRunning());
-    Assert.assertEquals(Jenkins.getInstanceOrNull().getNodes().size(), 1);
+    assertThat(agent.isRunning(), equalTo(true));
+
+    assertThat(Jenkins.getInstanceOrNull().getNodes().size(), equalTo(1));
 
     agent.terminate();
     await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
-    Assert.assertTrue(agent.isKilled());
-    Assert.assertTrue(Jenkins.getInstanceOrNull().getNodes().isEmpty());
+    assertThat(agent.isKilled(), equalTo(true));
+
+    assertThat(Jenkins.getInstanceOrNull().getNodes().size(), equalTo(0));
   }
 }

@@ -1,6 +1,8 @@
 package org.jenkinsci.plugins.mesos.integration;
 
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
@@ -16,7 +18,6 @@ import org.jenkinsci.plugins.mesos.MesosApi;
 import org.jenkinsci.plugins.mesos.MesosSlave;
 import org.jenkinsci.plugins.mesos.TestUtils.JenkinsParameterResolver;
 import org.jenkinsci.plugins.mesos.TestUtils.JenkinsRule;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -61,9 +62,10 @@ class MesosApiTest {
     MesosSlave agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
     // Poll state until we get something.
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
-    Assert.assertTrue(agent.isRunning());
+    assertThat(agent.isRunning(), equalTo(true));
+
     api.killAgent(agent.getPodId());
     await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
-    Assert.assertTrue(agent.isKilled());
+    assertThat(agent.isKilled(), equalTo(true));
   }
 }

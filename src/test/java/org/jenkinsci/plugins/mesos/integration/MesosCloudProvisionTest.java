@@ -1,6 +1,8 @@
 package org.jenkinsci.plugins.mesos.integration;
 
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
@@ -14,7 +16,6 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosSlave;
 import org.jenkinsci.plugins.mesos.TestUtils;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -44,18 +45,17 @@ public class MesosCloudProvisionTest {
     int workload = 3;
     Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, workload);
 
-    Assert.assertEquals(plannedNodes.size(), workload);
-
+    assertThat(plannedNodes.size(), equalTo(workload));
     for (NodeProvisioner.PlannedNode node : plannedNodes) {
       // resolve all plannedNodes
       MesosSlave agent = (MesosSlave) node.future.get();
 
       // ensure all plannedNodes are now running
-      Assert.assertTrue(agent.isRunning());
+      assertThat(agent.isRunning(), equalTo(true));
     }
 
     // check that jenkins knows about all the plannedNodes
-    Assert.assertEquals(Jenkins.getInstanceOrNull().getNodes().size(), workload);
+    assertThat(Jenkins.getInstanceOrNull().getNodes().size(), equalTo(workload));
   }
 
   @Test
@@ -68,8 +68,9 @@ public class MesosCloudProvisionTest {
 
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
 
-    Assert.assertTrue(agent.isRunning());
+    assertThat(agent.isRunning(), equalTo(true));
+
     // assert jenkins has the 3 added nodes
-    Assert.assertEquals(Jenkins.getInstanceOrNull().getNodes().size(), 1);
+    assertThat(Jenkins.getInstanceOrNull().getNodes().size(), equalTo(1));
   }
 }
