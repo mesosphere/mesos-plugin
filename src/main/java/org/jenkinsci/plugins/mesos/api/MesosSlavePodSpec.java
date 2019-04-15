@@ -31,8 +31,8 @@ public class MesosSlavePodSpec {
 
     private static final String AGENT_JAR_URI_SUFFIX = "jnlpJars/agent.jar";
 
-    // We allocate 10% more memory to the Mesos task to account for the JVM overhead.
-    private static final double JVM_MEM_OVERHEAD_FACTOR = 1.1;
+    // We allocate extra memory for the JVM
+    private static final int JVM_XMX = 32;
 
     private static final String AGENT_COMMAND_FORMAT =
         "java -DHUDSON_HOME=jenkins -server -Xmx%dm %s -jar ${MESOS_SANDBOX-.}/agent.jar %s %s -jnlpUrl %s";
@@ -73,8 +73,8 @@ public class MesosSlavePodSpec {
      * @return the pod spec builder.
      */
     public Builder withMemory(int memory) {
-      this.memory = ScalarRequirement.memory(memory * JVM_MEM_OVERHEAD_FACTOR);
-      this.xmx = memory;
+      this.memory = ScalarRequirement.memory(memory + JVM_XMX);
+      this.xmx = JVM_XMX;
       return this;
     }
 
