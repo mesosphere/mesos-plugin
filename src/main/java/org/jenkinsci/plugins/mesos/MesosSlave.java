@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.mesos;
 
+import akka.NotUsed;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.mesosphere.usi.core.models.Goal;
@@ -76,7 +77,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
    * @return The future agent that will come online.
    */
   public CompletableFuture<Node> waitUntilOnlineAsync() {
-    return Source.tick(Duration.ofSeconds(0), Duration.ofSeconds(1), 1)
+    return Source.tick(Duration.ofSeconds(0), Duration.ofSeconds(1), NotUsed.notUsed())
         .completionTimeout(Duration.ofMinutes(5))
         .filter(ignored -> this.getComputer().isOnline())
         .map(ignored -> this.asNode())

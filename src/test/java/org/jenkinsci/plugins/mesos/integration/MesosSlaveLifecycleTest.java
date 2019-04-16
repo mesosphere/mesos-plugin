@@ -2,7 +2,8 @@ package org.jenkinsci.plugins.mesos.integration;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
@@ -36,21 +37,20 @@ public class MesosSlaveLifecycleTest {
   @Test
   public void testAgentLifecycle(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
-    MesosCloud cloud =
-        new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString(), "slaveUrl");
+    MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString());
 
     MesosSlave agent = (MesosSlave) cloud.startAgent().get();
     agent.waitUntilOnlineAsync().get();
 
     // verify slave is running when the future completes;
-    assertThat(agent.isRunning(), equalTo(true));
+    assertThat(agent.isRunning(), is(true));
 
-    assertThat(Jenkins.getInstanceOrNull().getNodes().size(), equalTo(1));
+    assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(1));
 
     agent.terminate();
     await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
-    assertThat(agent.isKilled(), equalTo(true));
+    assertThat(agent.isKilled(), is(true));
 
-    assertThat(Jenkins.getInstanceOrNull().getNodes().size(), equalTo(0));
+    assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(0));
   }
 }

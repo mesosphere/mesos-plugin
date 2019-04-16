@@ -156,13 +156,13 @@ public class MesosApi {
    *
    * @return a {@link MesosSlave} once it's queued for running.
    */
-  public CompletionStage<MesosSlave> enqueueAgent(MesosCloud cloud, double cpu, double mem)
+  public CompletionStage<MesosSlave> enqueueAgent(MesosCloud cloud, double cpu, int mem)
       throws IOException, FormException, URISyntaxException {
 
     var name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
     MesosSlave mesosSlave =
         new MesosSlave(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", List.of());
-    PodSpec spec = mesosSlave.getPodSpec(0.1, 32, Goal.Running$.MODULE$);
+    PodSpec spec = mesosSlave.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
     stateMap.put(spec.id(), mesosSlave);
@@ -213,5 +213,6 @@ public class MesosApi {
             return slave;
           });
     }
+    // TODO: kill pod if unknown.
   }
 }

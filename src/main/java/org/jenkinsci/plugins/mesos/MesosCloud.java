@@ -4,7 +4,6 @@ import hudson.model.Label;
 import hudson.model.Node;
 import hudson.slaves.AbstractCloudImpl;
 import hudson.slaves.NodeProvisioner;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ public class MesosCloud extends AbstractCloudImpl {
   private final URL jenkinsUrl;
 
   @DataBoundConstructor
-  public MesosCloud(String name, String mesosUrl, String jenkinsUrl, String slaveUrl)
+  public MesosCloud(String name, String mesosUrl, String jenkinsUrl)
       throws InterruptedException, ExecutionException, MalformedURLException {
     super(name, null);
 
@@ -110,10 +109,10 @@ public class MesosCloud extends AbstractCloudImpl {
               try {
                 Jenkins.getInstanceOrNull().addNode(mesosSlave);
                 logger.info("waiting for slave to come online...");
-              } catch (IOException e) {
-                logger.info("error occured when waiting for slave to come online...");
+                return mesosSlave.waitUntilOnlineAsync();
+              } catch (Exception ex) {
+                throw new CompletionException(ex);
               }
-              return mesosSlave.waitUntilOnlineAsync();
             })
         .toCompletableFuture();
   }
