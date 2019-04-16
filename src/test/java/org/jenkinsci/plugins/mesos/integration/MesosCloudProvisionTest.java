@@ -40,7 +40,7 @@ public class MesosCloudProvisionTest {
   public void testJenkinsProvision(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
 
-    MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString());
+    MesosCloud cloud = new MesosCloud(mesosCluster.getMesosUrl(), "jenkins", j.getURL().toString());
 
     int workload = 3;
     Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, workload);

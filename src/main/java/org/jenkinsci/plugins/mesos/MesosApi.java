@@ -58,7 +58,8 @@ public class MesosApi {
    * @throws InterruptedException
    * @throws ExecutionException
    */
-  public MesosApi(String masterUrl, URL jenkinsUrl, String agentUser, String frameworkName, String role)
+  public MesosApi(
+      String masterUrl, URL jenkinsUrl, String agentUser, String frameworkName, String role)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
     this.role = role;
@@ -66,6 +67,8 @@ public class MesosApi {
         Protos.FrameworkID.newBuilder().setValue(UUID.randomUUID().toString()).build();
     this.slavesUser = agentUser;
     this.jenkinsUrl = jenkinsUrl;
+
+    logger.info("Config: {}", ConfigFactory.load());
 
     Config conf =
         ConfigFactory.load()
@@ -99,7 +102,7 @@ public class MesosApi {
         .thenApply(
             builder -> {
               // We create a SourceQueue and assume that the very first item is a spec snapshot.
-              var queue =
+              SourceQueueWithComplete<SpecUpdated> queue =
                   Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
                       .via(builder.getFlow())
                       .toMat(Sink.foreach(this::updateState), Keep.left())
@@ -130,7 +133,7 @@ public class MesosApi {
   public CompletionStage<MesosSlave> enqueueAgent(MesosCloud cloud, double cpu, int mem)
       throws IOException, FormException, URISyntaxException {
 
-    var name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
+    String name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
     MesosSlave mesosSlave =
         new MesosSlave(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", List.of());
     PodSpec spec = mesosSlave.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
@@ -175,7 +178,7 @@ public class MesosApi {
    */
   public void updateState(StateEvent event) {
     if (event instanceof PodStatusUpdated) {
-      var podStateEvent = (PodStatusUpdated) event;
+      PodStatusUpdated podStateEvent = (PodStatusUpdated) event;
       logger.info("Got status update for pod {}", podStateEvent.id().value());
       stateMap.computeIfPresent(
           podStateEvent.id(),
@@ -184,6 +187,5 @@ public class MesosApi {
             return slave;
           });
     }
-    // TODO: kill pod if unknown.
   }
 }

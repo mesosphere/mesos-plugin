@@ -7,6 +7,7 @@ import com.mesosphere.usi.core.models.PodSpec;
 import com.mesosphere.usi.core.models.RunSpec;
 import com.mesosphere.usi.core.models.resources.ScalarRequirement;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -95,7 +96,7 @@ public class MesosSlavePodSpec {
     }
 
     public PodSpec build() throws MalformedURLException, URISyntaxException {
-      final var runSpec =
+      final RunSpec runSpec =
           new RunSpec(
               convertListToSeq(List.of(this.cpus, this.memory)),
               this.buildCommand(),
@@ -128,7 +129,7 @@ public class MesosSlavePodSpec {
 
     /** @return the {@link FetchUri} for the Jenkins agent jar file. */
     private FetchUri buildFetchUri() throws MalformedURLException, URISyntaxException {
-      final var uri = new URL(this.jenkinsMaster, AGENT_JAR_URI_SUFFIX).toURI();
+      final URI uri = new URL(this.jenkinsMaster, AGENT_JAR_URI_SUFFIX).toURI();
       return new FetchUri(uri, false, false, false, Option.empty());
     }
 

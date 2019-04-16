@@ -40,15 +40,14 @@ public class MesosCloud extends AbstractCloudImpl {
   private final URL jenkinsUrl;
 
   @DataBoundConstructor
-  public MesosCloud(String mesosMasterUrl, String frameworkName, String role, String agentUser, String jenkinsUrl)
+  public MesosCloud(
+      String mesosMasterUrl, String frameworkName, String role, String agentUser, String jenkinsUrl)
       throws InterruptedException, ExecutionException, MalformedURLException {
     super("MesosCloud", null);
 
-    System.out.println("constructed");
-
     this.mesosMasterUrl = new URL(mesosMasterUrl);
     this.jenkinsUrl = new URL(jenkinsUrl);
-    this.agentUser = agentUser; //TODO: default to system user
+    this.agentUser = agentUser; // TODO: default to system user
 
     mesos = new MesosApi(mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
   }
@@ -138,12 +137,11 @@ public class MesosCloud extends AbstractCloudImpl {
       return "Mesos Cloud";
     }
 
-    //TODO: validate URLs
+    // TODO: validate URLs
 
-    /**
-     * Test connection from configuration page.
-     */
-    public FormValidation doTestConnection(@QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
+    /** Test connection from configuration page. */
+    public FormValidation doTestConnection(
+        @QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
       throw new NotImplementedException("Connection testing is not supported yet.");
     }
   }
