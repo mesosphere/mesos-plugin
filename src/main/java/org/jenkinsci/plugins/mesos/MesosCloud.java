@@ -44,6 +44,8 @@ public class MesosCloud extends AbstractCloudImpl {
       throws InterruptedException, ExecutionException, MalformedURLException {
     super("MesosCloud", null);
 
+    System.out.println("constructed");
+
     this.mesosMasterUrl = new URL(mesosMasterUrl);
     this.jenkinsUrl = new URL(jenkinsUrl);
     this.agentUser = agentUser; //TODO: default to system user
