@@ -52,6 +52,7 @@ public class MesosCloudProvisionTest {
 
       // ensure all plannedNodes are now running
       assertThat(agent.isRunning(), is(true));
+      assertThat(agent.getComputer().isOnline(), is(true));
     }
 
     // check that jenkins knows about all the plannedNodes

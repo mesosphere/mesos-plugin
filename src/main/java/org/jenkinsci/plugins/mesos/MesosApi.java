@@ -45,6 +45,8 @@ public class MesosApi {
   private final ActorMaterializer materializer;
   private final ExecutionContext context;
 
+  private final Integer idleTimeoutInMinutes = 5;
+
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
    * MesosSlave} instances.
@@ -129,7 +131,14 @@ public class MesosApi {
 
     var name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
     MesosSlave mesosSlave =
-        new MesosSlave(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", List.of());
+        new MesosSlave(
+            cloud,
+            name,
+            "Mesos Jenkins Slave",
+            jenkinsUrl,
+            "label",
+            idleTimeoutInMinutes,
+            List.of());
     PodSpec spec = mesosSlave.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
