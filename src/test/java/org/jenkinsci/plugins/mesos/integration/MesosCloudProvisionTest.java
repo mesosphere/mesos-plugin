@@ -37,7 +37,7 @@ public class MesosCloudProvisionTest {
           .build(system, materializer);
 
   @Test
-  public void testJekinsProvision(TestUtils.JenkinsRule j) throws Exception {
+  public void testJenkinsProvision(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
 
     MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString());

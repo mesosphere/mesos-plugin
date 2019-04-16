@@ -1,9 +1,13 @@
 package org.jenkinsci.plugins.mesos;
 
+import hudson.Extension;
+import hudson.model.Descriptor;
 import hudson.model.Label;
 import hudson.model.Node;
 import hudson.slaves.AbstractCloudImpl;
+import hudson.slaves.Cloud;
 import hudson.slaves.NodeProvisioner;
+import hudson.util.FormValidation;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -11,7 +15,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.NotImplementedException;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,22 +32,23 @@ public class MesosCloud extends AbstractCloudImpl {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosCloud.class);
 
+  private final URL mesosMasterUrl;
   private MesosApi mesos;
 
-  private final String frameworkName = "JenkinsMesos";
-
-  private final String slavesUser = System.getProperty("user.name");
+  private final String agentUser;
 
   private final URL jenkinsUrl;
 
   @DataBoundConstructor
-  public MesosCloud(String name, String mesosUrl, String jenkinsUrl)
+  public MesosCloud(String mesosMasterUrl, String frameworkName, String role, String agentUser, String jenkinsUrl)
       throws InterruptedException, ExecutionException, MalformedURLException {
-    super(name, null);
+    super("MesosCloud", null);
 
+    this.mesosMasterUrl = new URL(mesosMasterUrl);
     this.jenkinsUrl = new URL(jenkinsUrl);
+    this.agentUser = agentUser; //TODO: default to system user
 
-    mesos = new MesosApi(mesosUrl, this.jenkinsUrl, slavesUser, frameworkName);
+    mesos = new MesosApi(mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
   }
 
   /**
@@ -115,5 +122,49 @@ public class MesosCloud extends AbstractCloudImpl {
               }
             })
         .toCompletableFuture();
+  }
+
+  @Extension
+  public static class DescriptorImpl extends Descriptor<Cloud> {
+
+    public DescriptorImpl() {
+      load();
+    }
+
+    @Override
+    public String getDisplayName() {
+      return "Mesos Cloud";
+    }
+
+    //TODO: validate URLs
+
+    /**
+     * Test connection from configuration page.
+     */
+    public FormValidation doTestConnection(@QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
+      throw new NotImplementedException("Connection testing is not supported yet.");
+    }
+  }
+
+  // Getters
+
+  public String getMesosMasterUrl() {
+    return this.mesosMasterUrl.toString();
+  }
+
+  public String getFrameworkName() {
+    return "todo";
+  }
+
+  public String getJenkinsUrl() {
+    return this.jenkinsUrl.toString();
+  }
+
+  public String getAgentUser() {
+    return "kjeschkies";
+  }
+
+  public String getRole() {
+    return "*";
   }
 }

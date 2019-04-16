@@ -36,6 +36,7 @@ public class MesosApi {
 
   private final String slavesUser;
   private final String frameworkName;
+  private final String role;
   private final URL jenkinsUrl;
   private final Protos.FrameworkID frameworkId;
   private final MesosClientSettings clientSettings;
@@ -54,17 +55,19 @@ public class MesosApi {
    *
    * @param masterUrl The Mesos master address to connect to.
    * @param jenkinsUrl The Jenkins address to fetch the agent jar from.
-   * @param user The username used for executing Mesos tasks.
+   * @param agentUser The username used for executing Mesos tasks.
    * @param frameworkName The name of the framework the Mesos client should register as.
+   * @param role The Mesos role to assume.
    * @throws InterruptedException
    * @throws ExecutionException
    */
-  public MesosApi(String masterUrl, URL jenkinsUrl, String user, String frameworkName)
+  public MesosApi(String masterUrl, URL jenkinsUrl, String agentUser, String frameworkName, String role)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
+    this.role = role;
     this.frameworkId =
         Protos.FrameworkID.newBuilder().setValue(UUID.randomUUID().toString()).build();
-    this.slavesUser = user;
+    this.slavesUser = agentUser;
     this.jenkinsUrl = jenkinsUrl;
 
     Config conf =
@@ -177,7 +180,7 @@ public class MesosApi {
             .setUser(slavesUser)
             .setName(frameworkName)
             .setId(frameworkId)
-            .addRoles("test")
+            .addRoles(this.role)
             .addCapabilities(
                 Protos.FrameworkInfo.Capability.newBuilder()
                     .setType(Protos.FrameworkInfo.Capability.Type.MULTI_ROLE))
