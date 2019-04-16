@@ -78,7 +78,7 @@ public class MesosApi {
     stateMap = new ConcurrentHashMap<>();
 
     logger.info("Starting USI scheduler flow.");
-    updates = runUsi(SpecsSnapshot.empty(), client, materializer).get();
+    updates = runScheduler(SpecsSnapshot.empty(), client, materializer).get();
   }
 
   /**
@@ -90,7 +90,7 @@ public class MesosApi {
    * @param materializer The {@link ActorMaterializer} used for the source queue.
    * @return A running source queue.
    */
-  private CompletableFuture<SourceQueueWithComplete<SpecUpdated>> runUsi(
+  private CompletableFuture<SourceQueueWithComplete<SpecUpdated>> runScheduler(
       SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
     return Scheduler.asFlow(specsSnapshot, client, materializer)
         .thenApply(
