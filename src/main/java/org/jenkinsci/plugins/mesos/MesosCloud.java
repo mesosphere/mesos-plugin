@@ -153,7 +153,7 @@ public class MesosCloud extends AbstractCloudImpl {
   }
 
   public String getFrameworkName() {
-    return "todo";
+    return this.mesos.getFrameworkName();
   }
 
   public String getJenkinsUrl() {

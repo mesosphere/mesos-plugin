@@ -9,6 +9,7 @@ import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
 import com.mesosphere.usi.core.japi.Scheduler;
 import com.mesosphere.usi.core.models.*;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
@@ -21,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,19 +33,27 @@ public class MesosApi {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosApi.class);
 
-  private final String slavesUser;
   private final String frameworkName;
   private final String role;
+  private final String agentUser;
+  private final String frameworkId;
   private final URL jenkinsUrl;
-  private final Protos.FrameworkID frameworkId;
-  private final MesosClientSettings clientSettings;
+
+  @XStreamOmitField
   private final MesosClient client;
 
+  @XStreamOmitField
   private final SourceQueueWithComplete<SpecUpdated> updates;
+
   private final ConcurrentHashMap<PodId, MesosSlave> stateMap;
 
+  @XStreamOmitField
   private final ActorSystem system;
+
+  @XStreamOmitField
   private final ActorMaterializer materializer;
+
+  @XStreamOmitField
   private final ExecutionContext context;
 
   /**
@@ -62,24 +72,25 @@ public class MesosApi {
       String masterUrl, URL jenkinsUrl, String agentUser, String frameworkName, String role)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
+    this.frameworkId = UUID.randomUUID().toString();
     this.role = role;
-    this.frameworkId =
-        Protos.FrameworkID.newBuilder().setValue(UUID.randomUUID().toString()).build();
-    this.slavesUser = agentUser;
+    this.agentUser = agentUser;
     this.jenkinsUrl = jenkinsUrl;
 
-    logger.info("Config: {}", ConfigFactory.load());
+    ClassLoader classLoader = Jenkins.getInstanceOrNull().pluginManager.uberClassLoader;
 
-    Config conf =
-        ConfigFactory.load()
-            .getConfig("mesos-client")
+    Config conf = ConfigFactory.load(classLoader);
+    Config clientConf =
+        conf.getConfig("mesos-client")
             .withValue("master-url", ConfigValueFactory.fromAnyRef(masterUrl));
-    this.clientSettings = MesosClientSettings.fromConfig(conf);
-    system = ActorSystem.create("mesos-scheduler");
+
+    logger.info("Config: {}", conf);
+    MesosClientSettings clientSettings = MesosClientSettings.fromConfig(clientConf);
+    system = ActorSystem.create("mesos-scheduler", conf, classLoader);
     context = system.dispatcher();
     materializer = ActorMaterializer.create(system);
 
-    client = connectClient().get();
+    client = connectClient(clientSettings).get();
 
     stateMap = new ConcurrentHashMap<>();
 
@@ -135,7 +146,7 @@ public class MesosApi {
 
     String name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
     MesosSlave mesosSlave =
-        new MesosSlave(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", List.of());
+        new MesosSlave(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", new ArrayList());
     PodSpec spec = mesosSlave.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
@@ -145,13 +156,14 @@ public class MesosApi {
   }
 
   /** Establish a connection to Mesos via the v1 client. */
-  private CompletableFuture<MesosClient> connectClient() {
+  private CompletableFuture<MesosClient> connectClient(MesosClientSettings clientSettings) {
+    Protos.FrameworkID frameworkId = Protos.FrameworkID.newBuilder().setValue(this.frameworkId).build();
     Protos.FrameworkInfo frameworkInfo =
         Protos.FrameworkInfo.newBuilder()
-            .setUser(slavesUser)
-            .setName(frameworkName)
+            .setUser(this.agentUser)
+            .setName(this.frameworkName)
             .setId(frameworkId)
-            .addRoles(this.role)
+            .addRoles(role)
             .addCapabilities(
                 Protos.FrameworkInfo.Capability.newBuilder()
                     .setType(Protos.FrameworkInfo.Capability.Type.MULTI_ROLE))
@@ -187,5 +199,10 @@ public class MesosApi {
             return slave;
           });
     }
+  }
+
+  /** @return the name of the registered Mesos framework. */
+  public String getFrameworkName() {
+    return this.frameworkName;
   }
 }

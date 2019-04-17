@@ -11,6 +11,8 @@ repositories {
 
 ext {
     usiBranch = 'master'
+    scalaVersion = '2.12'
+    akkaVersion = '2.5.19'
 }
 
 dependencies {
@@ -45,8 +47,6 @@ jenkinsPlugin {
     gitHubUrl = "https://github.com/mesosphere/mesos-plugin/"
     shortName = "mesos"
 
-    pluginFirstClassLoader = true
- 
     // The developers section is optional, and corresponds to the POM developers section.
     developers {
         developer {
@@ -65,8 +65,8 @@ spotless {
 
 idea {
     project {
-        jdkName = '1.11'
-        languageLevel = '1.11'
+        jdkName = '1.8'
+        languageLevel = '1.8'
         vcs = 'Git'
     }
 }
