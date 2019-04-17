@@ -66,7 +66,7 @@ public class MesosCloudProvisionTest {
 
     MesosSlave agent = (MesosSlave) cloud.startAgent().get();
 
-    await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
+    await().atMost(10, TimeUnit.SECONDS).until(agent::isRunning);
 
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.toComputer().isOnline(), is(true));

@@ -5,7 +5,13 @@ import hudson.slaves.CloudRetentionStrategy;
 import hudson.slaves.RetentionStrategy;
 
 public class MesosRetentionStrategy extends CloudRetentionStrategy {
-
+  /**
+   * Constructs a new {@link hudson.slaves.CloudRetentionStrategy}. This is called by {@link
+   * MesosSlave()}.
+   *
+   * @param idleMinutes The number of minutes to wait before calling getNode().terminate() on an
+   *     idle {@link MesosComputer}
+   */
   public MesosRetentionStrategy(int idleMinutes) {
     super(idleMinutes);
   }

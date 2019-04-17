@@ -48,7 +48,7 @@ public class MesosSlaveLifecycleTest {
     assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(1));
 
     agent.terminate();
-    await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
+    await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
     assertThat(agent.isKilled(), is(true));
 
     assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(0));
@@ -66,7 +66,7 @@ public class MesosSlaveLifecycleTest {
 
     MesosSlave shouldBeParent = (MesosSlave) agent.getComputer().getNode();
     shouldBeParent.terminate();
-    await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
+    await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
     assertThat(agent.isKilled(), is(true));
   }
 
@@ -82,7 +82,7 @@ public class MesosSlaveLifecycleTest {
 
     agent.getComputer().doDoDelete();
 
-    await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
+    await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
     assertThat(agent.isKilled(), is(true));
   }
 }

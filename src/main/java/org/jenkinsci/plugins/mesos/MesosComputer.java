@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.mesos;
 import hudson.model.Executor;
 import hudson.model.Queue;
 import hudson.slaves.AbstractCloudComputer;
+import java.io.IOException;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.slf4j.Logger;
@@ -54,11 +55,11 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
   }
 
   @Override
-  public HttpResponse doDoDelete() {
+  public HttpResponse doDoDelete() throws IOException {
     try {
       getNode().terminate();
-    } catch (Exception e) {
-      logger.warn("Error killing " + getNode().getPodId());
+    } catch (InterruptedException e) {
+      logger.warn(" got exception " + e + "failure to delete agent" + getNode().getPodId());
     }
     return new HttpRedirect("..");
   }
