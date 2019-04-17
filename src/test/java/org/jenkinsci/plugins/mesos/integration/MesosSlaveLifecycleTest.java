@@ -53,4 +53,36 @@ public class MesosSlaveLifecycleTest {
 
     assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(0));
   }
+
+  @Test
+  public void testComputerNodeTermination(TestUtils.JenkinsRule j) throws Exception {
+    MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString());
+
+    MesosSlave agent = (MesosSlave) cloud.startAgent().get();
+    agent.waitUntilOnlineAsync().get();
+
+    assertThat(agent.isRunning(), is(true));
+    assertThat(agent.getComputer().isOnline(), is(true));
+
+    MesosSlave shouldBeParent = (MesosSlave) agent.getComputer().getNode();
+    shouldBeParent.terminate();
+    await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
+    assertThat(agent.isKilled(), is(true));
+  }
+
+  @Test
+  public void testComputerNodeDeletion(TestUtils.JenkinsRule j) throws Exception {
+    MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString());
+
+    MesosSlave agent = (MesosSlave) cloud.startAgent().get();
+    agent.waitUntilOnlineAsync().get();
+
+    assertThat(agent.isRunning(), is(true));
+    assertThat(agent.getComputer().isOnline(), is(true));
+
+    agent.getComputer().doDoDelete();
+
+    await().atMost(5, TimeUnit.MINUTES).until(agent::isKilled);
+    assertThat(agent.isKilled(), is(true));
+  }
 }

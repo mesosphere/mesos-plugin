@@ -4,11 +4,9 @@ import hudson.model.Executor;
 import hudson.model.Queue;
 import hudson.slaves.AbstractCloudComputer;
 import org.kohsuke.stapler.HttpRedirect;
+import org.kohsuke.stapler.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.kohsuke.stapler.HttpResponse;
-
-import java.io.IOException;
 
 /** The running state of a {@link hudson.model.Node} or rather {@link MesosSlave} in our case. */
 public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
@@ -62,6 +60,6 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
     } catch (Exception e) {
       logger.warn("Error killing " + getNode().getPodId());
     }
-    return HttpRedirect{".."};
+    return new HttpRedirect("..");
   }
 }
