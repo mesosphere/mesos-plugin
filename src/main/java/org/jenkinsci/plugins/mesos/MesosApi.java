@@ -45,7 +45,7 @@ public class MesosApi {
   @XStreamOmitField
   private final SourceQueueWithComplete<SpecUpdated> updates;
 
-  private final ConcurrentHashMap<PodId, MesosSlave> stateMap;
+  private final ConcurrentHashMap<PodId, MesosAgent> stateMap;
 
   @XStreamOmitField
   private final ActorSystem system;
@@ -58,7 +58,7 @@ public class MesosApi {
 
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
-   * MesosSlave} instances.
+   * MesosAgent} instances.
    *
    * @param masterUrl The Mesos master address to connect to.
    * @param jenkinsUrl The Jenkins address to fetch the agent jar from.
@@ -69,7 +69,7 @@ public class MesosApi {
    * @throws ExecutionException
    */
   public MesosApi(
-      String masterUrl, URL jenkinsUrl, String agentUser, String frameworkName, String role)
+      URL masterUrl, URL jenkinsUrl, String agentUser, String frameworkName, String role)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
     this.frameworkId = UUID.randomUUID().toString();
@@ -82,7 +82,7 @@ public class MesosApi {
     Config conf = ConfigFactory.load(classLoader);
     Config clientConf =
         conf.getConfig("mesos-client")
-            .withValue("master-url", ConfigValueFactory.fromAnyRef(masterUrl));
+            .withValue("master-url", ConfigValueFactory.fromAnyRef(masterUrl.toString()));
 
     logger.info("Config: {}", conf);
     MesosClientSettings clientSettings = MesosClientSettings.fromConfig(clientConf);
@@ -127,7 +127,7 @@ public class MesosApi {
    * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
    * that pod
    *
-   * @return a {@link MesosSlave} once it's queued for running.
+   * @return a {@link MesosAgent} once it's queued for running.
    */
   public CompletionStage<Void> killAgent(String id) throws Exception {
     PodSpec spec = stateMap.get(new PodId(id)).getPodSpec(0.1, 32, Goal.Terminal$.MODULE$);
@@ -139,20 +139,20 @@ public class MesosApi {
    * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
    * that pod
    *
-   * @return a {@link MesosSlave} once it's queued for running.
+   * @return a {@link MesosAgent} once it's queued for running.
    */
-  public CompletionStage<MesosSlave> enqueueAgent(MesosCloud cloud, double cpu, int mem)
+  public CompletionStage<MesosAgent> enqueueAgent(MesosCloud cloud, double cpu, int mem)
       throws IOException, FormException, URISyntaxException {
 
     String name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
-    MesosSlave mesosSlave =
-        new MesosSlave(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", new ArrayList());
-    PodSpec spec = mesosSlave.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
+    MesosAgent mesosAgent =
+        new MesosAgent(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", new ArrayList());
+    PodSpec spec = mesosAgent.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
 
-    stateMap.put(spec.id(), mesosSlave);
+    stateMap.put(spec.id(), mesosAgent);
     // async add agent to queue
-    return updates.offer(update).thenApply(result -> mesosSlave); // TODO: handle QueueOfferResult.
+    return updates.offer(update).thenApply(result -> mesosAgent); // TODO: handle QueueOfferResult.
   }
 
   /** Establish a connection to Mesos via the v1 client. */
@@ -184,7 +184,7 @@ public class MesosApi {
    * Callback for USI to process state events.
    *
    * <p>This method will filter out {@link PodStatusUpdated} and pass them on to their {@link
-   * MesosSlave}. It should be threadsafe.
+   * MesosAgent}. It should be threadsafe.
    *
    * @param event The {@link PodStatusUpdated} for a USI pod.
    */

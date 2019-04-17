@@ -22,6 +22,14 @@
         <f:textbox/>
     </f:entry>
 
+    <f:advanced>
+      <f:entry title="Agent Specs">
+          <f:repeatable field="mesosAgentSpecs">
+            <st:include page="/org/jenkinsci/plugins/mesos/MesosAgentSpec/config.jelly" class="org.jenkinsci.plugins.mesos.MesosAgentSpec$DescriptorImpl"/>
+          </f:repeatable>
+      </f:entry>
+    </f:advanced>
+
     <f:validateButton title="Test Connection}" progress="Testing..." method="testConnection" with="mesosMasterUrl"/>
 
 </j:jelly>

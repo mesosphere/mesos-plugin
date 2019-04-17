@@ -30,9 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Representation of a Jenkins node on Mesos. */
-public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
+public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
 
-  private static final Logger logger = LoggerFactory.getLogger(MesosSlave.class);
+  private static final Logger logger = LoggerFactory.getLogger(MesosAgent.class);
 
   // Holds the current USI status for this agent.
   Optional<PodStatus> currentStatus = Optional.empty();
@@ -45,7 +45,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
 
   private final URL jenkinsUrl;
 
-  public MesosSlave(
+  public MesosAgent(
       MesosCloud cloud,
       String id,
       String nodeDescription,

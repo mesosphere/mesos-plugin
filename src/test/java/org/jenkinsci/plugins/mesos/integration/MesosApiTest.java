@@ -11,11 +11,12 @@ import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
+import org.jenkinsci.plugins.mesos.MesosAgent;
 import org.jenkinsci.plugins.mesos.MesosApi;
-import org.jenkinsci.plugins.mesos.MesosSlave;
 import org.jenkinsci.plugins.mesos.TestUtils.JenkinsParameterResolver;
 import org.jenkinsci.plugins.mesos.TestUtils.JenkinsRule;
 import org.junit.jupiter.api.Test;
@@ -42,12 +43,12 @@ class MesosApiTest {
       throws InterruptedException, ExecutionException, IOException, FormException,
           URISyntaxException {
 
-    var jenkinsUrl = j.getURL();
+    URL jenkinsUrl = j.getURL();
 
     String mesosUrl = mesosCluster.getMesosUrl();
-    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest");
+    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"),  "MesosTest","*");
 
-    MesosSlave agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
+    MesosAgent agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
 
     Awaitility.await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
   }
@@ -56,10 +57,10 @@ class MesosApiTest {
   public void stopAgent(JenkinsRule j) throws Exception {
 
     String mesosUrl = mesosCluster.getMesosUrl();
-    var jenkinsUrl = j.getURL();
-    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest");
+    URL jenkinsUrl = j.getURL();
+    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
 
-    MesosSlave agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
+    MesosAgent agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
     // Poll state until we get something.
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
     assertThat(agent.isRunning(), equalTo(true));

@@ -39,23 +39,26 @@ public class MesosCloud extends AbstractCloudImpl {
 
   private final URL jenkinsUrl;
 
+  private final List<MesosAgentSpec> mesosAgentSpecs;
+
   @DataBoundConstructor
   public MesosCloud(
-      String mesosMasterUrl, String frameworkName, String role, String agentUser, String jenkinsUrl)
+      String mesosMasterUrl, String frameworkName, String role, String agentUser, String jenkinsUrl, List<MesosAgentSpec> mesosAgentSpecs)
       throws InterruptedException, ExecutionException, MalformedURLException {
     super("MesosCloud", null);
 
     this.mesosMasterUrl = new URL(mesosMasterUrl);
     this.jenkinsUrl = new URL(jenkinsUrl);
     this.agentUser = agentUser; // TODO: default to system user
+    this.mesosAgentSpecs = mesosAgentSpecs;
 
-    mesos = new MesosApi(mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
+    mesos = new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
   }
 
   /**
    * Provision one or more Jenkins nodes on Mesos.
    *
-   * <p>The provisioning follows the Nomad plugin. The Jenkins agnets is started as a Mesos task and
+   * <p>The provisioning follows the Nomad plugin. The Jenkins agents is started as a Mesos task and
    * added to the available Jenkins nodes. This differs from the old plugin when the provision
    * method would return immediately.
    *
@@ -94,8 +97,12 @@ public class MesosCloud extends AbstractCloudImpl {
    */
   @Override
   public boolean canProvision(Label label) {
-    // TODO: implement executor limits
-    return true;
+    for (MesosAgentSpec spec : this.mesosAgentSpecs) {
+      if (label.matches(spec.getLabelSet())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public MesosApi getMesosClient() {

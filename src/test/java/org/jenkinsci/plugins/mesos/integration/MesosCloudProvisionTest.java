@@ -14,8 +14,8 @@ import hudson.slaves.NodeProvisioner;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.mesos.MesosAgent;
 import org.jenkinsci.plugins.mesos.MesosCloud;
-import org.jenkinsci.plugins.mesos.MesosSlave;
 import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +40,7 @@ public class MesosCloudProvisionTest {
   public void testJenkinsProvision(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
 
-    MesosCloud cloud = new MesosCloud(mesosCluster.getMesosUrl(), "jenkins", j.getURL().toString());
+    MesosCloud cloud = new MesosCloud(mesosCluster.getMesosUrl(), "MesosTest", "*", System.getProperty("user.name"), j.getURL().toString());
 
     int workload = 3;
     Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, workload);
@@ -48,7 +48,7 @@ public class MesosCloudProvisionTest {
     assertThat(plannedNodes, hasSize(workload));
     for (NodeProvisioner.PlannedNode node : plannedNodes) {
       // resolve all plannedNodes
-      MesosSlave agent = (MesosSlave) node.future.get();
+      MesosAgent agent = (MesosAgent) node.future.get();
 
       // ensure all plannedNodes are now running
       assertThat(agent.isRunning(), is(true));
@@ -61,9 +61,9 @@ public class MesosCloudProvisionTest {
   @Test
   public void testStartAgent(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
-    MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString());
+    MesosCloud cloud = new MesosCloud(mesosCluster.getMesosUrl(), "MesosTest", "*", System.getProperty("user.name"), j.getURL().toString());
 
-    MesosSlave agent = (MesosSlave) cloud.startAgent().get();
+    MesosAgent agent = (MesosAgent) cloud.startAgent().get();
 
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
 
