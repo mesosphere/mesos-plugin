@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.kohsuke.stapler.HttpResponse;
 
+import java.io.IOException;
+
 /** The running state of a {@link hudson.model.Node} or rather {@link MesosSlave} in our case. */
 public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
 
@@ -51,5 +53,15 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
   @Override
   public MesosSlave getNode() {
     return super.getNode();
+  }
+
+  @Override
+  public HttpResponse doDoDelete() {
+    try {
+      getNode().terminate();
+    } catch (Exception e) {
+      logger.warn("Error killing " + getNode().getPodId());
+    }
+    return HttpRedirect{".."};
   }
 }
