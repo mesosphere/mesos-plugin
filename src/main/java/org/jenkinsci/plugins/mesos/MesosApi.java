@@ -45,7 +45,7 @@ public class MesosApi {
   private final ActorMaterializer materializer;
   private final ExecutionContext context;
 
-  private final Integer IDLE_TERMINATION_IN_MIN = 5;
+  private final Integer IDLE_TERMINATION_IN_MIN = 1;
 
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
@@ -138,6 +138,7 @@ public class MesosApi {
             jenkinsUrl,
             "label",
             IDLE_TERMINATION_IN_MIN,
+            true,
             List.of());
     PodSpec spec = mesosSlave.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));

@@ -85,4 +85,19 @@ public class MesosSlaveLifecycleTest {
     await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
     assertThat(agent.isKilled(), is(true));
   }
+
+  @Test
+  public void testRetentionStrategy(TestUtils.JenkinsRule j) throws Exception {
+    MesosCloud cloud = new MesosCloud("mesos", mesosCluster.getMesosUrl(), j.getURL().toString());
+
+    MesosSlave agent = (MesosSlave) cloud.startAgent().get();
+    agent.waitUntilOnlineAsync().get();
+
+    assertThat(agent.isRunning(), is(true));
+    assertThat(agent.getComputer().isOnline(), is(true));
+    assertThat(agent.getComputer().isIdle(), is(true));
+
+    //after 1 minute MesosRetentionStrategy will kill the task
+    await().atMost(2, TimeUnit.MINUTES).until(agent::isKilled);
+  }
 }

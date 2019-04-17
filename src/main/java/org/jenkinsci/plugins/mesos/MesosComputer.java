@@ -28,6 +28,13 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
   @Override
   public void taskAccepted(Executor executor, Queue.Task task) {
     super.taskAccepted(executor, task);
+    if (!reusable) {
+      // single use computer will only accept one task, after completing task it will go idle and be
+      // killed by MesosRetentionStrategy
+      logger.warn(
+          " Computer " + this + ": is no longer accepting tasks and was marked as single-use");
+      setAcceptingTasks(false);
+    }
     logger.info(" Computer " + this + ": task accepted");
   }
 
