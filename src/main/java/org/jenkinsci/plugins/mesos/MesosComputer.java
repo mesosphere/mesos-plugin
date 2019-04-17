@@ -12,6 +12,7 @@ public class MesosComputer extends AbstractCloudComputer<MesosAgent> {
   private static final Logger logger = LoggerFactory.getLogger(MesosComputer.class);
 
   private final Boolean reusable;
+
   /**
    * Constructs a new computer. This is called by {@link MesosAgent#createComputer()}.
    *

@@ -12,8 +12,8 @@ import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.labels.LabelAtom;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosAgent;
+import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +38,9 @@ public class MesosAgentLifecycleTest {
   public void testAgentLifecycle(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
     String mesosUrl = mesosCluster.getMesosUrl();
-    MesosCloud cloud = new MesosCloud(mesosUrl, "MesosTest", "*", System.getProperty("user.name"), j.getURL().toString());
+    MesosCloud cloud =
+        new MesosCloud(
+            mesosUrl, "MesosTest", "*", System.getProperty("user.name"), j.getURL().toString());
 
     MesosAgent agent = (MesosAgent) cloud.startAgent().get();
     agent.waitUntilOnlineAsync().get();

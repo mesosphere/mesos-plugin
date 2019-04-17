@@ -46,7 +46,8 @@ class MesosApiTest {
     URL jenkinsUrl = j.getURL();
 
     String mesosUrl = mesosCluster.getMesosUrl();
-    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"),  "MesosTest","*");
+    MesosApi api =
+        new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
 
     MesosAgent agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
 
@@ -58,7 +59,8 @@ class MesosApiTest {
 
     String mesosUrl = mesosCluster.getMesosUrl();
     URL jenkinsUrl = j.getURL();
-    MesosApi api = new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
+    MesosApi api =
+        new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
 
     MesosAgent agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
     // Poll state until we get something.

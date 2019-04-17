@@ -11,6 +11,7 @@ import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.labels.LabelAtom;
 import hudson.slaves.NodeProvisioner;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
@@ -40,7 +41,14 @@ public class MesosCloudProvisionTest {
   public void testJenkinsProvision(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
 
-    MesosCloud cloud = new MesosCloud(mesosCluster.getMesosUrl(), "MesosTest", "*", System.getProperty("user.name"), j.getURL().toString());
+    MesosCloud cloud =
+        new MesosCloud(
+            mesosCluster.getMesosUrl(),
+            "MesosTest",
+            "*",
+            System.getProperty("user.name"),
+            j.getURL().toString(),
+            new ArrayList<>());
 
     int workload = 3;
     Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, workload);
@@ -61,7 +69,14 @@ public class MesosCloudProvisionTest {
   @Test
   public void testStartAgent(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
-    MesosCloud cloud = new MesosCloud(mesosCluster.getMesosUrl(), "MesosTest", "*", System.getProperty("user.name"), j.getURL().toString());
+    MesosCloud cloud =
+        new MesosCloud(
+            mesosCluster.getMesosUrl(),
+            "MesosTest",
+            "*",
+            System.getProperty("user.name"),
+            j.getURL().toString(),
+            new ArrayList<>());
 
     MesosAgent agent = (MesosAgent) cloud.startAgent().get();
 

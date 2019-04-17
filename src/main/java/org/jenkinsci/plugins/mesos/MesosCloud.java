@@ -2,17 +2,21 @@ package org.jenkinsci.plugins.mesos;
 
 import hudson.Extension;
 import hudson.model.Descriptor;
+import hudson.model.Descriptor.FormException;
 import hudson.model.Label;
 import hudson.model.Node;
 import hudson.slaves.AbstractCloudImpl;
 import hudson.slaves.Cloud;
 import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.*;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.NotImplementedException;
@@ -43,7 +47,12 @@ public class MesosCloud extends AbstractCloudImpl {
 
   @DataBoundConstructor
   public MesosCloud(
-      String mesosMasterUrl, String frameworkName, String role, String agentUser, String jenkinsUrl, List<MesosAgentSpec> mesosAgentSpecs)
+      String mesosMasterUrl,
+      String frameworkName,
+      String role,
+      String agentUser,
+      String jenkinsUrl,
+      List<MesosAgentSpec> mesosAgentSpecs)
       throws InterruptedException, ExecutionException, MalformedURLException {
     super("MesosCloud", null);
 
@@ -73,15 +82,13 @@ public class MesosCloud extends AbstractCloudImpl {
     while (excessWorkload > 0) {
       try {
         logger.info(
-            "Excess workload of "
-                + excessWorkload
-                + ", provisioning new Jenkins slave on Mesos cluster");
-        String slaveName = "undefined";
-
-        nodes.add(new NodeProvisioner.PlannedNode(slaveName, startAgent(), 1));
+            "Excess workload of {} provisioning new Jenkins agent on Mesos cluster",
+            excessWorkload);
+        String agentName = String.format("jenkins-test-%s", UUID.randomUUID().toString());
+        nodes.add(new NodeProvisioner.PlannedNode(agentName, startAgent(agentName), 1));
         excessWorkload--;
       } catch (Exception ex) {
-        logger.warn("could not create planned Node");
+        logger.warn("could not create planned Node", ex);
       }
     }
 
@@ -114,17 +121,25 @@ public class MesosCloud extends AbstractCloudImpl {
    *
    * <p>Provide a callback for Jenkins to start a Node.
    *
+   * @param name Name of the Jenkins agent and Mesos task
    * @return A future reference to the launched node.
    */
-  public Future<Node> startAgent() throws Exception {
+  public Future<Node> startAgent(String name)
+      throws IOException, FormException, URISyntaxException {
     return mesos
-        .enqueueAgent(this, 0.1, 32)
+        .enqueueAgent(this, name, 0.1, 32)
         .thenCompose(
-            mesosSlave -> {
+            mesosAgent -> {
               try {
-                Jenkins.getInstanceOrNull().addNode(mesosSlave);
-                logger.info("waiting for slave to come online...");
-                return mesosSlave.waitUntilOnlineAsync();
+                Jenkins.getInstanceOrNull().addNode(mesosAgent);
+                logger.info("waiting for node to come online...");
+                return mesosAgent
+                    .waitUntilOnlineAsync()
+                    .thenApply(
+                        node -> {
+                          logger.info("Agent {} is online", name);
+                          return node;
+                        });
               } catch (Exception ex) {
                 throw new CompletionException(ex);
               }

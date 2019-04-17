@@ -39,22 +39,17 @@ public class MesosApi {
   private final String frameworkId;
   private final URL jenkinsUrl;
 
-  @XStreamOmitField
-  private final MesosClient client;
+  @XStreamOmitField private final MesosClient client;
 
-  @XStreamOmitField
-  private final SourceQueueWithComplete<SpecUpdated> updates;
+  @XStreamOmitField private final SourceQueueWithComplete<SpecUpdated> updates;
 
   private final ConcurrentHashMap<PodId, MesosAgent> stateMap;
 
-  @XStreamOmitField
-  private final ActorSystem system;
+  @XStreamOmitField private final ActorSystem system;
 
-  @XStreamOmitField
-  private final ActorMaterializer materializer;
+  @XStreamOmitField private final ActorMaterializer materializer;
 
-  @XStreamOmitField
-  private final ExecutionContext context;
+  @XStreamOmitField private final ExecutionContext context;
 
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
@@ -141,10 +136,10 @@ public class MesosApi {
    *
    * @return a {@link MesosAgent} once it's queued for running.
    */
-  public CompletionStage<MesosAgent> enqueueAgent(MesosCloud cloud, double cpu, int mem)
+  public CompletionStage<MesosAgent> enqueueAgent(
+      MesosCloud cloud, String name, double cpu, int mem)
       throws IOException, FormException, URISyntaxException {
 
-    String name = String.format("jenkins-test-%s", UUID.randomUUID().toString());
     MesosAgent mesosAgent =
         new MesosAgent(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", new ArrayList());
     PodSpec spec = mesosAgent.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
@@ -157,7 +152,8 @@ public class MesosApi {
 
   /** Establish a connection to Mesos via the v1 client. */
   private CompletableFuture<MesosClient> connectClient(MesosClientSettings clientSettings) {
-    Protos.FrameworkID frameworkId = Protos.FrameworkID.newBuilder().setValue(this.frameworkId).build();
+    Protos.FrameworkID frameworkId =
+        Protos.FrameworkID.newBuilder().setValue(this.frameworkId).build();
     Protos.FrameworkInfo frameworkInfo =
         Protos.FrameworkInfo.newBuilder()
             .setUser(this.agentUser)
