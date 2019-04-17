@@ -4,7 +4,7 @@ import hudson.model.Descriptor;
 import hudson.slaves.CloudRetentionStrategy;
 import hudson.slaves.RetentionStrategy;
 
-/**  A strategy to terminate idle {@link MesosComputer} */
+/** A strategy to terminate idle {@link MesosComputer} */
 public class MesosRetentionStrategy extends CloudRetentionStrategy {
   /**
    * Constructs a new {@link hudson.slaves.CloudRetentionStrategy}. This is called by {@link

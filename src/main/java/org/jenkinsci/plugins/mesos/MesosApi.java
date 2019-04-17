@@ -138,6 +138,7 @@ public class MesosApi {
             jenkinsUrl,
             "label",
             IDLE_TERMINATION_IN_MIN,
+            true,
             List.of());
     PodSpec spec = mesosSlave.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));

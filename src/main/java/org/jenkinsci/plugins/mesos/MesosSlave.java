@@ -52,6 +52,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
       URL jenkinsUrl,
       String labelString,
       Integer idleTerminationInMinutes,
+      Boolean reusable,
       List<? extends NodeProperty<?>> nodeProperties)
       throws Descriptor.FormException, IOException {
     super(
@@ -66,7 +67,7 @@ public class MesosSlave extends AbstractCloudSlave implements EphemeralNode {
         nodeProperties);
     // pass around the MesosApi connection via MesosCloud
     this.cloud = cloud;
-    this.reusable = true;
+    this.reusable = reusable;
     this.podId = id;
     this.jenkinsUrl = jenkinsUrl;
   }
