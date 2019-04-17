@@ -3,8 +3,10 @@ package org.jenkinsci.plugins.mesos;
 import hudson.model.Executor;
 import hudson.model.Queue;
 import hudson.slaves.AbstractCloudComputer;
+import org.kohsuke.stapler.HttpRedirect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.kohsuke.stapler.HttpResponse;
 
 /** The running state of a {@link hudson.model.Node} or rather {@link MesosSlave} in our case. */
 public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
@@ -44,5 +46,10 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
   @Override
   public String toString() {
     return String.format("%s (slave: %s)", getName(), getNode());
+  }
+
+  @Override
+  public MesosSlave getNode() {
+    return super.getNode();
   }
 }
