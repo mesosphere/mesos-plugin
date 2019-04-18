@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.mesos;
 
-import static java.lang.Math.log;
 import static java.lang.Math.toIntExact;
 
 import hudson.Extension;
@@ -20,9 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.*;
-import javax.swing.text.html.Option;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.NotImplementedException;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -48,7 +45,7 @@ public class MesosCloud extends AbstractCloudImpl {
 
   private final URL jenkinsUrl;
 
-  private final List<MesosAgentSpec> mesosAgentSpecs;
+  private final List<MesosAgentSpecTemplate> mesosAgentSpecTemplates;
 
   @DataBoundConstructor
   public MesosCloud(
@@ -57,14 +54,14 @@ public class MesosCloud extends AbstractCloudImpl {
       String role,
       String agentUser,
       String jenkinsUrl,
-      List<MesosAgentSpec> mesosAgentSpecs)
+      List<MesosAgentSpecTemplate> mesosAgentSpecTemplates)
       throws InterruptedException, ExecutionException, MalformedURLException {
     super("MesosCloud", null);
 
     this.mesosMasterUrl = new URL(mesosMasterUrl);
     this.jenkinsUrl = new URL(jenkinsUrl);
     this.agentUser = agentUser; // TODO: default to system user
-    this.mesosAgentSpecs = mesosAgentSpecs;
+    this.mesosAgentSpecTemplates = mesosAgentSpecTemplates;
 
     mesos = new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
   }
@@ -83,7 +80,8 @@ public class MesosCloud extends AbstractCloudImpl {
   @Override
   public Collection<NodeProvisioner.PlannedNode> provision(Label label, int excessWorkload) {
     List<NodeProvisioner.PlannedNode> nodes = new ArrayList<>();
-    final MesosAgentSpec spec = getSpecForLabel(label).get(); // TODO: handle case when optinal is empty.
+    final MesosAgentSpecTemplate spec =
+        getSpecForLabel(label).get(); // TODO: handle case when optinal is empty.
 
     while (excessWorkload > 0) {
       try {
@@ -115,9 +113,9 @@ public class MesosCloud extends AbstractCloudImpl {
     return getSpecForLabel(label).isPresent();
   }
 
-  /** @return the {@link MesosAgentSpec} for passed label or empty optional. */
-  private Optional<MesosAgentSpec> getSpecForLabel(Label label) {
-    for (MesosAgentSpec spec : this.mesosAgentSpecs) {
+  /** @return the {@link MesosAgentSpecTemplate} for passed label or empty optional. */
+  private Optional<MesosAgentSpecTemplate> getSpecForLabel(Label label) {
+    for (MesosAgentSpecTemplate spec : this.mesosAgentSpecTemplates) {
       if (label.matches(spec.getLabelSet())) {
         return Optional.of(spec);
       }
@@ -131,10 +129,10 @@ public class MesosCloud extends AbstractCloudImpl {
    * <p>Provide a callback for Jenkins to start a Node.
    *
    * @param name Name of the Jenkins name and Mesos task.
-   * @param spec The {@link MesosAgentSpec} that was configured for the Jenkins node.
+   * @param spec The {@link MesosAgentSpecTemplate} that was configured for the Jenkins node.
    * @return A future reference to the launched node.
    */
-  public Future<Node> startAgent(String name, MesosAgentSpec spec)
+  public Future<Node> startAgent(String name, MesosAgentSpecTemplate spec)
       throws IOException, FormException, URISyntaxException {
     return mesos
         .enqueueAgent(this, name, spec)

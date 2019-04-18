@@ -24,8 +24,8 @@
 
     <f:advanced>
       <f:entry title="Agent Specs">
-          <f:repeatable field="mesosAgentSpecs">
-            <st:include page="/org/jenkinsci/plugins/mesos/MesosAgentSpec/config.jelly" class="org.jenkinsci.plugins.mesos.MesosAgentSpec$DescriptorImpl"/>
+          <f:repeatable field="mesosAgentSpecTemplates">
+            <st:include page="/org/jenkinsci/plugins/mesos/MesosAgentSpecTemplate/config.jelly" class="org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate$DescriptorImpl"/>
           </f:repeatable>
       </f:entry>
     </f:advanced>

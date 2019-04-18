@@ -15,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Credit where's credit due @antweiss for nomad-plugin, @kostyasha for
- * yet-another-docker-plugin and @stephenc for mansion-cloud.
+ * Credit where's credit due @antweiss for nomad-plugin, @kostyasha for yet-another-docker-plugin
+ * and @stephenc for mansion-cloud.
  *
  * @author jeschkies
  */

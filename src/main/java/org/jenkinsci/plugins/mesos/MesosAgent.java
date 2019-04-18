@@ -45,12 +45,12 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
 
   private final URL jenkinsUrl;
 
-  private final MesosAgentSpec spec;
+  private final MesosAgentSpecTemplate spec;
 
   public MesosAgent(
       MesosCloud cloud,
       String name,
-      MesosAgentSpec spec,
+      MesosAgentSpecTemplate spec,
       String nodeDescription,
       URL jenkinsUrl,
       List<? extends NodeProperty<?>> nodeProperties)
@@ -124,8 +124,7 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
     return (!isKilled() && !isOnline());
   }
 
-  public PodSpec getPodSpec(Goal goal)
-      throws MalformedURLException, URISyntaxException {
+  public PodSpec getPodSpec(Goal goal) throws MalformedURLException, URISyntaxException {
     return MesosSlavePodSpec.builder()
         .withCpu(this.spec.getCpu())
         .withMemory(this.spec.getMemory())

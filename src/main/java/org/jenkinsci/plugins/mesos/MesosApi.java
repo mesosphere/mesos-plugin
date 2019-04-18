@@ -136,11 +136,13 @@ public class MesosApi {
    *
    * @return a {@link MesosAgent} once it's queued for running.
    */
-  public CompletionStage<MesosAgent> enqueueAgent(MesosCloud cloud, String name, MesosAgentSpec spec)
+  public CompletionStage<MesosAgent> enqueueAgent(
+      MesosCloud cloud, String name, MesosAgentSpecTemplate spec)
       throws IOException, FormException, URISyntaxException {
 
     MesosAgent mesosAgent =
-        new MesosAgent(cloud, name, spec, "Mesos Jenkins Slave", jenkinsUrl, Collections.emptyList());
+        new MesosAgent(
+            cloud, name, spec, "Mesos Jenkins Slave", jenkinsUrl, Collections.emptyList());
     PodSpec podSpec = mesosAgent.getPodSpec(Goal.Running$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(podSpec.id(), Option.apply(podSpec));
 

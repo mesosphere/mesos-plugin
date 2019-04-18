@@ -11,8 +11,7 @@ import java.util.UUID;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /** This is the Mesos agent pod spec config set by a user. */
-// TODO: rename to MesosAgentSpecTemplate.
-public class MesosAgentSpec extends AbstractDescribableImpl<MesosAgentSpec> {
+public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSpecTemplate> {
 
   private final String label;
   private final Set<LabelAtom> labelSet;
@@ -20,14 +19,14 @@ public class MesosAgentSpec extends AbstractDescribableImpl<MesosAgentSpec> {
   private final Node.Mode mode;
 
   @DataBoundConstructor
-  public MesosAgentSpec(String label, Node.Mode mode) {
+  public MesosAgentSpecTemplate(String label, Node.Mode mode) {
     this.label = label;
     this.labelSet = Label.parse(label);
     this.mode = mode;
   }
 
   @Extension
-  public static final class DescriptorImpl extends Descriptor<MesosAgentSpec> {
+  public static final class DescriptorImpl extends Descriptor<MesosAgentSpecTemplate> {
 
     public DescriptorImpl() {
       load();
