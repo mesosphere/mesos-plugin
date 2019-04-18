@@ -66,7 +66,7 @@ public class MesosComputer extends AbstractCloudComputer<MesosSlave> {
     try {
       getNode().terminate();
     } catch (InterruptedException e) {
-      logger.warn(" got exception " + e + "failure to delete agent" + getNode().getPodId());
+      logger.warn("Failure to terminate agent {}", getNode().getPodId(), e);
     }
     return new HttpRedirect("..");
   }
