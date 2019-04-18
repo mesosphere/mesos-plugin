@@ -79,7 +79,7 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
   public CompletableFuture<Node> waitUntilOnlineAsync() {
     return Source.tick(Duration.ofSeconds(0), Duration.ofSeconds(1), NotUsed.notUsed())
         .completionTimeout(Duration.ofMinutes(5))
-        .filter(ignored -> this.getComputer().isOnline())
+        .filter(ignored -> this.isOnline())
         .map(ignored -> this.asNode())
         .runWith(Sink.head(), this.getCloud().getMesosClient().getMaterializer())
         .toCompletableFuture();
@@ -109,6 +109,16 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
     } else {
       return false;
     }
+  }
+
+  /** @return whether the Jenkins agent connected and is online. */
+  public synchronized boolean isOnline() {
+    return this.toComputer().isOnline();
+  }
+
+  /** @return whether the agent is launching and not connected yet. */
+  public synchronized boolean isPending() {
+    return (!isKilled() && !isOnline());
   }
 
   public PodSpec getPodSpec(Double cpu, int memory, Goal goal)

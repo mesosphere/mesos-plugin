@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import scala.Option;
 import scala.collection.JavaConverters;
@@ -98,10 +99,10 @@ public class MesosSlavePodSpec {
     public PodSpec build() throws MalformedURLException, URISyntaxException {
       final RunSpec runSpec =
           new RunSpec(
-              convertListToSeq(List.of(this.cpus, this.memory)),
+              convertListToSeq(Arrays.asList(this.cpus, this.memory)),
               this.buildCommand(),
               this.role,
-              convertListToSeq(List.of(buildFetchUri())));
+              convertListToSeq(Arrays.asList(buildFetchUri())));
       return new PodSpec(this.id, this.goal, runSpec);
     }
 

@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.mesos;
 
+import static java.lang.Math.toIntExact;
+
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
@@ -84,7 +86,7 @@ public class MesosCloud extends AbstractCloudImpl {
         logger.info(
             "Excess workload of {} provisioning new Jenkins agent on Mesos cluster",
             excessWorkload);
-        String agentName = String.format("jenkins-test-%s", UUID.randomUUID().toString());
+        String agentName = String.format("jenkins-agent-%s", UUID.randomUUID().toString());
         nodes.add(new NodeProvisioner.PlannedNode(agentName, startAgent(agentName), 1));
         excessWorkload--;
       } catch (Exception ex) {
@@ -188,5 +190,10 @@ public class MesosCloud extends AbstractCloudImpl {
 
   public String getRole() {
     return "*";
+  }
+
+  /** @return Number of launching agents that are not connected yet. */
+  public synchronized int getPending() {
+    return toIntExact(mesos.getState().values().stream().filter(MesosAgent::isPending).count());
   }
 }

@@ -78,12 +78,13 @@ public class MesosCloudProvisionTest {
             j.getURL().toString(),
             new ArrayList<>());
 
-    MesosAgent agent = (MesosAgent) cloud.startAgent().get();
+    final String name = "jenkins-agent";
+    MesosAgent agent = (MesosAgent) cloud.startAgent(name).get();
 
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
 
     assertThat(agent.isRunning(), is(true));
-    assertThat(agent.toComputer().isOnline(), is(true));
+    assertThat(agent.isOnline(), is(true));
 
     // assert jenkins has the 1 added nodes
     assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(1));

@@ -197,8 +197,15 @@ public class MesosApi {
     }
   }
 
+  // Getters
+
   /** @return the name of the registered Mesos framework. */
   public String getFrameworkName() {
     return this.frameworkName;
+  }
+
+  /** @return the current state map. */
+  public Map<PodId, MesosAgent> getState() {
+    return Collections.unmodifiableMap(this.stateMap);
   }
 }

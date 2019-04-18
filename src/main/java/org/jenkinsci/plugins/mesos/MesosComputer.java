@@ -26,20 +26,20 @@ public class MesosComputer extends AbstractCloudComputer<MesosAgent> {
   @Override
   public void taskAccepted(Executor executor, Queue.Task task) {
     super.taskAccepted(executor, task);
-    logger.info(" Computer " + this + ": task accepted");
+    logger.info("Computer {}: task accepted", this);
   }
 
   @Override
   public void taskCompleted(Executor executor, Queue.Task task, long durationMS) {
     super.taskCompleted(executor, task, durationMS);
-    logger.info(" Computer " + this + ": task completed");
+    logger.info("Computer {}: task completed", this);
   }
 
   @Override
   public void taskCompletedWithProblems(
       Executor executor, Queue.Task task, long durationMS, Throwable problems) {
     super.taskCompletedWithProblems(executor, task, durationMS, problems);
-    logger.warn(" Computer " + this + " task completed with problems");
+    logger.warn("Computer {} task completed with problems", this);
   }
 
   @Override

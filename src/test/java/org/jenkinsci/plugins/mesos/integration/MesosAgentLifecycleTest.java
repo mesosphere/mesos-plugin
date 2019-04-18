@@ -10,6 +10,7 @@ import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.labels.LabelAtom;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.mesos.MesosAgent;
@@ -40,9 +41,15 @@ public class MesosAgentLifecycleTest {
     String mesosUrl = mesosCluster.getMesosUrl();
     MesosCloud cloud =
         new MesosCloud(
-            mesosUrl, "MesosTest", "*", System.getProperty("user.name"), j.getURL().toString());
+            mesosUrl,
+            "MesosTest",
+            "*",
+            System.getProperty("user.name"),
+            j.getURL().toString(),
+            new ArrayList<>());
 
-    MesosAgent agent = (MesosAgent) cloud.startAgent().get();
+    final String name = "jenkins-lifecycle";
+    MesosAgent agent = (MesosAgent) cloud.startAgent(name).get();
     agent.waitUntilOnlineAsync().get();
 
     // verify slave is running when the future completes;

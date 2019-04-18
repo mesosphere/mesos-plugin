@@ -45,11 +45,12 @@ class MesosApiTest {
 
     URL jenkinsUrl = j.getURL();
 
-    String mesosUrl = mesosCluster.getMesosUrl();
+    URL mesosUrl = new URL(mesosCluster.getMesosUrl());
     MesosApi api =
         new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
 
-    MesosAgent agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
+    final String name = "jenkins-start-agent";
+    MesosAgent agent = api.enqueueAgent(null, name, 0.1, 32).toCompletableFuture().get();
 
     Awaitility.await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
   }
@@ -57,12 +58,13 @@ class MesosApiTest {
   @Test
   public void stopAgent(JenkinsRule j) throws Exception {
 
-    String mesosUrl = mesosCluster.getMesosUrl();
+    URL mesosUrl = new URL(mesosCluster.getMesosUrl());
     URL jenkinsUrl = j.getURL();
     MesosApi api =
         new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
 
-    MesosAgent agent = api.enqueueAgent(null, 0.1, 32).toCompletableFuture().get();
+    final String name = "jenkins-stop-agent";
+    MesosAgent agent = api.enqueueAgent(null, name, 0.1, 32).toCompletableFuture().get();
     // Poll state until we get something.
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
     assertThat(agent.isRunning(), equalTo(true));
