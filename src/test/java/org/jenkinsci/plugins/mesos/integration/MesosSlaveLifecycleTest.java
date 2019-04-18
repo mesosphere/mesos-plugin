@@ -98,6 +98,6 @@ public class MesosSlaveLifecycleTest {
     assertThat(agent.getComputer().isIdle(), is(true));
 
     // after 1 minute MesosRetentionStrategy will kill the task
-    await().atMost(2, TimeUnit.MINUTES).until(agent::isKilled);
+    await().atMost(3, TimeUnit.MINUTES).until(agent::isKilled);
   }
 }
