@@ -45,29 +45,32 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
 
   private final URL jenkinsUrl;
 
+  private final MesosAgentSpec spec;
+
   public MesosAgent(
       MesosCloud cloud,
-      String id,
+      String name,
+      MesosAgentSpec spec,
       String nodeDescription,
       URL jenkinsUrl,
-      String labelString,
       List<? extends NodeProperty<?>> nodeProperties)
       throws Descriptor.FormException, IOException {
     super(
-        id,
+        name,
         nodeDescription,
         "jenkins",
         1,
-        Mode.NORMAL,
-        labelString,
+        spec.getMode(),
+        spec.getLabel(),
         new JNLPLauncher(),
         null,
         nodeProperties);
     // pass around the MesosApi connection via MesosCloud
     this.cloud = cloud;
     this.reusable = true;
-    this.podId = id;
+    this.podId = name;
     this.jenkinsUrl = jenkinsUrl;
+    this.spec = spec;
   }
 
   /**
@@ -121,11 +124,11 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
     return (!isKilled() && !isOnline());
   }
 
-  public PodSpec getPodSpec(Double cpu, int memory, Goal goal)
+  public PodSpec getPodSpec(Goal goal)
       throws MalformedURLException, URISyntaxException {
     return MesosSlavePodSpec.builder()
-        .withCpu(cpu)
-        .withMemory(memory)
+        .withCpu(this.spec.getCpu())
+        .withMemory(this.spec.getMemory())
         .withName(this.name)
         .withJenkinsUrl(this.jenkinsUrl)
         .withGoal(goal)
@@ -162,7 +165,7 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
       Jenkins.getInstanceOrNull().removeNode(this);
       this.getCloud().getMesosClient().killAgent(this.podId);
     } catch (Exception ex) {
-      logger.warn("error when killing task {}", this.podId);
+      logger.warn("error when killing task {}", this.podId, ex);
     }
   }
 

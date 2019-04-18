@@ -125,7 +125,7 @@ public class MesosApi {
    * @return a {@link MesosAgent} once it's queued for running.
    */
   public CompletionStage<Void> killAgent(String id) throws Exception {
-    PodSpec spec = stateMap.get(new PodId(id)).getPodSpec(0.1, 32, Goal.Terminal$.MODULE$);
+    PodSpec spec = stateMap.get(new PodId(id)).getPodSpec(Goal.Terminal$.MODULE$);
     SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
     return updates.offer(update).thenRun(() -> {});
   }
@@ -136,16 +136,15 @@ public class MesosApi {
    *
    * @return a {@link MesosAgent} once it's queued for running.
    */
-  public CompletionStage<MesosAgent> enqueueAgent(
-      MesosCloud cloud, String name, double cpu, int mem)
+  public CompletionStage<MesosAgent> enqueueAgent(MesosCloud cloud, String name, MesosAgentSpec spec)
       throws IOException, FormException, URISyntaxException {
 
     MesosAgent mesosAgent =
-        new MesosAgent(cloud, name, "Mesos Jenkins Slave", jenkinsUrl, "label", new ArrayList());
-    PodSpec spec = mesosAgent.getPodSpec(cpu, mem, Goal.Running$.MODULE$);
-    SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
+        new MesosAgent(cloud, name, spec, "Mesos Jenkins Slave", jenkinsUrl, Collections.emptyList());
+    PodSpec podSpec = mesosAgent.getPodSpec(Goal.Running$.MODULE$);
+    SpecUpdated update = new PodSpecUpdated(podSpec.id(), Option.apply(podSpec));
 
-    stateMap.put(spec.id(), mesosAgent);
+    stateMap.put(podSpec.id(), mesosAgent);
     // async add agent to queue
     return updates.offer(update).thenApply(result -> mesosAgent); // TODO: handle QueueOfferResult.
   }

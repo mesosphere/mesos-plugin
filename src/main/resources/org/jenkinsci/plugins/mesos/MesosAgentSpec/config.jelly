@@ -8,6 +8,8 @@
             <f:textbox default="${instance == null ? 'mesos' : ''}"/>
         </f:entry>
 
+        <f:slave-mode name="mode" node="${instance}" />
+
     </table>
 
 </j:jelly>
