@@ -35,7 +35,6 @@ public class MesosProvisioningStrategy extends NodeProvisioner.Strategy {
   @Override
   public NodeProvisioner.StrategyDecision apply(
       @Nonnull NodeProvisioner.StrategyState strategyState) {
-    System.out.println("+++++++++ Provisioning strategy");
     final Label label = strategyState.getLabel();
     final LoadStatisticsSnapshot snapshot = strategyState.getSnapshot();
 

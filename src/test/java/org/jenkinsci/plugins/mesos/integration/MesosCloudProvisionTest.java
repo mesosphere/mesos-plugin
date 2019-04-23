@@ -96,18 +96,4 @@ public class MesosCloudProvisionTest {
     // assert jenkins has the 1 added nodes
     assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(1));
   }
-
-  //  @Test
-  //  public void runSimpleBuild(TestUtils.JenkinsRule j) throws Exception {
-  //
-  //    // Given: a project with a simple build command.
-  //    FreeStyleProject project = j.createFreeStyleProject("mesos-test");
-  //    final Builder step = new Shell("echo Hello");
-  //    project.getBuildersList().add(step);
-  //    project.setAssignedLabel(new LabelAtom("mesos"));
-  //
-  //    FreeStyleBuild build = j.buildAndAssertSuccess(project);
-  //
-  //    j.assertLogContains("echo Hello", build);
-  //  }
 }
