@@ -6,7 +6,9 @@ import hudson.slaves.AbstractCloudComputer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** The running state of a {@link hudson.model.Node} or rather {@link MesosJenkinsAgent} in our case. */
+/**
+ * The running state of a {@link hudson.model.Node} or rather {@link MesosJenkinsAgent} in our case.
+ */
 public class MesosComputer extends AbstractCloudComputer<MesosJenkinsAgent> {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosComputer.class);

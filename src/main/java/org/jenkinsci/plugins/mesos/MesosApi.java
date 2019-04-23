@@ -148,7 +148,9 @@ public class MesosApi {
 
     stateMap.put(podSpec.id(), mesosJenkinsAgent);
     // async add agent to queue
-    return updates.offer(update).thenApply(result -> mesosJenkinsAgent); // TODO: handle QueueOfferResult.
+    return updates
+        .offer(update)
+        .thenApply(result -> mesosJenkinsAgent); // TODO: handle QueueOfferResult.
   }
 
   /** Establish a connection to Mesos via the v1 client. */

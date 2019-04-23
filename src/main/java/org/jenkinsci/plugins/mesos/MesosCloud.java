@@ -81,7 +81,7 @@ public class MesosCloud extends AbstractCloudImpl {
   public Collection<NodeProvisioner.PlannedNode> provision(Label label, int excessWorkload) {
     List<NodeProvisioner.PlannedNode> nodes = new ArrayList<>();
     final MesosAgentSpecTemplate spec =
-        getSpecForLabel(label).get(); // TODO: handle case when optinal is empty.
+        getSpecForLabel(label).get(); // TODO: handle case when optional is empty.
 
     while (excessWorkload > 0) {
       try {
@@ -200,7 +200,8 @@ public class MesosCloud extends AbstractCloudImpl {
 
   /** @return Number of launching agents that are not connected yet. */
   public synchronized int getPending() {
-    return toIntExact(mesosApi.getState().values().stream().filter(MesosJenkinsAgent::isPending).count());
+    return toIntExact(
+        mesosApi.getState().values().stream().filter(MesosJenkinsAgent::isPending).count());
   }
 
   public MesosApi getMesosApi() {

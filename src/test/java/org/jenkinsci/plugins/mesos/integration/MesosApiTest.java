@@ -9,14 +9,16 @@ import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Descriptor.FormException;
+import hudson.model.Node.Mode;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
-import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
+import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosApi;
+import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.TestUtils.JenkinsParameterResolver;
 import org.jenkinsci.plugins.mesos.TestUtils.JenkinsRule;
 import org.junit.jupiter.api.Test;
@@ -50,7 +52,8 @@ class MesosApiTest {
         new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
 
     final String name = "jenkins-start-agent";
-    MesosJenkinsAgent agent = api.enqueueAgent(null, name, 0.1, 32).toCompletableFuture().get();
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    MesosJenkinsAgent agent = api.enqueueAgent(null, name, spec).toCompletableFuture().get();
 
     Awaitility.await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
   }
@@ -64,7 +67,8 @@ class MesosApiTest {
         new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
 
     final String name = "jenkins-stop-agent";
-    MesosJenkinsAgent agent = api.enqueueAgent(null, name, 0.1, 32).toCompletableFuture().get();
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    MesosJenkinsAgent agent = api.enqueueAgent(null, name, spec).toCompletableFuture().get();
     // Poll state until we get something.
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
     assertThat(agent.isRunning(), equalTo(true));

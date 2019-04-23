@@ -9,14 +9,17 @@ import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
+import hudson.model.Node.Mode;
 import hudson.model.labels.LabelAtom;
 import hudson.slaves.NodeProvisioner;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
+import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosCloud;
+import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +43,9 @@ public class MesosCloudProvisionTest {
   @Test
   public void testJenkinsProvision(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
+    final MesosAgentSpecTemplate spec =
+        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE);
+    List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
 
     MesosCloud cloud =
         new MesosCloud(
@@ -48,7 +54,7 @@ public class MesosCloudProvisionTest {
             "*",
             System.getProperty("user.name"),
             j.getURL().toString(),
-            new ArrayList<>());
+            specTemplates);
 
     int workload = 3;
     Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, workload);
@@ -68,7 +74,9 @@ public class MesosCloudProvisionTest {
 
   @Test
   public void testStartAgent(TestUtils.JenkinsRule j) throws Exception {
-    LabelAtom label = new LabelAtom("label");
+    final String name = "jenkins-agent";
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
     MesosCloud cloud =
         new MesosCloud(
             mesosCluster.getMesosUrl(),
@@ -76,10 +84,9 @@ public class MesosCloudProvisionTest {
             "*",
             System.getProperty("user.name"),
             j.getURL().toString(),
-            new ArrayList<>());
+            specTemplates);
 
-    final String name = "jenkins-agent";
-    MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name).get();
+    MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
 
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
 
@@ -89,4 +96,18 @@ public class MesosCloudProvisionTest {
     // assert jenkins has the 1 added nodes
     assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(1));
   }
+
+  //  @Test
+  //  public void runSimpleBuild(TestUtils.JenkinsRule j) throws Exception {
+  //
+  //    // Given: a project with a simple build command.
+  //    FreeStyleProject project = j.createFreeStyleProject("mesos-test");
+  //    final Builder step = new Shell("echo Hello");
+  //    project.getBuildersList().add(step);
+  //    project.setAssignedLabel(new LabelAtom("mesos"));
+  //
+  //    FreeStyleBuild build = j.buildAndAssertSuccess(project);
+  //
+  //    j.assertLogContains("echo Hello", build);
+  //  }
 }
