@@ -6,21 +6,21 @@ import hudson.slaves.AbstractCloudComputer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** The running state of a {@link hudson.model.Node} or rather {@link MesosAgent} in our case. */
-public class MesosComputer extends AbstractCloudComputer<MesosAgent> {
+/** The running state of a {@link hudson.model.Node} or rather {@link MesosJenkinsAgent} in our case. */
+public class MesosComputer extends AbstractCloudComputer<MesosJenkinsAgent> {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosComputer.class);
 
   private final Boolean reusable;
 
   /**
-   * Constructs a new computer. This is called by {@link MesosAgent#createComputer()}.
+   * Constructs a new computer. This is called by {@link MesosJenkinsAgent#createComputer()}.
    *
-   * @param slave The {@link hudson.model.Node} this computer belongs to.
+   * @param agent The {@link hudson.model.Node} this computer belongs to.
    */
-  public MesosComputer(MesosAgent slave) {
-    super(slave);
-    this.reusable = slave.getReusable();
+  public MesosComputer(MesosJenkinsAgent agent) {
+    super(agent);
+    this.reusable = agent.getReusable();
   }
 
   @Override

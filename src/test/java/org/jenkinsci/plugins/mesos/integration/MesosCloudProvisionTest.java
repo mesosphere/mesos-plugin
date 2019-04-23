@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.mesos.MesosAgent;
+import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -56,7 +56,7 @@ public class MesosCloudProvisionTest {
     assertThat(plannedNodes, hasSize(workload));
     for (NodeProvisioner.PlannedNode node : plannedNodes) {
       // resolve all plannedNodes
-      MesosAgent agent = (MesosAgent) node.future.get();
+      MesosJenkinsAgent agent = (MesosJenkinsAgent) node.future.get();
 
       // ensure all plannedNodes are now running
       assertThat(agent.isRunning(), is(true));
@@ -79,7 +79,7 @@ public class MesosCloudProvisionTest {
             new ArrayList<>());
 
     final String name = "jenkins-agent";
-    MesosAgent agent = (MesosAgent) cloud.startAgent(name).get();
+    MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name).get();
 
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
 

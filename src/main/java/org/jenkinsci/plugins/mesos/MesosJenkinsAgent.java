@@ -30,9 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Representation of a Jenkins node on Mesos. */
-public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
+public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNode {
 
-  private static final Logger logger = LoggerFactory.getLogger(MesosAgent.class);
+  private static final Logger logger = LoggerFactory.getLogger(MesosJenkinsAgent.class);
 
   // Holds the current USI status for this agent.
   Optional<PodStatus> currentStatus = Optional.empty();
@@ -47,7 +47,7 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
 
   private final MesosAgentSpecTemplate spec;
 
-  public MesosAgent(
+  public MesosJenkinsAgent(
       MesosCloud cloud,
       String name,
       MesosAgentSpecTemplate spec,
@@ -84,7 +84,7 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
         .completionTimeout(Duration.ofMinutes(5))
         .filter(ignored -> this.isOnline())
         .map(ignored -> this.asNode())
-        .runWith(Sink.head(), this.getCloud().getMesosClient().getMaterializer())
+        .runWith(Sink.head(), this.getCloud().getMesosApi().getMaterializer())
         .toCompletableFuture();
   }
 
@@ -162,7 +162,7 @@ public class MesosAgent extends AbstractCloudSlave implements EphemeralNode {
       logger.info("killing task {}", this.podId);
       // create a terminating spec for this pod
       Jenkins.getInstanceOrNull().removeNode(this);
-      this.getCloud().getMesosClient().killAgent(this.podId);
+      this.getCloud().getMesosApi().killAgent(this.podId);
     } catch (Exception ex) {
       logger.warn("error when killing task {}", this.podId, ex);
     }

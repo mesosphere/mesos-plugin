@@ -13,7 +13,7 @@ import hudson.model.labels.LabelAtom;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.mesos.MesosAgent;
+import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @ExtendWith(TestUtils.JenkinsParameterResolver.class)
-public class MesosAgentLifecycleTest {
+public class MesosJenkinsAgentLifecycleTest {
 
   @RegisterExtension static ZookeeperServerExtension zkServer = new ZookeeperServerExtension();
 
@@ -32,7 +32,7 @@ public class MesosAgentLifecycleTest {
   static MesosClusterExtension mesosCluster =
       MesosClusterExtension.builder()
           .withMesosMasterUrl(String.format("zk://%s/mesos", zkServer.getConnectionUrl()))
-          .withLogPrefix(MesosAgentLifecycleTest.class.getCanonicalName())
+          .withLogPrefix(MesosJenkinsAgentLifecycleTest.class.getCanonicalName())
           .build(system, materializer);
 
   @Test
@@ -49,7 +49,7 @@ public class MesosAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-lifecycle";
-    MesosAgent agent = (MesosAgent) cloud.startAgent(name).get();
+    MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name).get();
     agent.waitUntilOnlineAsync().get();
 
     // verify slave is running when the future completes;

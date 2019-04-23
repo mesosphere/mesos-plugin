@@ -39,7 +39,7 @@ public class MesosCloud extends AbstractCloudImpl {
   private static final Logger logger = LoggerFactory.getLogger(MesosCloud.class);
 
   private final URL mesosMasterUrl;
-  private MesosApi mesos;
+  private MesosApi mesosApi;
 
   private final String agentUser;
 
@@ -63,7 +63,7 @@ public class MesosCloud extends AbstractCloudImpl {
     this.agentUser = agentUser; // TODO: default to system user
     this.mesosAgentSpecTemplates = mesosAgentSpecTemplates;
 
-    mesos = new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
+    mesosApi = new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
   }
 
   /**
@@ -134,7 +134,7 @@ public class MesosCloud extends AbstractCloudImpl {
    */
   public Future<Node> startAgent(String name, MesosAgentSpecTemplate spec)
       throws IOException, FormException, URISyntaxException {
-    return mesos
+    return mesosApi
         .enqueueAgent(this, name, spec)
         .thenCompose(
             mesosAgent -> {
@@ -183,7 +183,7 @@ public class MesosCloud extends AbstractCloudImpl {
   }
 
   public String getFrameworkName() {
-    return this.mesos.getFrameworkName();
+    return this.mesosApi.getFrameworkName();
   }
 
   public String getJenkinsUrl() {
@@ -200,10 +200,10 @@ public class MesosCloud extends AbstractCloudImpl {
 
   /** @return Number of launching agents that are not connected yet. */
   public synchronized int getPending() {
-    return toIntExact(mesos.getState().values().stream().filter(MesosAgent::isPending).count());
+    return toIntExact(mesosApi.getState().values().stream().filter(MesosJenkinsAgent::isPending).count());
   }
 
-  public MesosApi getMesosClient() {
-    return this.mesos;
+  public MesosApi getMesosApi() {
+    return this.mesosApi;
   }
 }
