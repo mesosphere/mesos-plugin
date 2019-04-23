@@ -7,11 +7,24 @@ import static org.hamcrest.Matchers.is;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
+import com.gargoylesoftware.htmlunit.html.DomElement;
+import com.gargoylesoftware.htmlunit.html.HtmlButton;
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
+import com.gargoylesoftware.htmlunit.html.HtmlInput;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
 import hudson.model.Node.Mode;
 import hudson.model.labels.LabelAtom;
 import hudson.slaves.NodeProvisioner;
+import hudson.tasks.Builder;
+import hudson.tasks.Shell;
+import io.webfolder.ui4j.api.browser.BrowserEngine;
+import io.webfolder.ui4j.api.browser.BrowserFactory;
+import io.webfolder.ui4j.api.browser.Page;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -21,9 +34,13 @@ import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.TestUtils;
+import org.jenkinsci.plugins.mesos.TestUtils.JenkinsRule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.runner.Description;
+import org.jvnet.hudson.test.HudsonHomeLoader.Local;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
 @ExtendWith(TestUtils.JenkinsParameterResolver.class)
 public class MesosCloudProvisionTest {
@@ -95,5 +112,56 @@ public class MesosCloudProvisionTest {
 
     // assert jenkins has the 1 added nodes
     assertThat(Jenkins.getInstanceOrNull().getNodes(), hasSize(1));
+  }
+
+  @Test
+  public void runSimpleBuild(TestUtils.JenkinsRule j) throws Exception {
+    System.out.println(j.createWebClient().createCrumbedUrl("configure"));
+    BrowserEngine browser = BrowserFactory.getWebKit();
+    String url = j.getURL().toURI().resolve("/jenkins").toString();
+    System.out.println("+++ " + url);
+//    Page page = browser.navigate();
+    Page page = browser.navigate(url);
+    System.out.println(page.getDocument().getBody().getText());
+//    WebClient c = j.jcreateWebClient();
+//    c.setJavaScriptEnabled(true);
+//
+//    HtmlButton cloud = c.goTo("configure").getFirstByXPath("//*[@suffix=\"cloud\"]");
+//    System.out.println(cloud);
+//    HtmlPage mesosCloud = ((HtmlPage) cloud.click()).getAnchorByText("Mesos Cloud").click();
+//
+//    System.out.println(mesosCloud.getElementByName("_.mesosMasterUrl"));
+
+//    HtmlForm config = c.goTo("configure").getFormByName("config");
+
+//    HtmlElement numExecutorsInput = config.appendChildIfNoneExists("input");
+//    numExecutorsInput.setAttribute("name", "_.numExecutors");
+//    numExecutorsInput.setAttribute("value", "2");
+//
+//    HtmlElement mesosMasterUrlInput = config.appendChildIfNoneExists("input");
+//    mesosMasterUrlInput.setAttribute("name", "_.mesosMasterUrl");
+//    mesosMasterUrlInput.setAttribute("value", mesosCluster.getMesosUrl());
+//
+//    HtmlElement agentUserInput = config.appendChildIfNoneExists("input");
+//    agentUserInput.setAttribute("name", "_.agentUser");
+//    agentUserInput.setAttribute("value", System.getProperty("user.name"));
+//
+//    HtmlElement jenkinsUrlInput = config.appendChildIfNoneExists("input");
+//    jenkinsUrlInput.setAttribute("name", "_.jenkinsUrl");
+//    jenkinsUrlInput.setAttribute("value", j.getURL().toString());
+
+//    j.submit(config);
+//    System.out.println(j.createWebClient().goTo("configure").getFormByName("config").getInputByName("_.mesosMasterUrl"));
+
+
+    // Given: a project with a simple build command.
+//    FreeStyleProject project = j.createFreeStyleProject("mesos-test");
+//    final Builder step = new Shell("echo Hello");
+//    project.getBuildersList().add(step);
+//    project.setAssignedLabel(new LabelAtom("mesos"));
+
+//    FreeStyleBuild build = j.buildAndAssertSuccess(project);
+
+//    j.assertLogContains("echo Hello", build);
   }
 }

@@ -29,6 +29,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
     testImplementation('com.mesosphere.usi:test-utils') { version { branch = usiBranch } }
     testImplementation 'org.awaitility:awaitility:3.1.6'
+    testImplementation 'io.webfolder:ui4j-webkit:4.0.0'
 }
 
 test {
