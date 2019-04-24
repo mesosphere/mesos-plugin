@@ -8,6 +8,8 @@ import hudson.model.Node;
 import hudson.model.labels.LabelAtom;
 import java.util.Set;
 import java.util.UUID;
+
+import org.apache.xpath.operations.Bool;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /** This is the Mesos agent pod spec config set by a user. */
@@ -63,5 +65,9 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public int getIdleTerminationMinutes() {
     return idleTerminationInMinutes;
+  }
+
+  public Boolean getReusable() {
+    return true;
   }
 }
