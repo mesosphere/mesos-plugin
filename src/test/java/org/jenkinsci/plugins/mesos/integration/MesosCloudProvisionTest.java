@@ -116,11 +116,9 @@ public class MesosCloudProvisionTest {
 
   @Test
   public void runSimpleBuild(TestUtils.JenkinsRule j) throws Exception {
-    System.out.println(j.createWebClient().createCrumbedUrl("configure"));
     BrowserEngine browser = BrowserFactory.getWebKit();
-    String url = j.getURL().toURI().resolve("/jenkins").toString();
+    String url = j.getURL().toURI().resolve("/jenkins/configure").toString();
     System.out.println("+++ " + url);
-//    Page page = browser.navigate();
     Page page = browser.navigate(url);
     System.out.println(page.getDocument().getBody().getText());
 //    WebClient c = j.jcreateWebClient();
