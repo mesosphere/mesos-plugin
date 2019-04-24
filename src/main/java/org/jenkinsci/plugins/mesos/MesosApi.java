@@ -51,8 +51,6 @@ public class MesosApi {
 
   @XStreamOmitField private final ExecutionContext context;
 
-  private final Integer IDLE_TERMINATION_IN_MIN = 1;
-
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
    * MesosJenkinsAgent} instances.

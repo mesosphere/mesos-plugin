@@ -34,8 +34,7 @@ public class MesosComputer extends AbstractCloudComputer<MesosJenkinsAgent> {
     if (!reusable) {
       // single use computer will only accept one task, after completing task it will go idle and be
       // killed by MesosRetentionStrategy
-      logger.warn(
-          " Computer " + this + ": is no longer accepting tasks and was marked as single-use");
+      logger.info("Computer {}: is no longer accepting tasks and was marked as single-use", this);
       setAcceptingTasks(false);
     }
     logger.info("Computer {}: task accepted", this);
