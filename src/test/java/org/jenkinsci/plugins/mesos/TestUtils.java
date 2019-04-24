@@ -1,13 +1,11 @@
 package org.jenkinsci.plugins.mesos;
 
-import java.io.File;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.jvnet.hudson.test.HudsonHomeLoader;
 import org.jvnet.hudson.test.JenkinsRecipe;
 
 // Copied from https://issues.jenkins-ci.org/browse/JENKINS-48466

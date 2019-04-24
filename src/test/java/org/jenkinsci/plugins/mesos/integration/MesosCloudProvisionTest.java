@@ -2,16 +2,15 @@ package org.jenkinsci.plugins.mesos.integration;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
-import com.gargoylesoftware.htmlunit.html.DomElement;
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
@@ -22,9 +21,6 @@ import hudson.model.labels.LabelAtom;
 import hudson.slaves.NodeProvisioner;
 import hudson.tasks.Builder;
 import hudson.tasks.Shell;
-import io.webfolder.ui4j.api.browser.BrowserEngine;
-import io.webfolder.ui4j.api.browser.BrowserFactory;
-import io.webfolder.ui4j.api.browser.Page;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -34,12 +30,9 @@ import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.TestUtils;
-import org.jenkinsci.plugins.mesos.TestUtils.JenkinsRule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.runner.Description;
-import org.jvnet.hudson.test.HudsonHomeLoader.Local;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
 @ExtendWith(TestUtils.JenkinsParameterResolver.class)
@@ -116,50 +109,55 @@ public class MesosCloudProvisionTest {
 
   @Test
   public void runSimpleBuild(TestUtils.JenkinsRule j) throws Exception {
-    BrowserEngine browser = BrowserFactory.getWebKit();
-    String url = j.getURL().toURI().resolve("/jenkins/configure").toString();
-    System.out.println("+++ " + url);
-    Page page = browser.navigate(url);
-    System.out.println(page.getDocument().getBody().getText());
-//    WebClient c = j.jcreateWebClient();
-//    c.setJavaScriptEnabled(true);
-//
-//    HtmlButton cloud = c.goTo("configure").getFirstByXPath("//*[@suffix=\"cloud\"]");
-//    System.out.println(cloud);
-//    HtmlPage mesosCloud = ((HtmlPage) cloud.click()).getAnchorByText("Mesos Cloud").click();
-//
-//    System.out.println(mesosCloud.getElementByName("_.mesosMasterUrl"));
 
-//    HtmlForm config = c.goTo("configure").getFormByName("config");
+    WebClient c = j.createWebClient();
+    c.setJavaScriptEnabled(true);
 
-//    HtmlElement numExecutorsInput = config.appendChildIfNoneExists("input");
-//    numExecutorsInput.setAttribute("name", "_.numExecutors");
-//    numExecutorsInput.setAttribute("value", "2");
-//
-//    HtmlElement mesosMasterUrlInput = config.appendChildIfNoneExists("input");
-//    mesosMasterUrlInput.setAttribute("name", "_.mesosMasterUrl");
-//    mesosMasterUrlInput.setAttribute("value", mesosCluster.getMesosUrl());
-//
-//    HtmlElement agentUserInput = config.appendChildIfNoneExists("input");
-//    agentUserInput.setAttribute("name", "_.agentUser");
-//    agentUserInput.setAttribute("value", System.getProperty("user.name"));
-//
-//    HtmlElement jenkinsUrlInput = config.appendChildIfNoneExists("input");
-//    jenkinsUrlInput.setAttribute("name", "_.jenkinsUrl");
-//    jenkinsUrlInput.setAttribute("value", j.getURL().toString());
+    HtmlForm config = c.goTo("configure").getFormByName("config");
 
-//    j.submit(config);
-//    System.out.println(j.createWebClient().goTo("configure").getFormByName("config").getInputByName("_.mesosMasterUrl"));
+    // Add a new Mesos Cloud
+    final HtmlPage p = ((HtmlButton) config.getFirstByXPath("//button[@suffix=\"cloud\"]")).click();
+    final HtmlPage pp = ((HtmlAnchor) p.getFirstByXPath("//a[text()=\"Mesos Cloud\"]")).click();
 
+    // Wait until Mesos Cloud form shows up.
+    await()
+        .atMost(10, TimeUnit.SECONDS)
+        .ignoreExceptions()
+        .until(() -> pp.getElementByName("_.mesosMasterUrl") != null);
+
+    // Fill out Mesos Cloud form and submit it.
+    pp.getElementByName("_.mesosMasterUrl").setAttribute("value", mesosCluster.getMesosUrl());
+    pp.getElementByName("_.jenkinsUrl").setAttribute("value", j.getURL().toString());
+    pp.getElementByName("_.agentUser").setAttribute("value", System.getProperty("user.name"));
+
+    final HtmlPage ppp =
+        ((HtmlButton)
+                pp.getFirstByXPath("//div[@class=\"repeated-container\"]//button[text()=\"Add\"]"))
+            .click();
+    await()
+        .atMost(10, TimeUnit.SECONDS)
+        .ignoreExceptions()
+        .until(() -> ppp.getElementByName("mesosAgentSpecTemplates") != null);
+
+    ((HtmlButton) ppp.getFirstByXPath("//span[@name=\"Submit\"]//button")).click();
+
+    // Verify that everything was saved.
+    final String savedMesosUrl =
+        j.createWebClient()
+            .goTo("configure")
+            .getFormByName("config")
+            .getInputByName("_.mesosMasterUrl")
+            .getValueAttribute();
+    assertThat(savedMesosUrl, is(equalTo(mesosCluster.getMesosUrl())));
 
     // Given: a project with a simple build command.
-//    FreeStyleProject project = j.createFreeStyleProject("mesos-test");
-//    final Builder step = new Shell("echo Hello");
-//    project.getBuildersList().add(step);
-//    project.setAssignedLabel(new LabelAtom("mesos"));
+    FreeStyleProject project = j.createFreeStyleProject("mesos-test");
+    final Builder step = new Shell("echo Hello");
+    project.getBuildersList().add(step);
+    project.setAssignedLabel(new LabelAtom("mesos"));
 
-//    FreeStyleBuild build = j.buildAndAssertSuccess(project);
+    FreeStyleBuild build = j.buildAndAssertSuccess(project);
 
-//    j.assertLogContains("echo Hello", build);
+    j.assertLogContains("echo Hello", build);
   }
 }
