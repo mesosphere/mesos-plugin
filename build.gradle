@@ -10,7 +10,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'karsten/support-java-8'
+    usiBranch = 'master'
     scalaVersion = '2.12'
     akkaVersion = '2.5.19'
 }
