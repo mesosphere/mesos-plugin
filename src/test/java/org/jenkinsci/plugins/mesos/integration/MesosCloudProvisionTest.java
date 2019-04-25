@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.mesos.integration;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -11,11 +10,6 @@ import static org.hamcrest.Matchers.lessThan;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlButton;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.FreeStyleBuild;
@@ -30,14 +24,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.json.Json;
+import javax.json.JsonBuilderFactory;
 import jenkins.model.Jenkins;
-import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.apache.tools.ant.taskdefs.Javadoc.Html;
+import org.jenkinsci.plugins.mesos.JenkinsConfigForm;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
@@ -45,7 +40,6 @@ import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
 @ExtendWith(TestUtils.JenkinsParameterResolver.class)
 public class MesosCloudProvisionTest {
@@ -125,52 +119,213 @@ public class MesosCloudProvisionTest {
     OkHttpClient client = new OkHttpClient();
 
     final String jenkinsUrl = j.getURL().toURI().resolve("jenkins").toString();
-    FormBody formBody = new FormBody.Builder()
-        .addEncoded("_.numExecutors", "2")
-        .addEncoded("_.labelString", "")
-        .addEncoded("master.mode", "NORMAL")
-        .addEncoded("_.quietPeriod", "5")
-        .addEncoded("_.scmCheckoutRetryCount", "0")
-        .addEncoded("stapler-class", "jenkins.model.ProjectNamingStrategy$PatternProjectNamingStrategy")
-        .addEncoded("$class", "jenkins.model.ProjectNamingStrategy$PatternProjectNamingStrategy")
-        .addEncoded("_.namePattern", "*")
-        .addEncoded("_.description", "")
-        .addEncoded("namingStrategy", "1")
-        .addEncoded("stapler-class", "jenkins.model.ProjectNamingStrategy$PatternProjectNamingStrategy")
-        .addEncoded("$class", "jenkins.model.ProjectNamingStrategy$PatternProjectNamingStrategy")
-        .addEncoded("_.usageStatisticsCollected", "on")
-        .addEncoded("administrativeMonitor", "on")
-        .addEncoded("_.url",jenkinsUrl )
-        .addEncoded("_.adminAddress", "")
-        .addEncoded("_.shell", "")
-        .addEncoded("_.mesosMasterUrl", mesosCluster.getMesosUrl())
-        .addEncoded("_.role", "*")
-        .addEncoded("_.agentUser", System.getProperty("user.name"))
-        .addEncoded("_.jenkinsUrl", jenkinsUrl)
-        .addEncoded("_.label", "mesos")
-        .addEncoded("mode", "EXCLUSIVE")
-        .addEncoded("stapler-class", "org.jenkinsci.plugins.mesos.MesosCloud")
-        .addEncoded("$class", "org.jenkinsci.plugins.mesos.MesosCloud")
-        .addEncoded("core:apply", "")
-        .build();
+
+    final String json =
+        "%7B%22system_message%22%3A+%22%22%2C+%22jenkins-model-MasterBuildConfiguration%22%3A+%7B%22numExecutors%22%3A+%222%22%2C+%22labelString%22%3A+%22%22%2C+%22mode%22%3A+%22NORMAL%22%7D%2C+%22jenkins-model-GlobalQuietPeriodConfiguration%22%3A+%7B%22quietPeriod%22%3A+%225%22%7D%2C+%22jenkins-model-GlobalSCMRetryCountConfiguration%22%3A+%7B%22scmCheckoutRetryCount%22%3A+%220%22%7D%2C+%22jenkins-model-GlobalProjectNamingStrategyConfiguration%22%3A+%7B%7D%2C+%22jenkins-model-GlobalNodePropertiesConfiguration%22%3A+%7B%22globalNodeProperties%22%3A+%7B%7D%7D%2C+%22hudson-model-UsageStatistics%22%3A+%7B%22usageStatisticsCollected%22%3A+%7B%7D%7D%2C+%22jenkins-management-AdministrativeMonitorsConfiguration%22%3A+%7B%22administrativeMonitor%22%3A+%5B%22hudson.PluginManager%24PluginCycleDependenciesMonitor%22%2C+%22hudson.PluginManager%24PluginUpdateMonitor%22%2C+%22hudson.PluginWrapper%24PluginWrapperAdministrativeMonitor%22%2C+%22hudsonHomeIsFull%22%2C+%22hudson.diagnosis.NullIdDescriptorMonitor%22%2C+%22OldData%22%2C+%22hudson.diagnosis.ReverseProxySetupMonitor%22%2C+%22hudson.diagnosis.TooManyJobsButNoView%22%2C+%22hudson.model.UpdateCenter%24CoreUpdateMonitor%22%2C+%22hudson.node_monitors.MonitorMarkedNodeOffline%22%2C+%22hudson.triggers.SCMTrigger%24AdministrativeMonitorImpl%22%2C+%22jenkins.CLI%22%2C+%22jenkins.diagnosis.HsErrPidList%22%2C+%22jenkins.diagnostics.CompletedInitializationMonitor%22%2C+%22jenkins.diagnostics.RootUrlNotSetMonitor%22%2C+%22jenkins.diagnostics.SecurityIsOffMonitor%22%2C+%22jenkins.diagnostics.URICheckEncodingMonitor%22%2C+%22jenkins.model.DownloadSettings%24Warning%22%2C+%22jenkins.model.Jenkins%24EnforceSlaveAgentPortAdministrativeMonitor%22%2C+%22jenkins.security.RekeySecretAdminMonitor%22%2C+%22jenkins.security.UpdateSiteWarningsMonitor%22%2C+%22jenkins.security.apitoken.ApiTokenPropertyDisabledDefaultAdministrativeMonitor%22%2C+%22jenkins.security.apitoken.ApiTokenPropertyEnabledNewLegacyAdministrativeMonitor%22%2C+%22legacyApiToken%22%2C+%22jenkins.security.csrf.CSRFAdministrativeMonitor%22%2C+%22slaveToMasterAccessControl%22%2C+%22jenkins.security.s2m.MasterKillSwitchWarning%22%2C+%22jenkins.slaves.DeprecatedAgentProtocolMonitor%22%5D%7D%2C+%22jenkins-model-JenkinsLocationConfiguration%22%3A+%7B%22url%22%3A+%22http%3A%2F%2Flocalhost%3A8080%2F%22%2C+%22adminAddress%22%3A+%22Adresse+nicht+konfiguriert+%3Cnobody%40nowhere%3E%22%7D%2C+%22hudson-tasks-Shell%22%3A+%7B%22shell%22%3A+%22%22%7D%2C+%22jenkins-model-GlobalCloudConfiguration%22%3A+%7B%22cloud%22%3A+%7B%22mesosMasterUrl%22%3A+%22"
+            + URLEncoder.encode(mesosCluster.getMesosUrl(), "UTF-8")
+            + "%22%2C+%22frameworkName%22%3A+%22Jenkins+Scheduler%22%2C+%22role%22%3A+%22*%22%2C+%22agentUser%22%3A+%22"
+            + System.getProperty("user.name")
+            + "%22%2C+%22jenkinsUrl%22%3A+%22"
+            + URLEncoder.encode(jenkinsUrl, "UTF-8")
+            + "%22%2C+%22mesosAgentSpecTemplates%22%3A+%7B%22label%22%3A+%22mesos%22%2C+%22mode%22%3A+%22EXCLUSIVE%22%7D%2C+%22stapler-class%22%3A+%22org.jenkinsci.plugins.mesos.MesosCloud%22%2C+%22%24class%22%3A+%22org.jenkinsci.plugins.mesos.MesosCloud%22%7D%7D%2C+%22core%3Aapply%22%3A+%22%22%7D";
+    JsonBuilderFactory factory = Json.createBuilderFactory(Collections.emptyMap());
+    final String jsonObject =
+        Json.createObjectBuilder()
+            .add("system_message", "")
+            .add(
+                "jenkins-model-MasterBuilderConfiguration",
+                Json.createObjectBuilder()
+                    .add("numExecutors", "2")
+                    .add("labelString", "")
+                    .add("mode", "NORMAL")
+                    .build())
+            .add(
+                "jenkins-model-GlobalQuietPeriodConfiguration",
+                Json.createObjectBuilder().add("quietPeriod", "5").build())
+            .add(
+                "jenkins-model-GlobalSCMRetryCountConfiguration",
+                Json.createObjectBuilder().add("scmCheckoutRetryCount", "0").build())
+            .add(
+                "jenkins-model-GlobalProjectNamingStrategyConfiguration",
+                Json.createObjectBuilder().build())
+            .add(
+                "jenkins-model-GlobalNodePropertiesConfiguration",
+                Json.createObjectBuilder()
+                    .add("globalNodeProperties", Json.createObjectBuilder().build())
+                    .build())
+            .add(
+                "hudson-model-UsageStatistics",
+                Json.createObjectBuilder()
+                    .add("usageStatisticsCollected", Json.createObjectBuilder().build())
+                    .build())
+            .add(
+                "jenkins-management-AdministrativeMonitorsConfiguration",
+                Json.createObjectBuilder()
+                    .add(
+                        "administrativeMonitor",
+                        Json.createArrayBuilder()
+                            .add("hudson.PluginManager$PluginCycleDependenciesMonitor")
+                            .add("hudson.PluginManager$PluginUpdateMonitor")
+                            .add("hudson.PluginWrapper$PluginWrapperAdministrativeMonitor")
+                            .add("hudsonHomeIsFull")
+                            .add("hudson.diagnosis.NullIdDescriptorMonitor")
+                            .add("OldData")
+                            .add("hudson.diagnosis.ReverseProxySetupMonitor")
+                            .add("hudson.diagnosis.TooManyJobsButNoView")
+                            .add("hudson.model.UpdateCenter$CoreUpdateMonitor")
+                            .add("hudson.node_monitors.MonitorMarkedNodeOffline")
+                            .add("hudson.triggers.SCMTrigger$AdministrativeMonitorImpl")
+                            .add("jenkins.CLI")
+                            .add("jenkins.diagnosis.HsErrPidList")
+                            .add("jenkins.diagnostics.CompletedInitializationMonitor")
+                            .add("jenkins.diagnostics.RootUrlNotSetMonitor")
+                            .add("jenkins.diagnostics.SecurityIsOffMonitor")
+                            .add("jenkins.diagnostics.URICheckEncodingMonitor")
+                            .add("jenkins.model.DownloadSettings$Warning")
+                            .add("jenkins.model.Jenkins$EnforceSlaveAgentPortAdministrativeMonitor")
+                            .add("jenkins.security.RekeySecretAdminMonitor")
+                            .add("jenkins.security.UpdateSiteWarningsMonitor")
+                            .add(
+                                "jenkins.security.apitoken.ApiTokenPropertyDisabledDefaultAdministrativeMonitor")
+                            .add(
+                                "jenkins.security.apitoken.ApiTokenPropertyEnabledNewLegacyAdministrativeMonitor")
+                            .add("legacyApiToken")
+                            .add("jenkins.security.csrf.CSRFAdministrativeMonitor")
+                            .add("slaveToMasterAccessControl")
+                            .add("jenkins.security.s2m.MasterKillSwitchWarning")
+                            .add("jenkins.slaves.DeprecatedAgentProtocolMonitor")
+                            .build())
+                    .build())
+            .add(
+                "jenkins-model-JenkinsLocationConfiguration",
+                Json.createObjectBuilder()
+                    .add("url", jenkinsUrl)
+                    .add("adminAddress", "Adresse nicht konfiguriert <nobody@nowhere>")
+                    .build())
+            .add("hudson-task-Shell", Json.createObjectBuilder().add("shell", "").build())
+            .add(
+                "jenkins-model-GlobalCloudConfiguration",
+                Json.createObjectBuilder()
+                    .add(
+                        "cloud",
+                        Json.createObjectBuilder()
+                            .add("mesosMasterUrl", mesosCluster.getMesosUrl())
+                            .add("frameworkName", "Jenkins Scheduler")
+                            .add("role", "*")
+                            .add("agentUser", System.getProperty("user.name"))
+                            .add("jenkinsUrl", jenkinsUrl)
+                            .add(
+                                "mesosAgentSpecTemplates",
+                                Json.createObjectBuilder()
+                                    .add("label", "mesos")
+                                    .add("mode", "EXCLUSIVE")
+                                    .build())
+                            .add("stapler-class", "org.jenkinsci.plugins.mesos.MesosCloud")
+                            .add("$class", "org.jenkinsci.plugins.mesos.MesosCloud")
+                            .build())
+                    .build())
+            .add("core:apply", "")
+            .build()
+            .toString();
+    final String data =
+        new JenkinsConfigForm.Builder()
+            .add("system_message", "")
+            .add("_.numExecutors", "2")
+            .add("_.labelString", "")
+            .add("master.mode", "NORMAL")
+            .add("_.quietPeriod", "5")
+            .add("_.scmCheckoutRetryCount", "0")
+            .add(
+                "stapler-class", "jenkins.model.ProjectNamingStrategy$PatternProjectNamingStrategy")
+            .add("$class", "jenkins.model.ProjectNamingStrategy$PatternProjectNamingStrategy")
+            .add("_.namePattern", ".*")
+            .add("_.description", "")
+            .add("namingStrategy", "1")
+            .add(
+                "stapler-class", "jenkins.model.ProjectNamingStrategy$DefaultProjectNamingStrategy")
+            .add("$class", "jenkins.model.ProjectNamingStrategy$DefaultProjectNamingStrategy")
+            .add("_.usageStatisticsCollected", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("administrativeMonitor", "on")
+            .add("_.url", jenkinsUrl)
+            .add("_.adminAddress", "Adresse nicht konfiguriert <nobody@nowhere>")
+            .add("_.shell", "")
+            .add("_.mesosMasterUrl", mesosCluster.getMesosUrl())
+            .add("_.frameworkName", "Jenkins Scheduler")
+            .add("_.role", "*")
+            .add("_.agentUser", System.getProperty("user.name"))
+            .add("_.jenkinsUrl", jenkinsUrl)
+            .add("_.label", "mesos")
+            .add("mode", "EXCLUSIVE")
+            .add("stapler-class", "org.jenkinsci.plugins.mesos.MesosCloud")
+            .add("$class", "org.jenkinsci.plugins.mesos.MesosCloud")
+            .add("core:apply", "")
+            .add("json", jsonObject)
+            .build();
 
     final MediaType FORM = MediaType.get("application/x-www-form-urlencoded");
-    final String data ="system_message=&_.numExecutors=2&_.labelString=&master.mode=NORMAL&_.quietPeriod=5&_.scmCheckoutRetryCount=0&stapler-class=jenkins.model.ProjectNamingStrategy%24PatternProjectNamingStrategy&%24class=jenkins.model.ProjectNamingStrategy%24PatternProjectNamingStrategy&_.namePattern=.*&_.description=&namingStrategy=1&stapler-class=jenkins.model.ProjectNamingStrategy%24DefaultProjectNamingStrategy&%24class=jenkins.model.ProjectNamingStrategy%24DefaultProjectNamingStrategy&_.usageStatisticsCollected=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&_.url="+URLEncoder.encode(jenkinsUrl, "UTF-8")+"&_.adminAddress=Adresse+nicht+konfiguriert+%3Cnobody%40nowhere%3E&_.shell=&_.mesosMasterUrl="+ URLEncoder
-        .encode(mesosCluster.getMesosUrl(), "UTF-8")+"&_.frameworkName=Jenkins+Scheduler&_.role=*&_.agentUser="+URLEncoder.encode(System.getProperty("user.name"), "UTF-8")+"&_.jenkinsUrl="+URLEncoder.encode(jenkinsUrl, "UTF-8")+"&_.label=mesos&mode=EXCLUSIVE&stapler-class=org.jenkinsci.plugins.mesos.MesosCloud&%24class=org.jenkinsci.plugins.mesos.MesosCloud&core%3Aapply=&json=%7B%22system_message%22%3A+%22%22%2C+%22jenkins-model-MasterBuildConfiguration%22%3A+%7B%22numExecutors%22%3A+%222%22%2C+%22labelString%22%3A+%22%22%2C+%22mode%22%3A+%22NORMAL%22%7D%2C+%22jenkins-model-GlobalQuietPeriodConfiguration%22%3A+%7B%22quietPeriod%22%3A+%225%22%7D%2C+%22jenkins-model-GlobalSCMRetryCountConfiguration%22%3A+%7B%22scmCheckoutRetryCount%22%3A+%220%22%7D%2C+%22jenkins-model-GlobalProjectNamingStrategyConfiguration%22%3A+%7B%7D%2C+%22jenkins-model-GlobalNodePropertiesConfiguration%22%3A+%7B%22globalNodeProperties%22%3A+%7B%7D%7D%2C+%22hudson-model-UsageStatistics%22%3A+%7B%22usageStatisticsCollected%22%3A+%7B%7D%7D%2C+%22jenkins-management-AdministrativeMonitorsConfiguration%22%3A+%7B%22administrativeMonitor%22%3A+%5B%22hudson.PluginManager%24PluginCycleDependenciesMonitor%22%2C+%22hudson.PluginManager%24PluginUpdateMonitor%22%2C+%22hudson.PluginWrapper%24PluginWrapperAdministrativeMonitor%22%2C+%22hudsonHomeIsFull%22%2C+%22hudson.diagnosis.NullIdDescriptorMonitor%22%2C+%22OldData%22%2C+%22hudson.diagnosis.ReverseProxySetupMonitor%22%2C+%22hudson.diagnosis.TooManyJobsButNoView%22%2C+%22hudson.model.UpdateCenter%24CoreUpdateMonitor%22%2C+%22hudson.node_monitors.MonitorMarkedNodeOffline%22%2C+%22hudson.triggers.SCMTrigger%24AdministrativeMonitorImpl%22%2C+%22jenkins.CLI%22%2C+%22jenkins.diagnosis.HsErrPidList%22%2C+%22jenkins.diagnostics.CompletedInitializationMonitor%22%2C+%22jenkins.diagnostics.RootUrlNotSetMonitor%22%2C+%22jenkins.diagnostics.SecurityIsOffMonitor%22%2C+%22jenkins.diagnostics.URICheckEncodingMonitor%22%2C+%22jenkins.model.DownloadSettings%24Warning%22%2C+%22jenkins.model.Jenkins%24EnforceSlaveAgentPortAdministrativeMonitor%22%2C+%22jenkins.security.RekeySecretAdminMonitor%22%2C+%22jenkins.security.UpdateSiteWarningsMonitor%22%2C+%22jenkins.security.apitoken.ApiTokenPropertyDisabledDefaultAdministrativeMonitor%22%2C+%22jenkins.security.apitoken.ApiTokenPropertyEnabledNewLegacyAdministrativeMonitor%22%2C+%22legacyApiToken%22%2C+%22jenkins.security.csrf.CSRFAdministrativeMonitor%22%2C+%22slaveToMasterAccessControl%22%2C+%22jenkins.security.s2m.MasterKillSwitchWarning%22%2C+%22jenkins.slaves.DeprecatedAgentProtocolMonitor%22%5D%7D%2C+%22jenkins-model-JenkinsLocationConfiguration%22%3A+%7B%22url%22%3A+%22http%3A%2F%2Flocalhost%3A8080%2F%22%2C+%22adminAddress%22%3A+%22Adresse+nicht+konfiguriert+%3Cnobody%40nowhere%3E%22%7D%2C+%22hudson-tasks-Shell%22%3A+%7B%22shell%22%3A+%22%22%7D%2C+%22jenkins-model-GlobalCloudConfiguration%22%3A+%7B%22cloud%22%3A+%7B%22mesosMasterUrl%22%3A+%22"+URLEncoder.encode(mesosCluster.getMesosUrl(), "UTF-8")+"%22%2C+%22frameworkName%22%3A+%22Jenkins+Scheduler%22%2C+%22role%22%3A+%22*%22%2C+%22agentUser%22%3A+%22"+System.getProperty("user.name")+"%22%2C+%22jenkinsUrl%22%3A+%22"+URLEncoder.encode(jenkinsUrl, "UTF-8")+"%22%2C+%22mesosAgentSpecTemplates%22%3A+%7B%22label%22%3A+%22mesos%22%2C+%22mode%22%3A+%22EXCLUSIVE%22%7D%2C+%22stapler-class%22%3A+%22org.jenkinsci.plugins.mesos.MesosCloud%22%2C+%22%24class%22%3A+%22org.jenkinsci.plugins.mesos.MesosCloud%22%7D%7D%2C+%22core%3Aapply%22%3A+%22%22%7D";
+    final String referenceData =
+        "system_message=&_.numExecutors=2&_.labelString=&master.mode=NORMAL&_.quietPeriod=5&_.scmCheckoutRetryCount=0&stapler-class=jenkins.model.ProjectNamingStrategy%24PatternProjectNamingStrategy&%24class=jenkins.model.ProjectNamingStrategy%24PatternProjectNamingStrategy&_.namePattern=.*&_.description=&namingStrategy=1&stapler-class=jenkins.model.ProjectNamingStrategy%24DefaultProjectNamingStrategy&%24class=jenkins.model.ProjectNamingStrategy%24DefaultProjectNamingStrategy&_.usageStatisticsCollected=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&_.url="
+            + URLEncoder.encode(jenkinsUrl, "UTF-8")
+            + "&_.adminAddress=Adresse+nicht+konfiguriert+%3Cnobody%40nowhere%3E&_.shell=&_.mesosMasterUrl="
+            + URLEncoder.encode(mesosCluster.getMesosUrl(), "UTF-8")
+            + "&_.frameworkName=Jenkins+Scheduler&_.role=*&_.agentUser="
+            + URLEncoder.encode(System.getProperty("user.name"), "UTF-8")
+            + "&_.jenkinsUrl="
+            + URLEncoder.encode(jenkinsUrl, "UTF-8")
+            + "&_.label=mesos&mode=EXCLUSIVE&stapler-class=org.jenkinsci.plugins.mesos.MesosCloud&%24class=org.jenkinsci.plugins.mesos.MesosCloud&core%3Aapply=&json=%7B%22system_message%22%3A+%22%22%2C+%22jenkins-model-MasterBuildConfiguration%22%3A+%7B%22numExecutors%22%3A+%222%22%2C+%22labelString%22%3A+%22%22%2C+%22mode%22%3A+%22NORMAL%22%7D%2C+%22jenkins-model-GlobalQuietPeriodConfiguration%22%3A+%7B%22quietPeriod%22%3A+%225%22%7D%2C+%22jenkins-model-GlobalSCMRetryCountConfiguration%22%3A+%7B%22scmCheckoutRetryCount%22%3A+%220%22%7D%2C+%22jenkins-model-GlobalProjectNamingStrategyConfiguration%22%3A+%7B%7D%2C+%22jenkins-model-GlobalNodePropertiesConfiguration%22%3A+%7B%22globalNodeProperties%22%3A+%7B%7D%7D%2C+%22hudson-model-UsageStatistics%22%3A+%7B%22usageStatisticsCollected%22%3A+%7B%7D%7D%2C+%22jenkins-management-AdministrativeMonitorsConfiguration%22%3A+%7B%22administrativeMonitor%22%3A+%5B%22hudson.PluginManager%24PluginCycleDependenciesMonitor%22%2C+%22hudson.PluginManager%24PluginUpdateMonitor%22%2C+%22hudson.PluginWrapper%24PluginWrapperAdministrativeMonitor%22%2C+%22hudsonHomeIsFull%22%2C+%22hudson.diagnosis.NullIdDescriptorMonitor%22%2C+%22OldData%22%2C+%22hudson.diagnosis.ReverseProxySetupMonitor%22%2C+%22hudson.diagnosis.TooManyJobsButNoView%22%2C+%22hudson.model.UpdateCenter%24CoreUpdateMonitor%22%2C+%22hudson.node_monitors.MonitorMarkedNodeOffline%22%2C+%22hudson.triggers.SCMTrigger%24AdministrativeMonitorImpl%22%2C+%22jenkins.CLI%22%2C+%22jenkins.diagnosis.HsErrPidList%22%2C+%22jenkins.diagnostics.CompletedInitializationMonitor%22%2C+%22jenkins.diagnostics.RootUrlNotSetMonitor%22%2C+%22jenkins.diagnostics.SecurityIsOffMonitor%22%2C+%22jenkins.diagnostics.URICheckEncodingMonitor%22%2C+%22jenkins.model.DownloadSettings%24Warning%22%2C+%22jenkins.model.Jenkins%24EnforceSlaveAgentPortAdministrativeMonitor%22%2C+%22jenkins.security.RekeySecretAdminMonitor%22%2C+%22jenkins.security.UpdateSiteWarningsMonitor%22%2C+%22jenkins.security.apitoken.ApiTokenPropertyDisabledDefaultAdministrativeMonitor%22%2C+%22jenkins.security.apitoken.ApiTokenPropertyEnabledNewLegacyAdministrativeMonitor%22%2C+%22legacyApiToken%22%2C+%22jenkins.security.csrf.CSRFAdministrativeMonitor%22%2C+%22slaveToMasterAccessControl%22%2C+%22jenkins.security.s2m.MasterKillSwitchWarning%22%2C+%22jenkins.slaves.DeprecatedAgentProtocolMonitor%22%5D%7D%2C+%22jenkins-model-JenkinsLocationConfiguration%22%3A+%7B%22url%22%3A+%22http%3A%2F%2Flocalhost%3A8080%2F%22%2C+%22adminAddress%22%3A+%22Adresse+nicht+konfiguriert+%3Cnobody%40nowhere%3E%22%7D%2C+%22hudson-tasks-Shell%22%3A+%7B%22shell%22%3A+%22%22%7D%2C+%22jenkins-model-GlobalCloudConfiguration%22%3A+%7B%22cloud%22%3A+%7B%22mesosMasterUrl%22%3A+%22"
+            + URLEncoder.encode(mesosCluster.getMesosUrl(), "UTF-8")
+            + "%22%2C+%22frameworkName%22%3A+%22Jenkins+Scheduler%22%2C+%22role%22%3A+%22*%22%2C+%22agentUser%22%3A+%22"
+            + System.getProperty("user.name")
+            + "%22%2C+%22jenkinsUrl%22%3A+%22"
+            + URLEncoder.encode(jenkinsUrl, "UTF-8")
+            + "%22%2C+%22mesosAgentSpecTemplates%22%3A+%7B%22label%22%3A+%22mesos%22%2C+%22mode%22%3A+%22EXCLUSIVE%22%7D%2C+%22stapler-class%22%3A+%22org.jenkinsci.plugins.mesos.MesosCloud%22%2C+%22%24class%22%3A+%22org.jenkinsci.plugins.mesos.MesosCloud%22%7D%7D%2C+%22core%3Aapply%22%3A+%22%22%7D";
+
+    assertThat(data, is(equalTo(referenceData)));
+
     RequestBody rawBody = RequestBody.create(FORM, data);
 
     final String requestUrl = j.createWebClient().createCrumbedUrl("configSubmit").toString();
-    Request request = new Request.Builder()
-        .url(requestUrl)
-        .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3")
-        .addHeader("Connection", "keep-alive")
-        .addHeader("Cache-Control", "max-age=0")
-        .addHeader("Origin", jenkinsUrl)
-        .addHeader("Upgrade-Insecure-Requests", "1")
-        .addHeader("DNT", "1")
-        .addHeader("Referer", j.getURL().toURI().resolve("jenkins/configure").toString())
-        .post(rawBody)
-        .build();
+    Request request =
+        new Request.Builder()
+            .url(requestUrl)
+            .addHeader(
+                "Accept",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3")
+            .addHeader("Connection", "keep-alive")
+            .addHeader("Cache-Control", "max-age=0")
+            .addHeader("Origin", jenkinsUrl)
+            .addHeader("Upgrade-Insecure-Requests", "1")
+            .addHeader("DNT", "1")
+            .addHeader("Referer", j.getURL().toURI().resolve("jenkins/configure").toString())
+            .post(rawBody)
+            .build();
 
     Response response = client.newCall(request).execute();
     assertThat(response.code(), is(lessThan(400)));
