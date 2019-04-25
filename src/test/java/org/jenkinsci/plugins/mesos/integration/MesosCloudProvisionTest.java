@@ -123,15 +123,6 @@ public class MesosCloudProvisionTest {
             "EXCLUSIVE");
     assertThat(response.code(), is(lessThan(400)));
 
-    // Verify that everything was saved.
-    final String savedMesosUrl =
-        j.createWebClient()
-            .goTo("configure")
-            .getFormByName("config")
-            .getInputByName("_.mesosMasterUrl")
-            .getValueAttribute();
-    assertThat(savedMesosUrl, is(equalTo(mesosCluster.getMesosUrl())));
-
     // And: a project with a simple build command.
     FreeStyleProject project = j.createFreeStyleProject("mesos-test");
     final Builder step = new Shell("echo Hello");
