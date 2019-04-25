@@ -10,6 +10,7 @@ import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
@@ -26,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
+import org.apache.tools.ant.taskdefs.Javadoc.Html;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
@@ -125,21 +127,28 @@ public class MesosCloudProvisionTest {
         .ignoreExceptions()
         .until(() -> pp.getElementByName("_.mesosMasterUrl") != null);
 
-    // Fill out Mesos Cloud form and submit it.
+    // Fill out Mesos Cloud form.
     pp.getElementByName("_.mesosMasterUrl").setAttribute("value", mesosCluster.getMesosUrl());
     pp.getElementByName("_.jenkinsUrl").setAttribute("value", j.getURL().toString());
     pp.getElementByName("_.agentUser").setAttribute("value", System.getProperty("user.name"));
 
-    final HtmlPage ppp =
-        ((HtmlButton)
-                pp.getFirstByXPath("//div[@class=\"repeated-container\"]//button[text()=\"Add\"]"))
-            .click();
-    await()
-        .atMost(10, TimeUnit.SECONDS)
-        .ignoreExceptions()
-        .until(() -> ppp.getElementByName("mesosAgentSpecTemplates") != null);
+    // Add an agent spec with a label.
+//    if (pp.getElementsByName("mesosAgentSpecTemplates").isEmpty()) {
+//      System.out.println((HtmlButton) pp.getFirstByXPath("//table[@class=\"advancedBody\"]//button[text()=\"Add\"]"));
+//      System.out.println((HtmlElement) pp.getFirstByXPath("//td[text()=\"Agent Specs\"]"));
+//      HtmlButton addButton = pp.getFirstByXPath("//table[@class=\"advancedBody\"]//button[text()=\"Add\"]");
+//      final HtmlPage ppp = addButton.click();
+//      await()
+//          .atMost(10, TimeUnit.SECONDS)
+//          .ignoreExceptions()
+//          .until(() -> !ppp.getElementsByName("mesosAgentSpecTemplates").isEmpty());
+//      ((HtmlButton) ppp.getFirstByXPath("//span[@name=\"Submit\"]//button")).click();
+//    } else {
+//      ((HtmlButton) pp.getFirstByXPath("//span[@name=\"Submit\"]//button")).click();
+//    }
+    ((HtmlButton) pp.getFirstByXPath("//span[@name=\"Submit\"]//button")).click();
 
-    ((HtmlButton) ppp.getFirstByXPath("//span[@name=\"Submit\"]//button")).click();
+    // Submit everything.
 
     // Verify that everything was saved.
     final String savedMesosUrl =
