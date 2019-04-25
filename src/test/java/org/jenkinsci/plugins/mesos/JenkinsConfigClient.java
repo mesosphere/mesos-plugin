@@ -13,14 +13,20 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
+/**
+ * A simple client that hacks around the Jenkins configure form submit.
+ *
+ * <p>It allows to add a simple Mesos Cloud with one label.
+ */
 public class JenkinsConfigClient {
   final OkHttpClient client;
   final URL jenkinsConfigUrl;
 
-  public JenkinsConfigClient(URL jenkinsConfigUrl) {
+  public JenkinsConfigClient(WebClient jenkinsClient) throws IOException {
     this.client = new OkHttpClient();
-    this.jenkinsConfigUrl = jenkinsConfigUrl;
+    this.jenkinsConfigUrl = jenkinsClient.createCrumbedUrl("configSubmit");
   }
 
   /**

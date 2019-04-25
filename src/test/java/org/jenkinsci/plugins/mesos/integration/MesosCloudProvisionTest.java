@@ -111,8 +111,7 @@ public class MesosCloudProvisionTest {
 
     // Given: a configured Mesos Cloud.
     final String label = "mesos";
-    final JenkinsConfigClient jenkinsClient =
-        new JenkinsConfigClient(j.createWebClient().createCrumbedUrl("configSubmit"));
+    final JenkinsConfigClient jenkinsClient = new JenkinsConfigClient(j.createWebClient());
     final Response response =
         jenkinsClient.addMesosCloud(
             mesosCluster.getMesosUrl(),
