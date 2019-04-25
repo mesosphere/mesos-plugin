@@ -100,14 +100,9 @@ public class JenkinsConfigClient {
     Request request =
         new Request.Builder()
             .url(this.jenkinsConfigUrl.toString())
-            .addHeader(
-                "Accept",
-                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3")
-            .addHeader("Connection", "keep-alive")
-            .addHeader("Cache-Control", "max-age=0")
+            .addHeader("Accept", "text/html,application/xhtml+xml")
             .addHeader("Origin", jenkinsUrl)
             .addHeader("Upgrade-Insecure-Requests", "1")
-            .addHeader("DNT", "1")
             .post(rawBody)
             .build();
     return this.client.newCall(request).execute();
@@ -182,10 +177,7 @@ public class JenkinsConfigClient {
                 .build())
         .add(
             "jenkins-model-JenkinsLocationConfiguration",
-            Json.createObjectBuilder()
-                .add("url", jenkinsUrl)
-                .add("adminAddress", "Adresse nicht konfiguriert <nobody@nowhere>")
-                .build())
+            Json.createObjectBuilder().add("url", jenkinsUrl).add("adminAddress", "").build())
         .add("hudson-task-Shell", Json.createObjectBuilder().add("shell", "").build());
   }
 
@@ -235,7 +227,7 @@ public class JenkinsConfigClient {
         .add("administrativeMonitor", "on")
         .add("administrativeMonitor", "on")
         .add("_.url", jenkinsUrl)
-        .add("_.adminAddress", "Adresse nicht konfiguriert <nobody@nowhere>")
+        .add("_.adminAddress", "")
         .add("_.shell", "");
   }
 
@@ -243,12 +235,21 @@ public class JenkinsConfigClient {
   private static class FormDataBuilder {
     final List<String> values = new ArrayList<>();
 
+    /**
+     * Add a key value pair to the form. Duplicates are allowed. Keys and values are URL encoded.
+     *
+     * @param key The form field key/name.
+     * @param value The value for the key.
+     * @return This builder.
+     * @throws UnsupportedEncodingException
+     */
     public FormDataBuilder add(String key, String value) throws UnsupportedEncodingException {
       final String pair = URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(value, "UTF-8");
       this.values.add(pair);
       return this;
     }
 
+    /** @return a joined string of all key/value pairs. */
     public String build() {
       return String.join("&", this.values);
     }
