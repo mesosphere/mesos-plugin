@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.mesos.api;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.mesosphere.usi.core.models.FetchUri;
 import com.mesosphere.usi.core.models.Goal;
 import com.mesosphere.usi.core.models.PodId;
@@ -14,7 +13,6 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-
 import jenkins.model.Jenkins;
 import scala.Option;
 import scala.collection.JavaConverters;
@@ -43,7 +41,6 @@ public class MesosSlavePodSpec {
         "java -DHUDSON_HOME=jenkins -server -Xmx%dm %s -jar ${MESOS_SANDBOX-.}/agent.jar %s %s -jnlpUrl %s";
 
     private static final String JNLP_SECRET_FORMAT = "-secret %s";
-
 
     private PodId id = null;
     private ScalarRequirement cpus = null;
@@ -112,9 +109,8 @@ public class MesosSlavePodSpec {
       return new PodSpec(this.id, this.goal, runSpec);
     }
 
-    @VisibleForTesting
     /** @return the agent shell command for the Mesos task. */
-     String buildCommand() throws MalformedURLException {
+    private String buildCommand() throws MalformedURLException {
       return String.format(
           AGENT_COMMAND_FORMAT,
           this.xmx,
@@ -126,8 +122,11 @@ public class MesosSlavePodSpec {
 
     private String buildJnlpSecret() {
       String jnlpSecret = "";
-      if(Jenkins.getInstanceOrNull().isUseSecurity()) {
-        jnlpSecret = String.format(JNLP_SECRET_FORMAT, jenkins.slaves.JnlpSlaveAgentProtocol.SLAVE_SECRET.mac(this.id.toString()));
+      if (Jenkins.getInstanceOrNull().isUseSecurity()) {
+        jnlpSecret =
+            String.format(
+                JNLP_SECRET_FORMAT,
+                jenkins.slaves.JnlpSlaveAgentProtocol.SLAVE_SECRET.mac(this.id.toString()));
       }
       return jnlpSecret;
     }
