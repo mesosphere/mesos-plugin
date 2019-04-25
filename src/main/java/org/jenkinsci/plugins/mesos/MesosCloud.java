@@ -12,6 +12,7 @@ import hudson.slaves.Cloud;
 import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -21,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.NotImplementedException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.slf4j.Logger;
@@ -155,6 +155,11 @@ public class MesosCloud extends AbstractCloudImpl {
         .toCompletableFuture();
   }
 
+  @Override
+  public DescriptorImpl getDescriptor() {
+    return (DescriptorImpl) super.getDescriptor();
+  }
+
   @Extension
   public static class DescriptorImpl extends Descriptor<Cloud> {
 
@@ -167,12 +172,36 @@ public class MesosCloud extends AbstractCloudImpl {
       return "Mesos Cloud";
     }
 
-    // TODO: validate URLs
+    /** Test connection from Mesos Cloud configuration page. */
+    public FormValidation doTestConnection(@QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
+      mesosMasterUrl = mesosMasterUrl.trim();
 
-    /** Test connection from configuration page. */
-    public FormValidation doTestConnection(
-        @QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
-      throw new NotImplementedException("Connection testing is not supported yet.");
+      if (mesosMasterUrl.startsWith("zk://")) {
+        return FormValidation.warning("Zookeeper paths can be used, but the connection cannot be " +
+                "tested prior to saving this page.");
+      }
+
+      if (mesosMasterUrl.startsWith("http://") || mesosMasterUrl.startsWith("https://") ) {
+        return FormValidation.error("Please omit 'http(s)://'.");
+      }
+
+      try {
+        // URL requires the protocol to be explicitly specified.
+        HttpURLConnection urlConn =
+                (HttpURLConnection) new URL("http://" + mesosMasterUrl).openConnection();
+        urlConn.connect();
+        int code = urlConn.getResponseCode();
+        urlConn.disconnect();
+
+        if (code == 200) {
+          return FormValidation.ok("Connected to Mesos successfully");
+        } else {
+          return FormValidation.error("Status returned from url was " + code);
+        }
+      } catch (IOException e) {
+        logger.warn("Failed to connect to Mesos at {}", mesosMasterUrl, e);
+        return FormValidation.error(e.getMessage());
+      }
     }
   }
 
