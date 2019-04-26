@@ -111,13 +111,12 @@ public class JenkinsConfigClient {
   /**
    * Adds defaults from a manual form submit with Chrome Dev Tools.
    *
-   * The form includes a JSON field with all default configurations.
+   * <p>The form includes a JSON field with all default configurations.
    *
    * @param builder The json builder that will be changed.
    * @param jenkinsUrl URL for jenkins.
    * @return The changed builder.
    */
-
   private JsonObjectBuilder addJsonDefaults(JsonObjectBuilder builder, String jenkinsUrl) {
     return builder
         .add("system_message", "")
