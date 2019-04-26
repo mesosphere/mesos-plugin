@@ -22,10 +22,10 @@ dependencies {
     api ('com.mesosphere.usi:core') { version { branch = usiBranch } }
     api ('com.mesosphere.usi:core-models') { version { branch = usiBranch } }
     api ('com.mesosphere.usi:mesos-client') { version { branch = usiBranch } }
-    api 'com.squareup.okhttp3:okhttp:3.14.1'
     api group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 
     // Test dependencies
+    testImplementation 'com.squareup.okhttp3:okhttp:3.14.1'
     testImplementation 'javax.json:javax.json-api:1.1'
     testImplementation 'org.glassfish:javax.json:1.0.4'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
