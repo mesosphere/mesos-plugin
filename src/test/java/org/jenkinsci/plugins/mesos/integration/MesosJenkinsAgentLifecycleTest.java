@@ -50,7 +50,7 @@ public class MesosJenkinsAgentLifecycleTest {
 
     final String name = "jenkins-lifecycle";
     final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE, idleMin);
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
     agent.waitUntilOnlineAsync().get();
 
@@ -79,7 +79,7 @@ public class MesosJenkinsAgentLifecycleTest {
 
     final String name = "jenkins-node-terminate";
     final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE, idleMin);
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
     agent.waitUntilOnlineAsync().get();
@@ -106,7 +106,7 @@ public class MesosJenkinsAgentLifecycleTest {
 
     final String name = "jenkins-node-delete";
     final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE, idleMin);
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
     agent.waitUntilOnlineAsync().get();
@@ -133,7 +133,7 @@ public class MesosJenkinsAgentLifecycleTest {
 
     final String name = "jenkins-node-delete";
     final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE, idleMin);
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
     agent.waitUntilOnlineAsync().get();

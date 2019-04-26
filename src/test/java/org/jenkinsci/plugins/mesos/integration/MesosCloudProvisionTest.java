@@ -53,7 +53,7 @@ public class MesosCloudProvisionTest {
     LabelAtom label = new LabelAtom("label");
     final String idleMin = "1";
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE, idleMin);
+        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE);
     List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
 
     MesosCloud cloud =
@@ -86,7 +86,7 @@ public class MesosCloudProvisionTest {
   public void testStartAgent(TestUtils.JenkinsRule j) throws Exception {
     final String name = "jenkins-agent";
     final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE, idleMin);
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
     List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
     MesosCloud cloud =
         new MesosCloud(

@@ -53,7 +53,7 @@ class MesosApiTest {
 
     final String name = "jenkins-start-agent";
     final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE, idleMin);
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
     MesosJenkinsAgent agent = api.enqueueAgent(null, name, spec).toCompletableFuture().get();
 
     Awaitility.await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
@@ -69,7 +69,7 @@ class MesosApiTest {
 
     final String name = "jenkins-stop-agent";
     final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE, idleMin);
+    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
     MesosJenkinsAgent agent = api.enqueueAgent(null, name, spec).toCompletableFuture().get();
     // Poll state until we get something.
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
