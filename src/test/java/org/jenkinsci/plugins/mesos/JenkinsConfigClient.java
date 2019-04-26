@@ -108,6 +108,16 @@ public class JenkinsConfigClient {
     return this.client.newCall(request).execute();
   }
 
+  /**
+   * Adds defaults from a manual form submit with Chrome Dev Tools.
+   *
+   * The form includes a JSON field with all default configurations.
+   *
+   * @param builder The json builder that will be changed.
+   * @param jenkinsUrl URL for jenkins.
+   * @return The changed builder.
+   */
+
   private JsonObjectBuilder addJsonDefaults(JsonObjectBuilder builder, String jenkinsUrl) {
     return builder
         .add("system_message", "")
@@ -181,6 +191,14 @@ public class JenkinsConfigClient {
         .add("hudson-task-Shell", Json.createObjectBuilder().add("shell", "").build());
   }
 
+  /**
+   * Adds defaults from a manual form submit with Chrome Dev Tools.
+   *
+   * @param builder The form data builder that will be changed.
+   * @param jenkinsUrl URL for jenkins.
+   * @return The changed builder.
+   * @throws UnsupportedEncodingException
+   */
   private FormDataBuilder addFormDefaults(FormDataBuilder builder, String jenkinsUrl)
       throws UnsupportedEncodingException {
     return builder
