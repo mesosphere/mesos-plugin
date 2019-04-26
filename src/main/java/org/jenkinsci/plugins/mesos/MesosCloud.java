@@ -173,22 +173,24 @@ public class MesosCloud extends AbstractCloudImpl {
     }
 
     /** Test connection from Mesos Cloud configuration page. */
-    public FormValidation doTestConnection(@QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
+    public FormValidation doTestConnection(
+        @QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
       mesosMasterUrl = mesosMasterUrl.trim();
 
       if (mesosMasterUrl.startsWith("zk://")) {
-        return FormValidation.warning("Zookeeper paths can be used, but the connection cannot be " +
-                "tested prior to saving this page.");
+        return FormValidation.warning(
+            "Zookeeper paths can be used, but the connection cannot be "
+                + "tested prior to saving this page.");
       }
 
-      if (mesosMasterUrl.startsWith("http://") || mesosMasterUrl.startsWith("https://") ) {
+      if (mesosMasterUrl.startsWith("http://") || mesosMasterUrl.startsWith("https://")) {
         return FormValidation.error("Please omit 'http(s)://'.");
       }
 
       try {
         // URL requires the protocol to be explicitly specified.
         HttpURLConnection urlConn =
-                (HttpURLConnection) new URL("http://" + mesosMasterUrl).openConnection();
+            (HttpURLConnection) new URL("http://" + mesosMasterUrl).openConnection();
         urlConn.connect();
         int code = urlConn.getResponseCode();
         urlConn.disconnect();
