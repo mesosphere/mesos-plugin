@@ -18,13 +18,25 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   private final Node.Mode mode;
   private final int idleTerminationMinutes;
+  private final Boolean reusable;
+  private final double cpus;
+  private final int mem;
 
   @DataBoundConstructor
-  public MesosAgentSpecTemplate(String label, Node.Mode mode) {
+  public MesosAgentSpecTemplate(
+      String label,
+      Node.Mode mode,
+      String idleTerminationMinutes,
+      Boolean reusable,
+      String cpus,
+      String mem) {
     this.label = label;
     this.labelSet = Label.parse(label);
     this.mode = mode;
-    this.idleTerminationMinutes = 1;
+    this.idleTerminationMinutes = Integer.parseInt(idleTerminationMinutes);
+    this.reusable = reusable;
+    this.cpus = Double.parseDouble(cpus);
+    this.mem = Integer.parseInt(mem);
   }
 
   @Extension
@@ -54,18 +66,18 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   }
 
   public double getCpu() {
-    return 0.1;
+    return this.cpus;
   }
 
   public int getMemory() {
-    return 32;
+    return this.mem;
   }
 
   public int getIdleTerminationMinutes() {
-    return idleTerminationMinutes;
+    return this.idleTerminationMinutes;
   }
 
   public Boolean getReusable() {
-    return true;
+    return this.reusable;
   }
 }
