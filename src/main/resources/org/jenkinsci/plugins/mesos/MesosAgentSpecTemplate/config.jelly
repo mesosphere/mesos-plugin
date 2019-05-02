@@ -36,13 +36,13 @@
 
          <f:entry title="${%Mesos Offer Selection Attributes}" field="agentAttributes">
                  <f:textbox/>
-         </f:entry>
+         </f:entry>git st
 
-         <f:entry title="${%Additional Jenkins Slave JVM arguments}" field="jvmArgs">
+         <f:entry title="${%Additional Jenkins Agent JVM arguments}" field="jvmArgs">
               <f:textbox default="-Xms16m -XX:+UseConcMarkSweepGC -Djava.net.preferIPv4Stack=true"/>
          </f:entry>
 
-         <f:entry title="${%Additional Jenkins Slave Agent JNLP arguments}" field="jnlpArgs">
+         <f:entry title="${%Additional Jenkins Agent Agent JNLP arguments}" field="jnlpArgs">
              <f:textbox default="-noReconnect"/>
          </f:entry>
 

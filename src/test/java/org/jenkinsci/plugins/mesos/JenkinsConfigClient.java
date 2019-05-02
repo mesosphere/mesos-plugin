@@ -73,6 +73,7 @@ public class JenkinsConfigClient {
                                     .add("mode", mode)
                                     .add("idleTerminationMinutes", "1")
                                     .add("cpus", "0.1")
+                                    .add("mem", "32")
                                     .add("reusable", true)
                                     .add("minExecutors", "1")
                                     .add("maxExecutors", "1")
