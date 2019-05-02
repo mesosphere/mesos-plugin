@@ -10,10 +10,7 @@ import com.mesosphere.usi.core.models.PodStatusUpdated;
 import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.TaskListener;
-import hudson.slaves.AbstractCloudComputer;
-import hudson.slaves.AbstractCloudSlave;
-import hudson.slaves.JNLPLauncher;
-import hudson.slaves.NodeProperty;
+import hudson.slaves.*;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -29,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Representation of a Jenkins node on Mesos. */
-public class MesosJenkinsAgent extends AbstractCloudSlave {
+public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNode {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosJenkinsAgent.class);
 
@@ -148,6 +145,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave {
     }
   }
 
+  @Override
   public Node asNode() {
     return this;
   }
@@ -162,7 +160,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave {
     try {
       logger.info("killing task {}", this.podId);
       // create a terminating spec for this pod
-      Jenkins.getInstanceOrNull().removeNode(this.asNode());
+      Jenkins.getInstanceOrNull().removeNode(this);
       this.getCloud().getMesosApi().killAgent(this.podId);
     } catch (Exception ex) {
       logger.warn("error when killing task {}", this.podId, ex);

@@ -88,7 +88,6 @@ public class MesosCloud extends AbstractCloudImpl {
         int minExecutors = spec.getMinExecutors();
         int maxExecutors = spec.getMaxExecutors();
         int numExecutors = Math.max(minExecutors, Math.min(excessWorkload, maxExecutors));
-        excessWorkload -= numExecutors;
         logger.info(
             "Excess workload of {} provisioning new Jenkins agent on Mesos cluster with {} executors",
             excessWorkload,
@@ -96,7 +95,7 @@ public class MesosCloud extends AbstractCloudImpl {
         final String agentName = spec.getName();
         nodes.add(
             new NodeProvisioner.PlannedNode(agentName, startAgent(agentName, spec), numExecutors));
-        excessWorkload--;
+        excessWorkload -= numExecutors;
       } catch (Exception ex) {
         logger.warn("could not create planned node", ex);
       }
@@ -145,7 +144,7 @@ public class MesosCloud extends AbstractCloudImpl {
         .thenCompose(
             mesosAgent -> {
               try {
-                Jenkins.get().addNode(mesosAgent.asNode());
+                Jenkins.get().addNode(mesosAgent);
                 logger.info("waiting for node to come online...");
                 return mesosAgent
                     .waitUntilOnlineAsync()
