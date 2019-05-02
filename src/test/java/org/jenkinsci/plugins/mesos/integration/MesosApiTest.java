@@ -56,7 +56,24 @@ class MesosApiTest {
     final String idleMin = "1";
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE, idleMin, true, "0.1", "32");
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
 
     MesosJenkinsAgent agent = api.enqueueAgent(null, name, spec).toCompletableFuture().get();
 
@@ -74,7 +91,25 @@ class MesosApiTest {
     final String idleMin = "1";
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE, idleMin, true, "0.1", "32");
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
+
     MesosJenkinsAgent agent = api.enqueueAgent(null, name, spec).toCompletableFuture().get();
     // Poll state until we get something.
     await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);

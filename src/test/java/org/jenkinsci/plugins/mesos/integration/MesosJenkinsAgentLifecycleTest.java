@@ -53,7 +53,24 @@ public class MesosJenkinsAgentLifecycleTest {
     final String idleMin = "1";
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE, idleMin, true, "0.1", "32");
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
     agent.waitUntilOnlineAsync().get();
 
@@ -84,7 +101,24 @@ public class MesosJenkinsAgentLifecycleTest {
     final String idleMin = "1";
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE, idleMin, true, "0.1", "32");
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
     agent.waitUntilOnlineAsync().get();
@@ -113,7 +147,24 @@ public class MesosJenkinsAgentLifecycleTest {
     final String idleMin = "1";
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE, idleMin, true, "0.1", "32");
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
     agent.waitUntilOnlineAsync().get();
@@ -142,7 +193,24 @@ public class MesosJenkinsAgentLifecycleTest {
     final String idleMin = "1";
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE, idleMin, true, "0.1", "32");
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            null);
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
     agent.waitUntilOnlineAsync().get();

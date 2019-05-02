@@ -12,7 +12,6 @@ import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.slaves.AbstractCloudComputer;
 import hudson.slaves.AbstractCloudSlave;
-import hudson.slaves.EphemeralNode;
 import hudson.slaves.JNLPLauncher;
 import hudson.slaves.NodeProperty;
 import java.io.IOException;
@@ -30,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Representation of a Jenkins node on Mesos. */
-public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNode {
+public class MesosJenkinsAgent extends AbstractCloudSlave {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosJenkinsAgent.class);
 
@@ -130,6 +129,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
     return MesosSlavePodSpec.builder()
         .withCpu(this.spec.getCpu())
         .withMemory(this.spec.getMemory())
+        .withDisk(this.spec.getDisk())
         .withName(this.name)
         .withJenkinsUrl(this.jenkinsUrl)
         .withGoal(goal)
@@ -148,7 +148,6 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
     }
   }
 
-  @Override
   public Node asNode() {
     return this;
   }
@@ -163,7 +162,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
     try {
       logger.info("killing task {}", this.podId);
       // create a terminating spec for this pod
-      Jenkins.getInstanceOrNull().removeNode(this);
+      Jenkins.getInstanceOrNull().removeNode(this.asNode());
       this.getCloud().getMesosApi().killAgent(this.podId);
     } catch (Exception ex) {
       logger.warn("error when killing task {}", this.podId, ex);
