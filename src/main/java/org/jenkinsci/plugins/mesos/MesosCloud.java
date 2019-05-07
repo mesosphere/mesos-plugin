@@ -263,6 +263,12 @@ public class MesosCloud extends AbstractCloudImpl {
       throw new NotImplementedException("Connection testing is not supported yet.");
     }
 
+    /**
+     * Validate that given string is a proper URL.
+     *
+     * @param url The URL as a string.
+     * @return true if the string is a valid URL, false otherwise
+     */
     private boolean isValidUrl(String url) {
       try {
         new URL(url);
