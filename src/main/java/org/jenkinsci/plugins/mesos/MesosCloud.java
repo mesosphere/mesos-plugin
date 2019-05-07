@@ -21,9 +21,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
-import jdk.internal.joptsimple.internal.Strings;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.slf4j.Logger;
@@ -191,7 +191,7 @@ public class MesosCloud extends AbstractCloudImpl {
      * @return Whether the framework name is empty or not.
      */
     public FormValidation doCheckFrameworkName(@QueryParameter String frameworkName) {
-      if (Strings.isNullOrEmpty(frameworkName)) {
+      if (StringUtils.isEmpty(frameworkName)) {
         return FormValidation.error("The framework name must not be empty.");
       } else {
         return FormValidation.ok();
@@ -206,7 +206,7 @@ public class MesosCloud extends AbstractCloudImpl {
      * @return Whether the role is invalid or not.
      */
     public FormValidation doCheckRole(@QueryParameter String role) {
-      if (Strings.isNullOrEmpty(role)) {
+      if (StringUtils.isEmpty(role)) {
         return FormValidation.error("The role must not be empty.");
       } else if (".".equals(role) || "..".equals(role)) {
         return FormValidation.error("The role must not be '.' or '..'.");
@@ -226,7 +226,7 @@ public class MesosCloud extends AbstractCloudImpl {
      * @return Whether the agent user is empty or not.
      */
     public FormValidation doCheckAgentUser(@QueryParameter String agentUser) {
-      if (Strings.isNullOrEmpty(agentUser)) {
+      if (StringUtils.isEmpty(agentUser)) {
         return FormValidation.error("The agent user must not be empty.");
       } else {
         return FormValidation.ok();
