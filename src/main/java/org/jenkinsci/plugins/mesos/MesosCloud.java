@@ -56,12 +56,17 @@ public class MesosCloud extends AbstractCloudImpl {
       String agentUser,
       String jenkinsUrl,
       List<MesosAgentSpecTemplate> mesosAgentSpecTemplates)
-      throws InterruptedException, ExecutionException, MalformedURLException {
+      throws InterruptedException, ExecutionException {
     super("MesosCloud", null);
 
-    this.mesosMasterUrl = new URL(mesosMasterUrl);
-    this.jenkinsUrl = new URL(jenkinsUrl);
-    this.agentUser = agentUser; // TODO: default to system user
+    try {
+      this.mesosMasterUrl = new URL(mesosMasterUrl);
+      this.jenkinsUrl = new URL(jenkinsUrl);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException("Mesos Cloud URL validation failed", e);
+    }
+
+    this.agentUser = agentUser;
     this.mesosAgentSpecTemplates = mesosAgentSpecTemplates;
 
     mesosApi = new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
