@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.text.Normalizer.Form;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -181,7 +180,11 @@ public class MesosCloud extends AbstractCloudImpl {
      * @return Whether the URL is valid or not.
      */
     public FormValidation doCheckMesosMasterUrl(@QueryParameter String mesosMasterUrl) {
-      return FormValidation.error(mesosMasterUrl + " is not a valid URL.");
+      if (isValidUrl(mesosMasterUrl)) {
+        return FormValidation.ok();
+      } else {
+        return FormValidation.error(mesosMasterUrl + " is not a valid URL.");
+      }
     }
 
     /**
@@ -201,7 +204,8 @@ public class MesosCloud extends AbstractCloudImpl {
     /**
      * Validates that the role is valid.
      *
-     * @see <a href="http://mesos.apache.org/documentation/latest/roles/#invalid-role-names">Mesos Roles</a>
+     * @see <a href="http://mesos.apache.org/documentation/latest/roles/#invalid-role-names">Mesos
+     *     Roles</a>
      * @param role The Mesos role supplied by the user.
      * @return Whether the role is invalid or not.
      */
@@ -212,8 +216,9 @@ public class MesosCloud extends AbstractCloudImpl {
         return FormValidation.error("The role must not be '.' or '..'.");
       } else if (role.startsWith("-")) {
         return FormValidation.error("The role must not start with '-'.");
-      } else if (role.matches("\\s+")) {
-        return FormValidation.error("The role must not contain any slash, backspace, or whitespace character.");
+      } else if (role.matches(".*(\\s+|/+|\\\\+).*")) {
+        return FormValidation.error(
+            "The role must not contain any slash, backslash, or whitespace character.");
       } else {
         return FormValidation.ok();
       }
@@ -240,13 +245,26 @@ public class MesosCloud extends AbstractCloudImpl {
      * @return Whether the Jenkins URL is valid or not.
      */
     public FormValidation doCheckJenkinsUrl(@QueryParameter String jenkinsUrl) {
-      return FormValidation.error(jenkinsUrl + " is not a valid URL.");
+      if (isValidUrl(jenkinsUrl)) {
+        return FormValidation.ok();
+      } else {
+        return FormValidation.error(jenkinsUrl + " is not a valid URL.");
+      }
     }
 
     /** Test connection from configuration page. */
     public FormValidation doTestConnection(
         @QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
       throw new NotImplementedException("Connection testing is not supported yet.");
+    }
+
+    private boolean isValidUrl(String url) {
+      try {
+        new URL(url);
+        return true;
+      } catch (MalformedURLException e) {
+        return false;
+      }
     }
   }
 

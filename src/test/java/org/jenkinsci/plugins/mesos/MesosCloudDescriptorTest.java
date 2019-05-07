@@ -12,6 +12,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class MesosCloudDescriptorTest {
 
   @Test
+  void validateMesosMasterUrl(TestUtils.JenkinsRule j) throws Exception {
+    MesosCloud.DescriptorImpl descriptor = new DescriptorImpl();
+    assertThat(descriptor.doCheckMesosMasterUrl("http/other").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckMesosMasterUrl("zk://localhost:5050").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckMesosMasterUrl("http://localhost:5050").kind, is(Kind.OK));
+    assertThat(descriptor.doCheckMesosMasterUrl("https://localhost:5050").kind, is(Kind.OK));
+  }
+
+  @Test
   void validateFrameworkName(TestUtils.JenkinsRule j) throws Exception {
     MesosCloud.DescriptorImpl descriptor = new DescriptorImpl();
     assertThat(descriptor.doCheckFrameworkName("").kind, is(Kind.ERROR));
@@ -19,9 +28,36 @@ public class MesosCloudDescriptorTest {
   }
 
   @Test
+  void validateRole(TestUtils.JenkinsRule j) throws Exception {
+    MesosCloud.DescriptorImpl descriptor = new DescriptorImpl();
+    assertThat(descriptor.doCheckRole("").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole("-something").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole(".").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole("..").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole(" ").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole("/something").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole("some/thing").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole("\\something").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole("some\\thing").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckRole("something").kind, is(Kind.OK));
+    assertThat(descriptor.doCheckRole("some.thing.").kind, is(Kind.OK));
+    assertThat(descriptor.doCheckRole("some-thing").kind, is(Kind.OK));
+    assertThat(descriptor.doCheckRole("*").kind, is(Kind.OK));
+  }
+
+  @Test
   void validateAgentUser(TestUtils.JenkinsRule j) throws Exception {
     MesosCloud.DescriptorImpl descriptor = new DescriptorImpl();
     assertThat(descriptor.doCheckAgentUser("").kind, is(Kind.ERROR));
     assertThat(descriptor.doCheckAgentUser("something").kind, is(Kind.OK));
+  }
+
+  @Test
+  void validateJenkinsUrl(TestUtils.JenkinsRule j) throws Exception {
+    MesosCloud.DescriptorImpl descriptor = new DescriptorImpl();
+    assertThat(descriptor.doCheckJenkinsUrl("http/other").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckJenkinsUrl("zk://localhost:5050").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckJenkinsUrl("http://localhost:5050").kind, is(Kind.OK));
+    assertThat(descriptor.doCheckJenkinsUrl("https://localhost:5050").kind, is(Kind.OK));
   }
 }
