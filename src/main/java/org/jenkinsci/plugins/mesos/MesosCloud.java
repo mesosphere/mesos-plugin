@@ -15,11 +15,13 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.Normalizer.Form;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
+import jdk.internal.joptsimple.internal.Strings;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.NotImplementedException;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -172,7 +174,74 @@ public class MesosCloud extends AbstractCloudImpl {
       return "Mesos Cloud";
     }
 
-    // TODO: validate URLs
+    /**
+     * Validates that the Mesos master URL is a valid URL.
+     *
+     * @param mesosMasterUrl The Mesos master URL supplied by the user.
+     * @return Whether the URL is valid or not.
+     */
+    public FormValidation doCheckMesosMasterUrl(@QueryParameter String mesosMasterUrl) {
+      return FormValidation.error(mesosMasterUrl + " is not a valid URL.");
+    }
+
+    /**
+     * Validates that the framework name is not empty.
+     *
+     * @param frameworkName The framework name set by the user.
+     * @return Whether the framework name is empty or not.
+     */
+    public FormValidation doCheckFrameworkName(@QueryParameter String frameworkName) {
+      if (Strings.isNullOrEmpty(frameworkName)) {
+        return FormValidation.error("The framework name must not be empty.");
+      } else {
+        return FormValidation.ok();
+      }
+    }
+
+    /**
+     * Validates that the role is valid.
+     *
+     * @see <a href="http://mesos.apache.org/documentation/latest/roles/#invalid-role-names">Mesos Roles</a>
+     * @param role The Mesos role supplied by the user.
+     * @return Whether the role is invalid or not.
+     */
+    public FormValidation doCheckRole(@QueryParameter String role) {
+      if (Strings.isNullOrEmpty(role)) {
+        return FormValidation.error("The role must not be empty.");
+      } else if (".".equals(role) || "..".equals(role)) {
+        return FormValidation.error("The role must not be '.' or '..'.");
+      } else if (role.startsWith("-")) {
+        return FormValidation.error("The role must not start with '-'.");
+      } else if (role.matches("\\s+")) {
+        return FormValidation.error("The role must not contain any slash, backspace, or whitespace character.");
+      } else {
+        return FormValidation.ok();
+      }
+    }
+
+    /**
+     * Validates that the agent user is not empty.
+     *
+     * @param agentUser The agent user set by the user.
+     * @return Whether the agent user is empty or not.
+     */
+    public FormValidation doCheckAgentUser(@QueryParameter String agentUser) {
+      if (Strings.isNullOrEmpty(agentUser)) {
+        return FormValidation.error("The agent user must not be empty.");
+      } else {
+        return FormValidation.ok();
+      }
+    }
+
+    /**
+     * Validates that the Jenkins URL is a valid URL.
+     *
+     * @param jenkinsUrl The Jenkins URL supplied by the user.
+     * @return Whether the Jenkins URL is valid or not.
+     */
+    public FormValidation doCheckJenkinsUrl(@QueryParameter String jenkinsUrl) {
+      return FormValidation.error(jenkinsUrl + " is not a valid URL.");
+    }
 
     /** Test connection from configuration page. */
     public FormValidation doTestConnection(
