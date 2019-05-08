@@ -5,6 +5,7 @@ sourceControl {
         producesModule("com.mesosphere.usi:core")
         producesModule("com.mesosphere.usi:core-models")
         producesModule("com.mesosphere.usi:mesos-client")
+        producesModule("com.mesosphere.usi:persistence")
         producesModule("com.mesosphere.usi:test-utils")
     }
 }

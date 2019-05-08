@@ -19,7 +19,8 @@ ansiColor('xterm') {
         sh 'sudo -E ./ci/provision.sh 1.7.0'
         sh 'sudo -E ./gradlew check --info'
       } finally {
-        junit(allowEmptyResults: true, testResults: 'build/test-results/test/*.xml')
+        junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
+	recordIssues enabledForFailure: true, tools: [[tool: [$class: 'SpotBugs']]]
       }
     } 
   }
