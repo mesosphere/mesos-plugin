@@ -7,11 +7,13 @@ import com.mesosphere.usi.core.models.Goal;
 import com.mesosphere.usi.core.models.PodSpec;
 import com.mesosphere.usi.core.models.PodStatus;
 import com.mesosphere.usi.core.models.PodStatusUpdated;
+import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.slaves.*;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -114,7 +116,12 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
 
   /** @return whether the Jenkins agent connected and is online. */
   public synchronized boolean isOnline() {
-    return this.toComputer().isOnline();
+    final Computer computer = this.toComputer();
+    if (computer != null) {
+      return computer.isOnline();
+    } else {
+      return false;
+    }
   }
 
   /** @return whether the agent is launching and not connected yet. */
@@ -160,7 +167,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
     try {
       logger.info("killing task {}", this.podId);
       // create a terminating spec for this pod
-      Jenkins.getInstanceOrNull().removeNode(this);
+      Jenkins.get().removeNode(this);
       this.getCloud().getMesosApi().killAgent(this.podId);
     } catch (Exception ex) {
       logger.warn("error when killing task {}", this.podId, ex);
@@ -179,5 +186,16 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
   /** get the podId tied to this task. */
   public String getPodId() {
     return podId;
+  }
+
+  // Mark as not serializable.
+
+  private void writeObject(java.io.ObjectOutputStream stream) throws IOException {
+    throw new NotSerializableException();
+  }
+
+  private void readObject(java.io.ObjectInputStream stream)
+      throws IOException, ClassNotFoundException {
+    throw new NotSerializableException();
   }
 }

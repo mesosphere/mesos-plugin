@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.mesos.api;
 
 import akka.Done;
-import akka.Done$;
 import com.mesosphere.usi.core.models.PodId;
 import com.mesosphere.usi.core.models.PodRecord;
 import com.mesosphere.usi.repository.PodRecordRepository;
