@@ -20,7 +20,7 @@ ansiColor('xterm') {
         sh 'sudo -E ./gradlew check --info'
       } finally {
         junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
-	recordIssues enabledForFailure: true, tools: [[tool: [$class: 'SpotBugs']]]
+        recordIssues enabledForFailure: true, tools: [[pattern: 'build/reports/spotbugs/*.xml',tool: [$class: 'SpotBugs']]]
       }
     } 
   }
