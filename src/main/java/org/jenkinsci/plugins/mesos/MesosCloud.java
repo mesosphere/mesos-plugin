@@ -185,6 +185,7 @@ public class MesosCloud extends AbstractCloudImpl {
      * @return Whether the URL is valid or not.
      */
     public FormValidation doCheckMesosMasterUrl(@QueryParameter String mesosMasterUrl) {
+      // This will change with https://jira.mesosphere.com/browse/DCOS-53671.
       if (isValidUrl(mesosMasterUrl)) {
         return FormValidation.ok();
       } else {
@@ -230,14 +231,17 @@ public class MesosCloud extends AbstractCloudImpl {
     }
 
     /**
-     * Validates that the agent user is not empty.
+     * Validates that the agent user is not empty and a valid UNIX user name.
      *
+     * @see <a href="https://www.unix.com/man-page/linux/8/useradd/">man useradd(8)</a>
      * @param agentUser The agent user set by the user.
      * @return Whether the agent user is empty or not.
      */
     public FormValidation doCheckAgentUser(@QueryParameter String agentUser) {
       if (StringUtils.isEmpty(agentUser)) {
         return FormValidation.error("The agent user must not be empty.");
+      } else if (!agentUser.matches("[a-z_][a-z0-9_-]*[$]?")) {
+        return FormValidation.error("The agent user must be a valid UNIX user name.");
       } else {
         return FormValidation.ok();
       }

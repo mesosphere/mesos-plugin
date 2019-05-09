@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
+import org.jenkinsci.plugins.mesos.api.InMemoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
@@ -103,7 +104,7 @@ public class MesosApi {
    */
   private CompletableFuture<SourceQueueWithComplete<SpecUpdated>> runScheduler(
       SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
-    return Scheduler.asFlow(specsSnapshot, client, materializer)
+    return Scheduler.asFlow(specsSnapshot, client, new InMemoryRepository(), materializer)
         .thenApply(
             builder -> {
               // We create a SourceQueue and assume that the very first item is a spec snapshot.

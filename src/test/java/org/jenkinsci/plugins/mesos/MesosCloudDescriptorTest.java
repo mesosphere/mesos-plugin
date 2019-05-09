@@ -49,6 +49,8 @@ public class MesosCloudDescriptorTest {
   void validateAgentUser(TestUtils.JenkinsRule j) throws Exception {
     MesosCloud.DescriptorImpl descriptor = new DescriptorImpl();
     assertThat(descriptor.doCheckAgentUser("").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckAgentUser("Invalid").kind, is(Kind.ERROR));
+    assertThat(descriptor.doCheckAgentUser("Inval$d").kind, is(Kind.ERROR));
     assertThat(descriptor.doCheckAgentUser("something").kind, is(Kind.OK));
   }
 
