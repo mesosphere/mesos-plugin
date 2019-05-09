@@ -40,7 +40,6 @@ public class MesosCloud extends AbstractCloudImpl {
 
   private final URL mesosMasterUrl;
 
-  // this is a test to see
   private MesosApi mesosApi;
 
   private final String agentUser;
