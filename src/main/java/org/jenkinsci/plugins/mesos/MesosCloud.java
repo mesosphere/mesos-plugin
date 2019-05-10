@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ public class MesosCloud extends AbstractCloudImpl {
   private static final Logger logger = LoggerFactory.getLogger(MesosCloud.class);
 
   private final URL mesosMasterUrl;
+
   private MesosApi mesosApi;
 
   private final String agentUser;
@@ -55,12 +57,17 @@ public class MesosCloud extends AbstractCloudImpl {
       String agentUser,
       String jenkinsUrl,
       List<MesosAgentSpecTemplate> mesosAgentSpecTemplates)
-      throws InterruptedException, ExecutionException, MalformedURLException {
+      throws InterruptedException, ExecutionException {
     super("MesosCloud", null);
 
-    this.mesosMasterUrl = new URL(mesosMasterUrl);
-    this.jenkinsUrl = new URL(jenkinsUrl);
-    this.agentUser = agentUser; // TODO: default to system user
+    try {
+      this.mesosMasterUrl = new URL(mesosMasterUrl);
+      this.jenkinsUrl = new URL(jenkinsUrl);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException("Mesos Cloud URL validation failed", e);
+    }
+
+    this.agentUser = agentUser;
     this.mesosAgentSpecTemplates = mesosAgentSpecTemplates;
 
     mesosApi = new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
@@ -85,12 +92,17 @@ public class MesosCloud extends AbstractCloudImpl {
 
     while (excessWorkload > 0) {
       try {
+        int minExecutors = spec.getMinExecutors();
+        int maxExecutors = spec.getMaxExecutors();
+        int numExecutors = Math.max(minExecutors, Math.min(excessWorkload, maxExecutors));
         logger.info(
-            "Excess workload of {} provisioning new Jenkins agent on Mesos cluster",
-            excessWorkload);
+            "Excess workload of {} provisioning new Jenkins agent on Mesos cluster with {} executors",
+            excessWorkload,
+            numExecutors);
         final String agentName = spec.getName();
-        nodes.add(new NodeProvisioner.PlannedNode(agentName, startAgent(agentName, spec), 1));
-        excessWorkload--;
+        nodes.add(
+            new NodeProvisioner.PlannedNode(agentName, startAgent(agentName, spec), numExecutors));
+        excessWorkload -= numExecutors;
       } catch (Exception ex) {
         logger.warn("could not create planned node", ex);
       }
@@ -155,11 +167,6 @@ public class MesosCloud extends AbstractCloudImpl {
         .toCompletableFuture();
   }
 
-  @Override
-  public DescriptorImpl getDescriptor() {
-    return (DescriptorImpl) super.getDescriptor();
-  }
-
   @Extension
   public static class DescriptorImpl extends Descriptor<Cloud> {
 
@@ -172,7 +179,91 @@ public class MesosCloud extends AbstractCloudImpl {
       return "Mesos Cloud";
     }
 
-    /** Test connection from Mesos Cloud configuration page. */
+    /**
+     * Validates that the Mesos master URL is a valid URL.
+     *
+     * @param mesosMasterUrl The Mesos master URL supplied by the user.
+     * @return Whether the URL is valid or not.
+     */
+    public FormValidation doCheckMesosMasterUrl(@QueryParameter String mesosMasterUrl) {
+      // This will change with https://jira.mesosphere.com/browse/DCOS-53671.
+      if (isValidUrl(mesosMasterUrl)) {
+        return FormValidation.ok();
+      } else {
+        return FormValidation.error(mesosMasterUrl + " is not a valid URL.");
+      }
+    }
+
+    /**
+     * Validates that the framework name is not empty.
+     *
+     * @param frameworkName The framework name set by the user.
+     * @return Whether the framework name is empty or not.
+     */
+    public FormValidation doCheckFrameworkName(@QueryParameter String frameworkName) {
+      frameworkName = frameworkName.trim();
+      if (StringUtils.isEmpty(frameworkName)) {
+        return FormValidation.error("The framework name must not be empty.");
+      } else {
+        return FormValidation.ok();
+      }
+    }
+
+    /**
+     * Validates that the role is valid.
+     *
+     * @see <a href="http://mesos.apache.org/documentation/latest/roles/#invalid-role-names">Mesos
+     *     Roles</a>
+     * @param role The Mesos role supplied by the user.
+     * @return Whether the role is invalid or not.
+     */
+    public FormValidation doCheckRole(@QueryParameter String role) {
+      if (StringUtils.isEmpty(role)) {
+        return FormValidation.error("The role must not be empty.");
+      } else if (".".equals(role) || "..".equals(role)) {
+        return FormValidation.error("The role must not be '.' or '..'.");
+      } else if (role.startsWith("-")) {
+        return FormValidation.error("The role must not start with '-'.");
+      } else if (role.matches(".*(\\s+|/+|\\\\+).*")) {
+        return FormValidation.error(
+            "The role must not contain any slash, backslash, or whitespace character.");
+      } else {
+        return FormValidation.ok();
+      }
+    }
+
+    /**
+     * Validates that the agent user is not empty and a valid UNIX user name.
+     *
+     * @see <a href="https://www.unix.com/man-page/linux/8/useradd/">man useradd(8)</a>
+     * @param agentUser The agent user set by the user.
+     * @return Whether the agent user is empty or not.
+     */
+    public FormValidation doCheckAgentUser(@QueryParameter String agentUser) {
+      if (StringUtils.isEmpty(agentUser)) {
+        return FormValidation.error("The agent user must not be empty.");
+      } else if (!agentUser.matches("[a-z_][a-z0-9_-]*[$]?")) {
+        return FormValidation.error("The agent user must be a valid UNIX user name.");
+      } else {
+        return FormValidation.ok();
+      }
+    }
+
+    /**
+     * Validates that the Jenkins URL is a valid URL.
+     *
+     * @param jenkinsUrl The Jenkins URL supplied by the user.
+     * @return Whether the Jenkins URL is valid or not.
+     */
+    public FormValidation doCheckJenkinsUrl(@QueryParameter String jenkinsUrl) {
+      if (isValidUrl(jenkinsUrl)) {
+        return FormValidation.ok();
+      } else {
+        return FormValidation.error(jenkinsUrl + " is not a valid URL.");
+      }
+    }
+
+    /** Test connection from configuration page. */
     public FormValidation doTestConnection(
         @QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
       mesosMasterUrl = mesosMasterUrl.trim();
@@ -205,9 +296,27 @@ public class MesosCloud extends AbstractCloudImpl {
         return FormValidation.error(e.getMessage());
       }
     }
+
+    /**
+     * Validate that given string is a proper URL.
+     *
+     * @param url The URL as a string.
+     * @return true if the string is a valid URL, false otherwise
+     */
+    private boolean isValidUrl(String url) {
+      try {
+        new URL(url);
+        return true;
+      } catch (MalformedURLException e) {
+        return false;
+      }
+    }
   }
 
   // Getters
+  public List<MesosAgentSpecTemplate> getMesosAgentSpecTemplates() {
+    return this.mesosAgentSpecTemplates;
+  }
 
   public String getMesosMasterUrl() {
     return this.mesosMasterUrl.toString();

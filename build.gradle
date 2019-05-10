@@ -22,6 +22,7 @@ dependencies {
     api ('com.mesosphere.usi:core') { version { branch = usiBranch } }
     api ('com.mesosphere.usi:core-models') { version { branch = usiBranch } }
     api ('com.mesosphere.usi:mesos-client') { version { branch = usiBranch } }
+    api ('com.mesosphere.usi:persistence') { version { branch = usiBranch } }
     api group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 
     // Test dependencies
@@ -47,7 +48,7 @@ jenkinsPlugin {
     coreVersion = "2.164"
     displayName = "Mesos Cloud"
     url = "https://wiki.jenkins-ci.org/display/JENKINS/Mesos+Plugin"
-    gitHubUrl = "https://github.com/mesosphere/mesos-plugin/"
+    gitHubUrl = "https://github.com/mesosphere/jenkins-mesos-plugin/"
     shortName = "mesos"
 
     // The developers section is optional, and corresponds to the POM developers section.

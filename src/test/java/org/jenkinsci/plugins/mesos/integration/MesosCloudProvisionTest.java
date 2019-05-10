@@ -51,8 +51,26 @@ public class MesosCloudProvisionTest {
   @Test
   public void testJenkinsProvision(TestUtils.JenkinsRule j) throws Exception {
     LabelAtom label = new LabelAtom("label");
+    final String idleMin = "1";
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE);
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
     List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
 
     MesosCloud cloud =
@@ -74,6 +92,7 @@ public class MesosCloudProvisionTest {
 
       // ensure all plannedNodes are now running
       assertThat(agent.isRunning(), is(true));
+      assertThat(agent.getComputer().isOnline(), is(true));
     }
 
     // check that jenkins knows about all the plannedNodes
@@ -83,7 +102,28 @@ public class MesosCloudProvisionTest {
   @Test
   public void testStartAgent(TestUtils.JenkinsRule j) throws Exception {
     final String name = "jenkins-agent";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    final String idleMin = "1";
+    LabelAtom label = new LabelAtom("label");
+    final MesosAgentSpecTemplate spec =
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
+
     List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
     MesosCloud cloud =
         new MesosCloud(
@@ -96,7 +136,7 @@ public class MesosCloudProvisionTest {
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
 
-    await().atMost(5, TimeUnit.MINUTES).until(agent::isRunning);
+    await().atMost(10, TimeUnit.SECONDS).until(agent::isRunning);
 
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.isOnline(), is(true));
