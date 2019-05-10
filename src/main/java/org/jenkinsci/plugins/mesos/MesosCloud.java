@@ -17,7 +17,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -266,7 +265,8 @@ public class MesosCloud extends AbstractCloudImpl {
       }
     }
 
-    /** Test connection from configuration page.
+    /**
+     * Test connection from configuration page.
      *
      * @param mesosMasterUrl The Mesos master URL set by the user.
      * @return Whether the URL is correct and reachable or a validation error.
