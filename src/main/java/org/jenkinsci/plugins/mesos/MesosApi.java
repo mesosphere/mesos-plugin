@@ -78,7 +78,7 @@ public class MesosApi {
 
     Config conf = ConfigFactory.load(classLoader);
     MesosClientSettings clientSettings =
-        MesosClientSettings.fromConfig(conf.getConfig("mesos-client")).withMaster(masterUrl);
+        MesosClientSettings.fromConfig(conf.getConfig("mesos-client")).withMasters(Collections.singletonList(masterUrl));
     system = ActorSystem.create("mesos-scheduler", conf, classLoader);
     context = system.dispatcher();
     materializer = ActorMaterializer.create(system);
