@@ -266,7 +266,11 @@ public class MesosCloud extends AbstractCloudImpl {
       }
     }
 
-    /** Test connection from configuration page. */
+    /** Test connection from configuration page.
+     *
+     * @param mesosMasterUrl The Mesos master URL set by the user.
+     * @return Whether the URL is correct and reachable or a validation error.
+     */
     public FormValidation doTestConnection(
         @QueryParameter("mesosMasterUrl") String mesosMasterUrl) {
       FormValidation urlValidation = doCheckMesosMasterUrl(mesosMasterUrl);
