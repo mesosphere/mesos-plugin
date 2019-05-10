@@ -201,6 +201,7 @@ public class MesosCloud extends AbstractCloudImpl {
      * @return Whether the framework name is empty or not.
      */
     public FormValidation doCheckFrameworkName(@QueryParameter String frameworkName) {
+      frameworkName = frameworkName.trim();
       if (StringUtils.isEmpty(frameworkName)) {
         return FormValidation.error("The framework name must not be empty.");
       } else {
