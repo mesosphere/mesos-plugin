@@ -9,6 +9,7 @@ import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
 import com.mesosphere.usi.core.japi.Scheduler;
 import com.mesosphere.usi.core.models.*;
+import com.mesosphere.usi.repository.PodRecordRepository;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -24,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
-import org.jenkinsci.plugins.mesos.api.InMemoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
@@ -51,6 +51,8 @@ public class MesosApi {
   @XStreamOmitField private final ActorMaterializer materializer;
 
   @XStreamOmitField private final ExecutionContext context;
+
+  @XStreamOmitField private final PodRecordRepository repository;
 
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
@@ -89,6 +91,8 @@ public class MesosApi {
 
     stateMap = new ConcurrentHashMap<>();
 
+    repository = new MesosPodRecordRepository();
+
     logger.info("Starting USI scheduler flow.");
     updates = runScheduler(SpecsSnapshot.empty(), client, materializer).get();
   }
@@ -104,7 +108,7 @@ public class MesosApi {
    */
   private CompletableFuture<SourceQueueWithComplete<SpecUpdated>> runScheduler(
       SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
-    return Scheduler.asFlow(specsSnapshot, client, new InMemoryRepository(), materializer)
+    return Scheduler.asFlow(specsSnapshot, client, repository, materializer)
         .thenApply(
             builder -> {
               // We create a SourceQueue and assume that the very first item is a spec snapshot.

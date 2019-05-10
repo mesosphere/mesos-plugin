@@ -40,6 +40,7 @@ public class MesosCloud extends AbstractCloudImpl {
   private static final Logger logger = LoggerFactory.getLogger(MesosCloud.class);
 
   private final URL mesosMasterUrl;
+
   private MesosApi mesosApi;
 
   private final String agentUser;
@@ -284,6 +285,9 @@ public class MesosCloud extends AbstractCloudImpl {
   }
 
   // Getters
+  public List<MesosAgentSpecTemplate> getMesosAgentSpecTemplates() {
+    return this.mesosAgentSpecTemplates;
+  }
 
   public String getMesosMasterUrl() {
     return this.mesosMasterUrl.toString();
