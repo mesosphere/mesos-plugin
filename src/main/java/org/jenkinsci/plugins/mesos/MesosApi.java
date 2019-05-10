@@ -9,6 +9,7 @@ import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
 import com.mesosphere.usi.core.japi.Scheduler;
 import com.mesosphere.usi.core.models.*;
+import com.mesosphere.usi.repository.PodRecordRepository;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -50,6 +51,8 @@ public class MesosApi {
 
   @XStreamOmitField private final ExecutionContext context;
 
+  @XStreamOmitField private final PodRecordRepository repository;
+
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
    * MesosJenkinsAgent} instances.
@@ -84,6 +87,8 @@ public class MesosApi {
 
     stateMap = new ConcurrentHashMap<>();
 
+    repository = new MesosPodRecordRepository();
+
     logger.info("Starting USI scheduler flow.");
     updates = runScheduler(SpecsSnapshot.empty(), client, materializer).get();
   }
@@ -99,7 +104,7 @@ public class MesosApi {
    */
   private CompletableFuture<SourceQueueWithComplete<SpecUpdated>> runScheduler(
       SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
-    return Scheduler.asFlow(specsSnapshot, client, materializer)
+    return Scheduler.asFlow(specsSnapshot, client, repository, materializer)
         .thenApply(
             builder -> {
               // We create a SourceQueue and assume that the very first item is a spec snapshot.
