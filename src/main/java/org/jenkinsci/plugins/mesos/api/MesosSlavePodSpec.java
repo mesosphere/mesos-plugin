@@ -1,10 +1,6 @@
 package org.jenkinsci.plugins.mesos.api;
 
-import com.mesosphere.usi.core.models.FetchUri;
-import com.mesosphere.usi.core.models.Goal;
-import com.mesosphere.usi.core.models.PodId;
-import com.mesosphere.usi.core.models.PodSpec;
-import com.mesosphere.usi.core.models.RunSpec;
+import com.mesosphere.usi.core.models.*;
 import com.mesosphere.usi.core.models.resources.ScalarRequirement;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -44,7 +40,6 @@ public class MesosSlavePodSpec {
     private ScalarRequirement memory = null;
     private ScalarRequirement disk = null;
     private String role = "test";
-    private Goal goal = null;
 
     private int xmx = 0;
 
@@ -71,7 +66,7 @@ public class MesosSlavePodSpec {
 
     /**
      * Sets the maximum memory pool for the JVM aka Xmx. Please note that the Mesos task will have
-     * {@link Builder#JVM_MEM_OVERHEAD_FACTOR} more memory allocated.
+     * {@link Builder#JVM_XMX} more memory allocated.
      *
      * @param memory Memory in megabyte.
      * @return the pod spec builder.
@@ -97,19 +92,14 @@ public class MesosSlavePodSpec {
       return this;
     }
 
-    public Builder withGoal(Goal goal) {
-      this.goal = goal;
-      return this;
-    }
-
-    public PodSpec build() throws MalformedURLException, URISyntaxException {
+    public LaunchPod build() throws MalformedURLException, URISyntaxException {
       final RunSpec runSpec =
           new RunSpec(
               convertListToSeq(Arrays.asList(this.cpus, this.memory, this.disk)),
               this.buildCommand(),
               this.role,
               convertListToSeq(Arrays.asList(buildFetchUri())));
-      return new PodSpec(this.id, this.goal, runSpec);
+      return new LaunchPod(this.id, runSpec);
     }
 
     /** @return the agent shell command for the Mesos task. */

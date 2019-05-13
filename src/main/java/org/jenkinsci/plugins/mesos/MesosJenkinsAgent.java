@@ -3,10 +3,7 @@ package org.jenkinsci.plugins.mesos;
 import akka.NotUsed;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
-import com.mesosphere.usi.core.models.Goal;
-import com.mesosphere.usi.core.models.PodSpec;
-import com.mesosphere.usi.core.models.PodStatus;
-import com.mesosphere.usi.core.models.PodStatusUpdated;
+import com.mesosphere.usi.core.models.*;
 import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.TaskListener;
@@ -122,14 +119,13 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
     return (!isKilled() && !isOnline());
   }
 
-  public PodSpec getPodSpec(Goal goal) throws MalformedURLException, URISyntaxException {
+  public LaunchPod getLaunchCommand() throws MalformedURLException, URISyntaxException {
     return MesosSlavePodSpec.builder()
         .withCpu(this.spec.getCpu())
         .withMemory(this.spec.getMemory())
         .withDisk(this.spec.getDisk())
         .withName(this.name)
         .withJenkinsUrl(this.jenkinsUrl)
-        .withGoal(goal)
         .build();
   }
 
@@ -138,7 +134,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
    *
    * @param event The state event from USI which informs about the task status.
    */
-  public synchronized void update(PodStatusUpdated event) {
+  public synchronized void update(PodStatusUpdatedEvent event) {
     if (event.newStatus().isDefined()) {
       logger.info("Received new status for {}", event.id().value());
       this.currentStatus = Optional.of(event.newStatus().get());
