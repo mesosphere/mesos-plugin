@@ -97,8 +97,8 @@ public class MesosApi {
   }
 
   /**
-   * Constructs a queue of {@link SchedulerCommand}.
-   * All state events are processed by {@link MesosApi#updateState(StateEventOrSnapshot)}.
+   * Constructs a queue of {@link SchedulerCommand}. All state events are processed by {@link
+   * MesosApi#updateState(StateEventOrSnapshot)}.
    *
    * @param client The Mesos client that is used.
    * @param materializer The {@link ActorMaterializer} used for the source queue.
