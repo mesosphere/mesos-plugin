@@ -109,6 +109,12 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     }
   }
 
+  /**
+   * Creates a LaunchPod command to to create a new Jenkins agent via USI
+   *
+   * @param jenkinsUrl the URL of the jenkins master
+   * @return a LaunchPod command to be passed to USI
+   */
   public LaunchPod getLaunchCommand(URL jenkinsUrl)
       throws MalformedURLException, URISyntaxException {
     return new LaunchCommandBuilder()
