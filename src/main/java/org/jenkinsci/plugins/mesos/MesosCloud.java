@@ -154,7 +154,7 @@ public class MesosCloud extends AbstractCloudImpl {
             mesosAgent -> {
               try {
                 Jenkins.get().addNode(mesosAgent);
-                logger.info("waiting for node to come online...");
+                logger.info("waiting for node {} to come online...", name);
                 return mesosAgent
                     .waitUntilOnlineAsync()
                     .thenApply(

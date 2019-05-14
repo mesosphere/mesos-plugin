@@ -110,6 +110,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
     if (computer != null) {
       return computer.isOnline();
     } else {
+      logger.warn("No computer for node {}.", getNodeName());
       return false;
     }
   }
