@@ -113,15 +113,16 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
    * Creates a LaunchPod command to to create a new Jenkins agent via USI
    *
    * @param jenkinsUrl the URL of the jenkins master.
+   * @param name The name of the node to launch.
    * @return a LaunchPod command to be passed to USI.
    */
-  public LaunchPod getLaunchCommand(URL jenkinsUrl)
+  public LaunchPod buildLaunchCommand(URL jenkinsUrl, String name)
       throws MalformedURLException, URISyntaxException {
     return new LaunchCommandBuilder()
         .withCpu(this.getCpu())
         .withMemory(this.getMemory())
         .withDisk(this.getDisk())
-        .withName(this.getName())
+        .withName(name)
         .withJenkinsUrl(jenkinsUrl)
         .build();
   }
@@ -138,7 +139,12 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return this.mode;
   }
 
-  public String getName() {
+  /**
+   * Generate a new unique name for a new agent. Note: multiple calls will yield different names.
+   *
+   * @return A new unique name for an agent.
+   */
+  public String generateName() {
     return String.format("jenkins-agent-%s-%s", this.label, UUID.randomUUID().toString());
   }
 

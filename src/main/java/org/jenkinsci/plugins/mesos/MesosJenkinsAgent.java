@@ -26,7 +26,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
   private static final Logger logger = LoggerFactory.getLogger(MesosJenkinsAgent.class);
 
   // TODO: Move magic number to config.
-  private static final Duration onlineTimeout = Duration.ofSeconds(30);
+  private static final Duration onlineTimeout = Duration.ofMinutes(5);
 
   // Holds the current USI status for this agent.
   Optional<PodStatus> currentStatus = Optional.empty();

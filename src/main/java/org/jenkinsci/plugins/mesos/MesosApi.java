@@ -150,7 +150,7 @@ public class MesosApi {
             spec.getIdleTerminationMinutes(),
             spec.getReusable(),
             Collections.emptyList());
-    LaunchPod launchCommand = spec.getLaunchCommand(jenkinsUrl);
+    LaunchPod launchCommand = spec.buildLaunchCommand(jenkinsUrl, name);
 
     stateMap.put(launchCommand.podId(), mesosJenkinsAgent);
     // async add agent to queue
