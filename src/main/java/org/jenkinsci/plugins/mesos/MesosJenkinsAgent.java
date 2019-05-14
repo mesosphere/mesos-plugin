@@ -4,6 +4,7 @@ import akka.NotUsed;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.mesosphere.usi.core.models.*;
+import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.TaskListener;
@@ -105,7 +106,12 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
 
   /** @return whether the Jenkins agent connected and is online. */
   public synchronized boolean isOnline() {
-    return this.toComputer().isOnline();
+    final Computer computer = this.toComputer();
+    if (computer != null) {
+      return computer.isOnline();
+    } else {
+      return false;
+    }
   }
 
   /** @return whether the agent is launching and not connected yet. */
