@@ -25,6 +25,9 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
 
   private static final Logger logger = LoggerFactory.getLogger(MesosJenkinsAgent.class);
 
+  // TODO: Move magic number to config.
+  private static final Duration onlineTimeout = Duration.ofSeconds(30);
+
   // Holds the current USI status for this agent.
   Optional<PodStatus> currentStatus = Optional.empty();
 
@@ -71,7 +74,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
    */
   public CompletableFuture<Node> waitUntilOnlineAsync() {
     return Source.tick(Duration.ofSeconds(0), Duration.ofSeconds(1), NotUsed.notUsed())
-        .completionTimeout(Duration.ofMinutes(5))
+        .completionTimeout(onlineTimeout)
         .filter(ignored -> this.isOnline())
         .map(ignored -> this.asNode())
         .runWith(Sink.head(), this.getCloud().getMesosApi().getMaterializer())
