@@ -132,8 +132,7 @@ public class MesosApi {
   }
 
   /**
-   * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
-   * that pod
+   * Enqueue launch command for a new Jenkins agent.
    *
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
