@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.mesos;
 
+import com.mesosphere.usi.core.models.LaunchPod;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
@@ -7,9 +8,13 @@ import hudson.model.Label;
 import hudson.model.Node;
 import hudson.model.labels.LabelAtom;
 import hudson.util.FormValidation;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.mesos.api.LaunchCommandBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -104,7 +109,16 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     }
   }
 
-  // Getters
+  public LaunchPod getLaunchCommand(URL jenkinsUrl)
+      throws MalformedURLException, URISyntaxException {
+    return new LaunchCommandBuilder()
+        .withCpu(this.getCpu())
+        .withMemory(this.getMemory())
+        .withDisk(this.getDisk())
+        .withName(this.getName())
+        .withJenkinsUrl(jenkinsUrl)
+        .build();
+  }
 
   public String getLabel() {
     return this.label;

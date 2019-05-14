@@ -9,8 +9,6 @@ import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.slaves.*;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
@@ -18,7 +16,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos.TaskState;
-import org.jenkinsci.plugins.mesos.api.MesosSlavePodSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +34,6 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
   private final String podId;
 
   private final URL jenkinsUrl;
-
-  private final MesosAgentSpecTemplate spec;
 
   public MesosJenkinsAgent(
       MesosCloud cloud,
@@ -65,7 +60,6 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
     this.reusable = reusable;
     this.podId = name;
     this.jenkinsUrl = jenkinsUrl;
-    this.spec = spec;
   }
 
   /**
@@ -117,16 +111,6 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
   /** @return whether the agent is launching and not connected yet. */
   public synchronized boolean isPending() {
     return (!isKilled() && !isOnline());
-  }
-
-  public LaunchPod getLaunchCommand() throws MalformedURLException, URISyntaxException {
-    return MesosSlavePodSpec.builder()
-        .withCpu(this.spec.getCpu())
-        .withMemory(this.spec.getMemory())
-        .withDisk(this.spec.getDisk())
-        .withName(this.name)
-        .withJenkinsUrl(this.jenkinsUrl)
-        .build();
   }
 
   /**
