@@ -11,6 +11,7 @@ import hudson.util.FormValidation;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
@@ -25,7 +26,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final Set<LabelAtom> labelSet;
 
   private final Node.Mode mode;
-  private final int idleTerminationMinutes;
+  private final Duration idleTermination;
   private final Boolean reusable;
   private final double cpus;
   private final int mem;
@@ -60,21 +61,62 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       String defaultAgent,
       String additionalURIs,
       String nodeProperties) {
+    this(
+        label,
+        Label.parse(label),
+        mode,
+        Double.parseDouble(cpus),
+        Integer.parseInt(mem),
+        Duration.ofMinutes(Integer.parseInt(idleTerminationMinutes)),
+        reusable,
+        Integer.parseInt(minExecutors) < 1 ? 1 : Integer.parseInt(minExecutors),
+        Integer.parseInt(maxExecutors),
+        Double.parseDouble(disk),
+        Integer.parseInt(executorMem),
+        StringUtils.isNotBlank(remoteFsRoot) ? remoteFsRoot.trim() : "jenkins",
+        StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "",
+        agentAttributes,
+        jvmArgs,
+        Boolean.valueOf(defaultAgent),
+        additionalURIs,
+        nodeProperties);
+  }
+
+  /** Typesafe constructor. */
+  public MesosAgentSpecTemplate(
+      String label,
+      Set<LabelAtom> labelSet,
+      Node.Mode mode,
+      Double cpus,
+      int mem,
+      Duration idleTermination,
+      Boolean reusable,
+      int minExecutors,
+      int maxExecutors,
+      Double disk,
+      int executorMem,
+      String remoteFsRoot,
+      String agentAttributes,
+      String jvmArgs,
+      String jnlpArgs,
+      boolean defaultAgent,
+      String additionalURIs,
+      String nodeProperties) {
     this.label = label;
-    this.labelSet = Label.parse(label);
+    this.labelSet = labelSet;
     this.mode = mode;
-    this.idleTerminationMinutes = Integer.parseInt(idleTerminationMinutes);
+    this.idleTermination = idleTermination;
     this.reusable = reusable;
-    this.cpus = Double.parseDouble(cpus);
-    this.mem = Integer.parseInt(mem);
-    this.minExecutors = Integer.parseInt(minExecutors) < 1 ? 1 : Integer.parseInt(minExecutors);
-    this.maxExecutors = Integer.parseInt(maxExecutors);
-    this.disk = Double.parseDouble(disk);
-    this.executorMem = Integer.parseInt(executorMem);
-    this.remoteFsRoot = StringUtils.isNotBlank(remoteFsRoot) ? remoteFsRoot.trim() : "jenkins";
-    this.jnlpArgs = StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "";
-    this.defaultAgent = Boolean.valueOf(defaultAgent);
-    this.agentAttributes = agentAttributes != null ? agentAttributes.toString() : null;
+    this.cpus = cpus;
+    this.mem = mem;
+    this.minExecutors = minExecutors;
+    this.maxExecutors = maxExecutors;
+    this.disk = disk;
+    this.executorMem = executorMem;
+    this.remoteFsRoot = remoteFsRoot;
+    this.jnlpArgs = jnlpArgs;
+    this.defaultAgent = defaultAgent;
+    this.agentAttributes = agentAttributes;
     this.jvmArgs = jvmArgs;
     this.additionalURIs = additionalURIs;
     this.nodeProperties = nodeProperties;
@@ -160,8 +202,12 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return this.mem;
   }
 
-  public int getIdleTerminationMinutes() {
-    return this.idleTerminationMinutes;
+  public long getIdleTerminationMinutes() {
+    return this.idleTermination.toMinutes();
+  }
+
+  public Duration getIdleTermination() {
+    return this.idleTermination;
   }
 
   public Boolean getReusable() {

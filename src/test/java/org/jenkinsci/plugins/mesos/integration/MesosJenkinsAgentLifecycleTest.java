@@ -11,7 +11,9 @@ import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Node.Mode;
 import hudson.model.labels.LabelAtom;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
@@ -50,25 +52,26 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-lifecycle";
-    final String idleMin = "1";
+    final Duration idleTime = Duration.ofSeconds(3);
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
         new MesosAgentSpecTemplate(
             label.toString(),
+            Collections.singleton(label),
             Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            idleMin,
+            0.1,
+            32,
+            idleTime,
             true,
-            "1",
-            "1",
-            "0",
-            "0",
+            1,
+            1,
+            0.0,
+            0,
             "",
             "",
             "",
             "",
-            "",
+            false,
             "",
             "");
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
@@ -98,25 +101,26 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-terminate";
-    final String idleMin = "1";
+    final Duration idleTime = Duration.ofSeconds(3);
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
         new MesosAgentSpecTemplate(
             label.toString(),
+            Collections.singleton(label),
             Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            idleMin,
+            0.1,
+            32,
+            idleTime,
             true,
-            "1",
-            "1",
-            "0",
-            "0",
+            1,
+            1,
+            0.0,
+            0,
             "",
             "",
             "",
             "",
-            "",
+            false,
             "",
             "");
 
@@ -144,25 +148,26 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-delete";
-    final String idleMin = "1";
+    final Duration idleTime = Duration.ofSeconds(3);
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
         new MesosAgentSpecTemplate(
             label.toString(),
+            Collections.singleton(label),
             Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            idleMin,
+            0.1,
+            32,
+            idleTime,
             true,
-            "1",
-            "1",
-            "0",
-            "0",
+            1,
+            1,
+            0.0,
+            0,
             "",
             "",
             "",
             "",
-            "",
+            false,
             "",
             "");
 
@@ -190,25 +195,26 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-delete";
-    final String idleMin = "1";
+    final Duration idleTime = Duration.ofSeconds(3);
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
         new MesosAgentSpecTemplate(
             label.toString(),
+            Collections.singleton(label),
             Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            idleMin,
+            0.1,
+            32,
+            idleTime,
             true,
-            "1",
-            "1",
-            "0",
-            "0",
+            1,
+            1,
+            0.0,
+            0,
             "",
             "",
             "",
             "",
-            "",
+            false,
             "",
             null);
 
@@ -219,7 +225,7 @@ public class MesosJenkinsAgentLifecycleTest {
     assertThat(agent.getComputer().isOnline(), is(true));
     assertThat(agent.getComputer().isIdle(), is(true));
 
-    // after 1 minute MesosRetentionStrategy will kill the task
-    await().atMost(3, TimeUnit.MINUTES).until(agent::isKilled);
+    // after 3 seconds MesosRetentionStrategy will kill the task
+    await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
   }
 }

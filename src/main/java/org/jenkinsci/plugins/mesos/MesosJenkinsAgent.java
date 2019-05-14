@@ -45,7 +45,6 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
       MesosAgentSpecTemplate spec,
       String nodeDescription,
       URL jenkinsUrl,
-      Integer idleTerminationInMinutes,
       Boolean reusable,
       List<? extends NodeProperty<?>> nodeProperties)
       throws Descriptor.FormException, IOException {
@@ -57,7 +56,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
         spec.getMode(),
         spec.getLabel(),
         new JNLPLauncher(),
-        new MesosRetentionStrategy(idleTerminationInMinutes),
+        new MesosRetentionStrategy(spec.getIdleTermination()),
         nodeProperties);
     // pass around the MesosApi connection via MesosCloud
     this.cloud = cloud;

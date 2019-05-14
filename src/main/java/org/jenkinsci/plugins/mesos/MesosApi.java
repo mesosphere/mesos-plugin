@@ -147,7 +147,6 @@ public class MesosApi {
             spec,
             "Mesos Jenkins Slave",
             jenkinsUrl,
-            spec.getIdleTerminationMinutes(),
             spec.getReusable(),
             Collections.emptyList());
     LaunchPod launchCommand = spec.buildLaunchCommand(jenkinsUrl, name);
