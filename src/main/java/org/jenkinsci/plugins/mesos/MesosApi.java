@@ -97,7 +97,7 @@ public class MesosApi {
   }
 
   /**
-   * Constructs a queue of {@link SchedulerCommand} and passes the specs snapshot as the first item.
+   * Constructs a queue of {@link SchedulerCommand}.
    * All commands are processed by {@link MesosApi#updateState(StateEventOrSnapshot)}.
    *
    * @param client The Mesos client that is used.
