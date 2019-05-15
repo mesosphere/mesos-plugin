@@ -195,7 +195,7 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-delete";
-    final Duration idleTime = Duration.ofSeconds(3);
+    final Duration idleTime = Duration.ofSeconds(10);
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
         new MesosAgentSpecTemplate(
@@ -226,6 +226,6 @@ public class MesosJenkinsAgentLifecycleTest {
     assertThat(agent.getComputer().isIdle(), is(true));
 
     // after 3 seconds MesosRetentionStrategy will kill the task
-    await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
+    await().atMost(30, TimeUnit.SECONDS).until(agent::isKilled);
   }
 }
