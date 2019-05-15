@@ -10,7 +10,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'master'
+    usiBranch = 'karsten/pass-config'
     scalaVersion = '2.12'
     akkaVersion = '2.5.19'
 }
