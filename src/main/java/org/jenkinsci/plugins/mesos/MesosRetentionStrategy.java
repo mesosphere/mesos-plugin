@@ -39,6 +39,7 @@ public class MesosRetentionStrategy extends RetentionStrategy<AbstractCloudCompu
   public long check(final AbstractCloudComputer c) {
     final AbstractCloudSlave computerNode = c.getNode();
     if (c.isIdle() && !disabled && computerNode != null) {
+      logger.debug("Checking if {} has been idle for longer than {}", c.getName(), idleTime);
       final long idleMilliseconds = System.currentTimeMillis() - c.getIdleStartMilliseconds();
       if (idleMilliseconds > idleTime.toMillis()) {
         logger.info("Disconnecting {}", c.getName());
