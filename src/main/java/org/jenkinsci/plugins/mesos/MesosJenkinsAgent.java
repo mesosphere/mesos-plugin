@@ -26,8 +26,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
 
   private static final Logger logger = LoggerFactory.getLogger(MesosJenkinsAgent.class);
 
-  // TODO: Move magic number to config.
-  private static final Duration onlineTimeout = Duration.ofMinutes(5);
+  private final Duration onlineTimeout;
 
   // Holds the current USI status for this agent.
   Optional<PodStatus> currentStatus = Optional.empty();
@@ -48,7 +47,8 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
       URL jenkinsUrl,
       Integer idleTerminationInMinutes,
       Boolean reusable,
-      List<? extends NodeProperty<?>> nodeProperties)
+      List<? extends NodeProperty<?>> nodeProperties,
+      Duration agentTimeout)
       throws Descriptor.FormException, IOException {
     super(
         name,
@@ -65,6 +65,7 @@ public class MesosJenkinsAgent extends AbstractCloudSlave implements EphemeralNo
     this.reusable = reusable;
     this.podId = name;
     this.jenkinsUrl = jenkinsUrl;
+    this.onlineTimeout = agentTimeout;
   }
 
   /**

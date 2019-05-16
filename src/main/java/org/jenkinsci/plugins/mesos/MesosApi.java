@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
+import org.jenkinsci.plugins.mesos.api.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.ExecutionContext;
@@ -34,6 +35,8 @@ import scala.concurrent.ExecutionContext;
 public class MesosApi {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosApi.class);
+
+  private final Settings operationalSettings;
 
   private final String frameworkName;
   private final String role;
@@ -81,6 +84,9 @@ public class MesosApi {
         MesosClientSettings.fromConfig(conf.getConfig("mesos-client"))
             .withMasters(Collections.singletonList(masterUrl));
     SchedulerSettings schedulerSettings = SchedulerSettings.load(classLoader);
+
+    this.operationalSettings = Settings.load(classLoader);
+
     this.system = ActorSystem.create("mesos-scheduler", conf, classLoader);
     this.materializer = ActorMaterializer.create(system);
     this.context = system.dispatcher();
@@ -96,6 +102,18 @@ public class MesosApi {
             .get();
   }
 
+  /**
+   * Internal constructor for testing the API.
+   *
+   * @param jenkinsUrl The Jenkins address to fetch the agent jar from.
+   * @param agentUser The username used for executing Mesos tasks.
+   * @param frameworkName The name of the framework the Mesos client should register as.
+   * @param frameworkId Unique identifier of the framework in Mesos.
+   * @param role The Mesos role to assume.
+   * @param schedulerFlow The USI scheduler flow constructed by {@link Scheduler#fromClient()}
+   * @param system The Akka actor system to use.
+   * @param materializer The Akka stream materializer to use.
+   */
   public MesosApi(
       URL jenkinsUrl,
       String agentUser,
@@ -103,6 +121,7 @@ public class MesosApi {
       String frameworkId,
       String role,
       Flow<SchedulerCommand, StateEventOrSnapshot, NotUsed> schedulerFlow,
+      Settings operationalSettings,
       ActorSystem system,
       ActorMaterializer materializer) {
     this.frameworkName = frameworkName;
@@ -110,6 +129,8 @@ public class MesosApi {
     this.role = role;
     this.agentUser = agentUser;
     this.jenkinsUrl = jenkinsUrl;
+
+    this.operationalSettings = operationalSettings;
 
     this.stateMap = new ConcurrentHashMap<>();
     this.repository = new MesosPodRecordRepository();
@@ -131,8 +152,8 @@ public class MesosApi {
   private SourceQueueWithComplete<SchedulerCommand> runScheduler(
       Flow<SchedulerCommand, StateEventOrSnapshot, NotUsed> schedulerFlow,
       ActorMaterializer materializer) {
-    // We create a SourceQueue and assume that the very first item is a spec snapshot.
-    return Source.<SchedulerCommand>queue(1, OverflowStrategy.dropNew())
+    return Source.<SchedulerCommand>queue(
+            operationalSettings.getCommandQueueBufferSize(), OverflowStrategy.dropNew())
         .via(schedulerFlow)
         .toMat(Sink.foreach(this::updateState), Keep.left())
         .run(materializer);
@@ -166,7 +187,8 @@ public class MesosApi {
             jenkinsUrl,
             spec.getIdleTerminationMinutes(),
             spec.getReusable(),
-            Collections.emptyList());
+            Collections.emptyList(),
+            this.operationalSettings.getAgentTimeout());
     LaunchPod launchCommand = spec.buildLaunchCommand(jenkinsUrl, name);
 
     stateMap.put(launchCommand.podId(), mesosJenkinsAgent);

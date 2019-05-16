@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.mesos.fixture;
 
 import hudson.model.Node.Mode;
-import hudson.model.labels.LabelAtom;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 
 /**
@@ -12,22 +11,22 @@ import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 public class AgentSpecMother {
 
   public static MesosAgentSpecTemplate simple =
-    new MesosAgentSpecTemplate(
-            "label",
-            Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            "1",
-            true,
-            "1",
-            "1",
-            "0",
-            "0",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "");
+      new MesosAgentSpecTemplate(
+          "label",
+          Mode.EXCLUSIVE,
+          "0.1",
+          "32",
+          "1",
+          true,
+          "1",
+          "1",
+          "0",
+          "0",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "");
 }
