@@ -18,6 +18,7 @@ import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.TestUtils;
+import org.jenkinsci.plugins.mesos.fixture.AgentSpecMother;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -49,29 +50,9 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-lifecycle";
-    final String idleMin = "1";
-    LabelAtom label = new LabelAtom("label");
-    final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(
-            label.toString(),
-            Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            idleMin,
-            true,
-            "1",
-            "1",
-            "0",
-            "0",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "");
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
-    agent.waitUntilOnlineAsync().get();
+    agent.waitUntilOnlineAsync(materializer).get();
 
     // verify slave is running when the future completes;
     assertThat(agent.isRunning(), is(true));
@@ -97,30 +78,10 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-terminate";
-    final String idleMin = "1";
-    LabelAtom label = new LabelAtom("label");
-    final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(
-            label.toString(),
-            Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            idleMin,
-            true,
-            "1",
-            "1",
-            "0",
-            "0",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "");
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
-    agent.waitUntilOnlineAsync().get();
+    agent.waitUntilOnlineAsync(materializer).get();
 
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.getComputer().isOnline(), is(true));
@@ -143,30 +104,10 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-delete";
-    final String idleMin = "1";
-    LabelAtom label = new LabelAtom("label");
-    final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(
-            label.toString(),
-            Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            idleMin,
-            true,
-            "1",
-            "1",
-            "0",
-            "0",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "");
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
-    agent.waitUntilOnlineAsync().get();
+    agent.waitUntilOnlineAsync(materializer).get();
 
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.getComputer().isOnline(), is(true));
@@ -189,30 +130,10 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-delete";
-    final String idleMin = "1";
-    LabelAtom label = new LabelAtom("label");
-    final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(
-            label.toString(),
-            Mode.EXCLUSIVE,
-            "0.1",
-            "32",
-            idleMin,
-            true,
-            "1",
-            "1",
-            "0",
-            "0",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            null);
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
-    agent.waitUntilOnlineAsync().get();
+    agent.waitUntilOnlineAsync(materializer).get();
 
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.getComputer().isOnline(), is(true));
