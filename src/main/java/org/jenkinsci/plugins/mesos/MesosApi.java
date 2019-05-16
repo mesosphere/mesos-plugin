@@ -9,6 +9,7 @@ import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
 import com.mesosphere.usi.core.japi.Scheduler;
 import com.mesosphere.usi.core.models.*;
+import com.mesosphere.usi.repository.PodRecordRepository;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -24,10 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
-import org.jenkinsci.plugins.mesos.api.InMemoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Option;
 import scala.concurrent.ExecutionContext;
 
 public class MesosApi {
@@ -42,7 +41,7 @@ public class MesosApi {
 
   @XStreamOmitField private final MesosClient client;
 
-  @XStreamOmitField private final SourceQueueWithComplete<SpecUpdated> updates;
+  @XStreamOmitField private final SourceQueueWithComplete<SchedulerCommand> commands;
 
   private final ConcurrentHashMap<PodId, MesosJenkinsAgent> stateMap;
 
@@ -51,6 +50,8 @@ public class MesosApi {
   @XStreamOmitField private final ActorMaterializer materializer;
 
   @XStreamOmitField private final ExecutionContext context;
+
+  @XStreamOmitField private final PodRecordRepository repository;
 
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
@@ -89,27 +90,28 @@ public class MesosApi {
 
     stateMap = new ConcurrentHashMap<>();
 
+    repository = new MesosPodRecordRepository();
+
     logger.info("Starting USI scheduler flow.");
-    updates = runScheduler(SpecsSnapshot.empty(), client, materializer).get();
+    commands = runScheduler(client, materializer).get();
   }
 
   /**
-   * Constructs a queue of {@link SpecUpdated} and passes the specs snapshot as the first item. All
-   * updates are processed by {@link MesosApi#updateState(StateEvent)}.
+   * Constructs a queue of {@link SchedulerCommand}. All state events are processed by {@link
+   * MesosApi#updateState(StateEventOrSnapshot)}.
    *
-   * @param specsSnapshot The initial set of pod specs.
    * @param client The Mesos client that is used.
    * @param materializer The {@link ActorMaterializer} used for the source queue.
    * @return A running source queue.
    */
-  private CompletableFuture<SourceQueueWithComplete<SpecUpdated>> runScheduler(
-      SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
-    return Scheduler.asFlow(specsSnapshot, client, new InMemoryRepository(), materializer)
+  private CompletableFuture<SourceQueueWithComplete<SchedulerCommand>> runScheduler(
+      MesosClient client, ActorMaterializer materializer) {
+    return Scheduler.asFlow(client, repository, materializer)
         .thenApply(
             builder -> {
               // We create a SourceQueue and assume that the very first item is a spec snapshot.
-              SourceQueueWithComplete<SpecUpdated> queue =
-                  Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
+              SourceQueueWithComplete<SchedulerCommand> queue =
+                  Source.<SchedulerCommand>queue(256, OverflowStrategy.fail())
                       .via(builder.getFlow())
                       .toMat(Sink.foreach(this::updateState), Keep.left())
                       .run(materializer);
@@ -125,14 +127,12 @@ public class MesosApi {
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
   public CompletionStage<Void> killAgent(String id) throws Exception {
-    PodSpec spec = stateMap.get(new PodId(id)).getPodSpec(Goal.Terminal$.MODULE$);
-    SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
-    return updates.offer(update).thenRun(() -> {});
+    SchedulerCommand command = new KillPod(new PodId(id));
+    return commands.offer(command).thenRun(() -> {});
   }
 
   /**
-   * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
-   * that pod
+   * Enqueue launch command for a new Jenkins agent.
    *
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
@@ -150,13 +150,12 @@ public class MesosApi {
             spec.getIdleTerminationMinutes(),
             spec.getReusable(),
             Collections.emptyList());
-    PodSpec podSpec = mesosJenkinsAgent.getPodSpec(Goal.Running$.MODULE$);
-    SpecUpdated update = new PodSpecUpdated(podSpec.id(), Option.apply(podSpec));
+    LaunchPod launchCommand = spec.buildLaunchCommand(jenkinsUrl, name);
 
-    stateMap.put(podSpec.id(), mesosJenkinsAgent);
+    stateMap.put(launchCommand.podId(), mesosJenkinsAgent);
     // async add agent to queue
-    return updates
-        .offer(update)
+    return commands
+        .offer(launchCommand)
         .thenApply(result -> mesosJenkinsAgent); // TODO: handle QueueOfferResult.
   }
 
@@ -189,14 +188,14 @@ public class MesosApi {
   /**
    * Callback for USI to process state events.
    *
-   * <p>This method will filter out {@link PodStatusUpdated} and pass them on to their {@link
+   * <p>This method will filter out {@link PodStatusUpdatedEvent} and pass them on to their {@link
    * MesosJenkinsAgent}. It should be threadsafe.
    *
-   * @param event The {@link PodStatusUpdated} for a USI pod.
+   * @param event The {@link PodStatusUpdatedEvent} for a USI pod.
    */
-  public void updateState(StateEvent event) {
-    if (event instanceof PodStatusUpdated) {
-      PodStatusUpdated podStateEvent = (PodStatusUpdated) event;
+  public void updateState(StateEventOrSnapshot event) {
+    if (event instanceof PodStatusUpdatedEvent) {
+      PodStatusUpdatedEvent podStateEvent = (PodStatusUpdatedEvent) event;
       logger.info("Got status update for pod {}", podStateEvent.id().value());
       stateMap.computeIfPresent(
           podStateEvent.id(),
