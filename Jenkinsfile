@@ -20,7 +20,7 @@ ansiColor('xterm') {
         sh 'sudo -E ./gradlew check --info'
       } finally {
         junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
-	publishHTML (target: [ alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'build/reports/spotbugs/', reportFiles: '*.html', reportName: 'SpotBugs' ])
+        publishHTML (target: [ alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'build/reports/spotbugs/', reportFiles: '*.html', reportName: 'SpotBugs' ])
       }
     } 
   }
