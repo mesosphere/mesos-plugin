@@ -123,4 +123,40 @@ class MesosApiTest {
       assertThat(ex.getCause().getMessage(), is("Launch command for agent3 was dropped."));
     }
   }
+
+  @Test
+  void testKillOverflow(JenkinsRule j) throws Exception {
+    // Given a scheduler flow that never processes commands.
+    Settings settings = Settings.load().withCommandQueueBufferSize(1);
+    final CompletableFuture<StateEventOrSnapshot> ignore = new CompletableFuture<>();
+    final Flow<SchedulerCommand, StateEventOrSnapshot, NotUsed> schedulerFlow =
+        Flow.of(SchedulerCommand.class).mapAsync(1, command -> ignore);
+
+    MesosApi api =
+        new MesosApi(
+            new URL("http://jenkins.com"),
+            System.getProperty("user.name"),
+            "MesosTest",
+            "uniqueId",
+            "*",
+            schedulerFlow,
+            settings,
+            system,
+            materializer);
+
+    // And one agent is processed and one is queued.
+    api.enqueueAgent("agent1", AgentSpecMother.simple);
+    api.enqueueAgent("agent2", AgentSpecMother.simple);
+
+    // When we enqueue a third agent
+    CompletableFuture<Void> result = api.killAgent("agent3").toCompletableFuture();
+
+    // Then backpressure hits us.
+    try {
+      result.get();
+    } catch (ExecutionException ex) {
+      assertThat(ex.getCause(), is(instanceOf(IllegalStateException.class)));
+      assertThat(ex.getCause().getMessage(), is("Kill command for agent3 was dropped."));
+    }
+  }
 }

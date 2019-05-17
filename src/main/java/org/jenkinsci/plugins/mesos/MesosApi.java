@@ -166,8 +166,20 @@ public class MesosApi {
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
   public CompletionStage<Void> killAgent(String id) throws Exception {
-    SchedulerCommand command = new KillPod(new PodId(id));
-    return commands.offer(command).thenRun(() -> {});
+    final SchedulerCommand command = new KillPod(new PodId(id));
+    return commands
+        .offer(command)
+        .thenAccept(
+            result -> {
+              if (result == QueueOfferResult.dropped()) {
+                logger.warn("USI command queue is full. Fail kill for {}", id);
+                throw new IllegalStateException(
+                    String.format("Kill command for %s was dropped.", id));
+              } else {
+                // TODO: Call crash strategy DCOS_OSS-5055
+                throw new IllegalStateException("The USI stream failed or is closed.");
+              }
+            });
   }
 
   /**
