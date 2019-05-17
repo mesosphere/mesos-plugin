@@ -10,7 +10,7 @@ import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
  */
 public class AgentSpecMother {
 
-  public static MesosAgentSpecTemplate simple =
+  public static final MesosAgentSpecTemplate simple =
       new MesosAgentSpecTemplate(
           "label",
           Mode.EXCLUSIVE,

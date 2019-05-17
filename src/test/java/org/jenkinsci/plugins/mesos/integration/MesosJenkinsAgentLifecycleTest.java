@@ -9,6 +9,8 @@ import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
+import hudson.model.Slave;
+import hudson.slaves.SlaveComputer;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
@@ -84,7 +86,11 @@ public class MesosJenkinsAgentLifecycleTest {
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.getComputer().isOnline(), is(true));
 
-    MesosJenkinsAgent shouldBeParent = (MesosJenkinsAgent) agent.getComputer().getNode();
+    SlaveComputer computer = agent.getComputer();
+    assert (computer != null);
+    Slave node = computer.getNode();
+    assert (node != null);
+    MesosJenkinsAgent shouldBeParent = (MesosJenkinsAgent) node;
     shouldBeParent.terminate();
     await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
     assertThat(agent.isKilled(), is(true));
@@ -110,7 +116,9 @@ public class MesosJenkinsAgentLifecycleTest {
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.getComputer().isOnline(), is(true));
 
-    agent.getComputer().doDoDelete();
+    SlaveComputer computer = agent.getComputer();
+    assert (computer != null);
+    computer.doDoDelete();
 
     await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
     assertThat(agent.isKilled(), is(true));
@@ -134,8 +142,11 @@ public class MesosJenkinsAgentLifecycleTest {
     agent.waitUntilOnlineAsync(materializer).get();
 
     assertThat(agent.isRunning(), is(true));
-    assertThat(agent.getComputer().isOnline(), is(true));
-    assertThat(agent.getComputer().isIdle(), is(true));
+
+    SlaveComputer computer = agent.getComputer();
+    assert (computer != null);
+    assertThat(computer.isOnline(), is(true));
+    assertThat(computer.isIdle(), is(true));
 
     // after 1 minute MesosRetentionStrategy will kill the task
     await().atMost(3, TimeUnit.MINUTES).until(agent::isKilled);
