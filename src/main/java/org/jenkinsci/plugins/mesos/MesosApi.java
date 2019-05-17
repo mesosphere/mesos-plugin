@@ -125,8 +125,18 @@ public class MesosApi {
    *
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
-  public CompletionStage<Void> killAgent(String id) throws Exception {
-    SchedulerCommand command = new KillPod(new PodId(id));
+  public CompletionStage<Void> killAgent(String id) {
+    return killAgent(new PodId(id));
+  }
+
+  /**
+   * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
+   * that pod
+   *
+   * @return a {@link MesosJenkinsAgent} once it's queued for running.
+   */
+  public CompletionStage<Void> killAgent(PodId id) {
+    SchedulerCommand command = new KillPod(id);
     return commands.offer(command).thenRun(() -> {});
   }
 
@@ -192,16 +202,23 @@ public class MesosApi {
    *
    * @param event The {@link PodStatusUpdatedEvent} for a USI pod.
    */
-  public void updateState(StateEventOrSnapshot event) {
+  private void updateState(StateEventOrSnapshot event) {
     if (event instanceof PodStatusUpdatedEvent) {
       PodStatusUpdatedEvent podStateEvent = (PodStatusUpdatedEvent) event;
       logger.info("Got status update for pod {}", podStateEvent.id().value());
-      stateMap.computeIfPresent(
-          podStateEvent.id(),
-          (id, slave) -> {
-            slave.update(podStateEvent);
-            return slave;
-          });
+      MesosJenkinsAgent updated =
+          stateMap.computeIfPresent(
+              podStateEvent.id(),
+              (id, slave) -> {
+                slave.update(podStateEvent);
+                return slave;
+              });
+
+      // The agent, ie the pod, is not terminal and unknown to us. Kill it.
+      boolean terminal = podStateEvent.newStatus().forall(PodStatus::isTerminalOrUnreachable);
+      if (updated == null && !terminal) {
+        killAgent(podStateEvent.id());
+      }
     }
   }
 
