@@ -41,6 +41,7 @@ public class Settings {
 
   /**
    * Factory method to construct {@link Settings} from a Lightbend {@link Config}.
+   *
    * @param conf The Lightbend config object.
    * @return a new settings instances.
    */
