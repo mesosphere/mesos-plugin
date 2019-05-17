@@ -16,7 +16,7 @@ public class MesosComputer extends AbstractCloudComputer<MesosJenkinsAgent> {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosComputer.class);
 
-  private final Boolean reusable;
+  private final boolean reusable;
   private final String podId;
 
   /**
@@ -26,7 +26,7 @@ public class MesosComputer extends AbstractCloudComputer<MesosJenkinsAgent> {
    */
   public MesosComputer(MesosJenkinsAgent agent) {
     super(agent);
-    this.reusable = agent.getReusable();
+    this.reusable = (agent.getReusable() == null) ? false : agent.getReusable();
     this.podId = agent.getPodId();
   }
 

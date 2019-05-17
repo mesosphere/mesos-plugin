@@ -7,13 +7,13 @@ import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
+import com.mesosphere.usi.core.conf.SchedulerSettings;
 import com.mesosphere.usi.core.japi.Scheduler;
 import com.mesosphere.usi.core.models.*;
 import com.mesosphere.usi.repository.PodRecordRepository;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -77,11 +77,10 @@ public class MesosApi {
     ClassLoader classLoader = Jenkins.get().pluginManager.uberClassLoader;
 
     Config conf = ConfigFactory.load(classLoader);
-    Config clientConf =
-        conf.getConfig("mesos-client")
-            .withValue("master-url", ConfigValueFactory.fromAnyRef(masterUrl.toString()));
-
-    MesosClientSettings clientSettings = MesosClientSettings.fromConfig(clientConf);
+    MesosClientSettings clientSettings =
+        MesosClientSettings.fromConfig(conf.getConfig("mesos-client"))
+            .withMasters(Collections.singletonList(masterUrl));
+    SchedulerSettings schedulerSettings = SchedulerSettings.load(classLoader);
     system = ActorSystem.create("mesos-scheduler", conf, classLoader);
     context = system.dispatcher();
     materializer = ActorMaterializer.create(system);
@@ -93,7 +92,7 @@ public class MesosApi {
     repository = new MesosPodRecordRepository();
 
     logger.info("Starting USI scheduler flow.");
-    commands = runScheduler(client, materializer).get();
+    commands = runScheduler(client, schedulerSettings, materializer).get();
   }
 
   /**
@@ -105,8 +104,8 @@ public class MesosApi {
    * @return A running source queue.
    */
   private CompletableFuture<SourceQueueWithComplete<SchedulerCommand>> runScheduler(
-      MesosClient client, ActorMaterializer materializer) {
-    return Scheduler.asFlow(client, repository, materializer)
+      MesosClient client, SchedulerSettings schedulerSettings, ActorMaterializer materializer) {
+    return Scheduler.fromClient(client, repository, schedulerSettings)
         .thenApply(
             builder -> {
               // We create a SourceQueue and assume that the very first item is a spec snapshot.
