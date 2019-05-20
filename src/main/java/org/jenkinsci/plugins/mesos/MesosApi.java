@@ -246,7 +246,7 @@ public class MesosApi {
             .addCapabilities(
                 Protos.FrameworkInfo.Capability.newBuilder()
                     .setType(Protos.FrameworkInfo.Capability.Type.MULTI_ROLE))
-            .setFailoverTimeout(0d) // Use config from current Mesos plugin.
+            .setFailoverTimeout(this.operationalSettings.getFailoverTimeout().getSeconds())
             .build();
 
     return MesosClient$.MODULE$

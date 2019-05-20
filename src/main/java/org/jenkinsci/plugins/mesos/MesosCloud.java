@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.mesos;
 
-import static java.lang.Math.log;
 import static java.lang.Math.toIntExact;
 
 import hudson.Extension;
