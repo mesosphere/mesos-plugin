@@ -19,6 +19,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,7 +56,7 @@ public class MesosCloud extends AbstractCloudImpl {
 
   private final URL jenkinsUrl;
 
-  private List<MesosAgentSpecTemplate> mesosAgentSpecTemplates;
+  private List<? extends MesosAgentSpecTemplate> mesosAgentSpecTemplates;
 
   @DataBoundConstructor
   public MesosCloud(
@@ -64,7 +65,7 @@ public class MesosCloud extends AbstractCloudImpl {
       String role,
       String agentUser,
       String jenkinsUrl,
-      List<MesosAgentSpecTemplate> mesosAgentSpecTemplates)
+      List<? extends MesosAgentSpecTemplate> mesosAgentSpecTemplates)
       throws InterruptedException, ExecutionException {
     super("MesosCloud", null);
 
@@ -356,7 +357,7 @@ public class MesosCloud extends AbstractCloudImpl {
 
   // Getters
   public List<MesosAgentSpecTemplate> getMesosAgentSpecTemplates() {
-    return this.mesosAgentSpecTemplates;
+    return Collections.unmodifiableList(this.mesosAgentSpecTemplates);
   }
 
   public String getMesosMasterUrl() {

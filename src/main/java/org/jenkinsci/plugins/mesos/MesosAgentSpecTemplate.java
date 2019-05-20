@@ -26,7 +26,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   private final Node.Mode mode;
   private final int idleTerminationMinutes;
-  private final Boolean reusable;
+  private final boolean reusable;
   private final double cpus;
   private final int mem;
   private final double disk;
@@ -48,7 +48,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       String cpus,
       String mem,
       String idleTerminationMinutes,
-      Boolean reusable,
       String minExecutors,
       String maxExecutors,
       String disk,
@@ -64,7 +63,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.labelSet = Label.parse(label);
     this.mode = mode;
     this.idleTerminationMinutes = Integer.parseInt(idleTerminationMinutes);
-    this.reusable = reusable;
+    this.reusable = false; // TODO: DCOS_OSS-5048.
     this.cpus = Double.parseDouble(cpus);
     this.mem = Integer.parseInt(mem);
     this.minExecutors = Integer.parseInt(minExecutors) < 1 ? 1 : Integer.parseInt(minExecutors);
@@ -164,7 +163,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return this.idleTerminationMinutes;
   }
 
-  public Boolean getReusable() {
+  public boolean getReusable() {
     return this.reusable;
   }
 
