@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.mesos;
 
+import static java.lang.Math.log;
 import static java.lang.Math.toIntExact;
 
 import hudson.Extension;
@@ -82,17 +83,10 @@ public class MesosCloud extends AbstractCloudImpl {
     this.frameworkName = frameworkName;
     this.frameworkId = UUID.randomUUID().toString();
 
-    this.mesosApi =
-        new MesosApi(
-            this.mesosMasterUrl,
-            this.jenkinsUrl,
-            this.agentUser,
-            this.frameworkName,
-            this.frameworkId,
-            this.role);
+    readResolve();
   }
 
-  protected Object readResolve() {
+  private Object readResolve() {
     try {
       this.mesosApi =
           new MesosApi(
@@ -102,8 +96,10 @@ public class MesosCloud extends AbstractCloudImpl {
               this.frameworkName,
               this.frameworkId,
               this.role);
+      logger.info("Initialized Mesos API object.");
     } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException("Failed to recover Mesos API after restart.", e);
+      logger.error("Failed initialize Mesos API object", e);
+      throw new RuntimeException("Failed to initialize Mesos API object.", e);
     }
 
     if (this.mesosAgentSpecTemplates == null) {
