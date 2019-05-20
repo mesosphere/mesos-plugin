@@ -21,8 +21,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.*;
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -43,13 +45,17 @@ public class MesosCloud extends AbstractCloudImpl {
 
   private final URL mesosMasterUrl;
 
-  private MesosApi mesosApi;
+  @Nonnull private transient MesosApi mesosApi;
+
+  private final String frameworkName;
+  private final String frameworkId;
 
   private final String agentUser;
+  private final String role;
 
   private final URL jenkinsUrl;
 
-  private final transient List<MesosAgentSpecTemplate> mesosAgentSpecTemplates;
+  private List<MesosAgentSpecTemplate> mesosAgentSpecTemplates;
 
   @DataBoundConstructor
   public MesosCloud(
@@ -70,9 +76,40 @@ public class MesosCloud extends AbstractCloudImpl {
     }
 
     this.agentUser = agentUser;
+    this.role = role;
     this.mesosAgentSpecTemplates = mesosAgentSpecTemplates;
+    this.frameworkName = frameworkName;
+    this.frameworkId = UUID.randomUUID().toString();
 
-    mesosApi = new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
+    this.mesosApi =
+        new MesosApi(
+            this.mesosMasterUrl,
+            this.jenkinsUrl,
+            this.agentUser,
+            this.frameworkName,
+            this.frameworkId,
+            this.role);
+  }
+
+  protected Object readResolve() {
+    try {
+      this.mesosApi =
+          new MesosApi(
+              this.mesosMasterUrl,
+              this.jenkinsUrl,
+              this.agentUser,
+              this.frameworkName,
+              this.frameworkId,
+              this.role);
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException("Failed to recover Mesos API after restart.", e);
+    }
+
+    if (this.mesosAgentSpecTemplates == null) {
+      this.mesosAgentSpecTemplates = new ArrayList<>();
+    }
+
+    return this;
   }
 
   /**
@@ -327,7 +364,7 @@ public class MesosCloud extends AbstractCloudImpl {
   }
 
   public String getFrameworkName() {
-    return this.mesosApi.getFrameworkName();
+    return this.frameworkName;
   }
 
   public String getJenkinsUrl() {
@@ -335,20 +372,16 @@ public class MesosCloud extends AbstractCloudImpl {
   }
 
   public String getAgentUser() {
-    return "kjeschkies";
+    return this.agentUser;
   }
 
   public String getRole() {
-    return "*";
+    return this.role;
   }
 
   /** @return Number of launching agents that are not connected yet. */
   public synchronized int getPending() {
     return toIntExact(
         mesosApi.getState().values().stream().filter(MesosJenkinsAgent::isPending).count());
-  }
-
-  public MesosApi getMesosApi() {
-    return this.mesosApi;
   }
 }
