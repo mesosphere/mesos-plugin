@@ -13,7 +13,6 @@ ansiColor('xterm') {
     stage('Build') {
       try {
         checkout scm
-        sh 'sudo -E ./ci/provision.sh 1.7.0'
         sh 'sudo -E ./gradlew check --info'
       } finally {
         junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
