@@ -82,7 +82,15 @@ public class MesosCloud extends AbstractCloudImpl {
     this.frameworkName = frameworkName;
     this.frameworkId = UUID.randomUUID().toString();
 
-    readResolve();
+    this.mesosApi =
+        new MesosApi(
+            this.mesosMasterUrl,
+            this.jenkinsUrl,
+            this.agentUser,
+            this.frameworkName,
+            this.frameworkId,
+            this.role);
+    logger.info("Initialized Mesos API object.");
   }
 
   private Object readResolve() {
@@ -95,10 +103,10 @@ public class MesosCloud extends AbstractCloudImpl {
               this.frameworkName,
               this.frameworkId,
               this.role);
-      logger.info("Initialized Mesos API object.");
+      logger.info("Initialized Mesos API object after deserialization.");
     } catch (InterruptedException | ExecutionException e) {
       logger.error("Failed initialize Mesos API object", e);
-      throw new RuntimeException("Failed to initialize Mesos API object.", e);
+      throw new RuntimeException("Failed to initialize Mesos API object after deserialization.", e);
     }
 
     if (this.mesosAgentSpecTemplates == null) {
