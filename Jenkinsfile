@@ -6,7 +6,7 @@ def master_branches = ["master", "usi-jenkins", ] as String[]
 
 ansiColor('xterm') {
   //node('mesos-med') {
-  node('mesos-plugin-test) {
+  node('mesos-plugin-test') {
     stage("Verify author") {
       user_is_authorized(master_branches, '8b793652-f26a-422f-a9ba-0d1e47eb9d89', '#orchestration-dailies')
     }
