@@ -167,6 +167,7 @@ public class MesosApi {
    */
   public CompletionStage<Void> killAgent(String id) throws Exception {
     final SchedulerCommand command = new KillPod(new PodId(id));
+    stateMap.remove(new PodId(id));
     return commands
         .offer(command)
         .thenAccept(
