@@ -9,7 +9,8 @@ import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
-import hudson.model.Node.Mode;
+import hudson.model.Slave;
+import hudson.slaves.SlaveComputer;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
@@ -17,6 +18,7 @@ import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.TestUtils;
+import org.jenkinsci.plugins.mesos.fixture.AgentSpecMother;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,10 +40,9 @@ public class MesosJenkinsAgentLifecycleTest {
 
   @Test
   public void testAgentLifecycle(TestUtils.JenkinsRule j) throws Exception {
-    String mesosUrl = mesosCluster.getMesosUrl();
     MesosCloud cloud =
         new MesosCloud(
-            mesosUrl,
+            mesosCluster.getMesosUrl().toString(),
             "MesosTest",
             "*",
             System.getProperty("user.name"),
@@ -49,10 +50,9 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-lifecycle";
-    final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
-    agent.waitUntilOnlineAsync().get();
+    agent.waitUntilOnlineAsync(materializer).get();
 
     // verify slave is running when the future completes;
     assertThat(agent.isRunning(), is(true));
@@ -70,7 +70,7 @@ public class MesosJenkinsAgentLifecycleTest {
   public void testComputerNodeTermination(TestUtils.JenkinsRule j) throws Exception {
     MesosCloud cloud =
         new MesosCloud(
-            mesosCluster.getMesosUrl(),
+            mesosCluster.getMesosUrl().toString(),
             "MesosTest",
             "*",
             System.getProperty("user.name"),
@@ -78,16 +78,19 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-terminate";
-    final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
-    agent.waitUntilOnlineAsync().get();
+    agent.waitUntilOnlineAsync(materializer).get();
 
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.getComputer().isOnline(), is(true));
 
-    MesosJenkinsAgent shouldBeParent = (MesosJenkinsAgent) agent.getComputer().getNode();
+    SlaveComputer computer = agent.getComputer();
+    assert (computer != null);
+    Slave node = computer.getNode();
+    assert (node != null);
+    MesosJenkinsAgent shouldBeParent = (MesosJenkinsAgent) node;
     shouldBeParent.terminate();
     await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
     assertThat(agent.isKilled(), is(true));
@@ -97,7 +100,7 @@ public class MesosJenkinsAgentLifecycleTest {
   public void testComputerNodeDeletion(TestUtils.JenkinsRule j) throws Exception {
     MesosCloud cloud =
         new MesosCloud(
-            mesosCluster.getMesosUrl(),
+            mesosCluster.getMesosUrl().toString(),
             "MesosTest",
             "*",
             System.getProperty("user.name"),
@@ -105,16 +108,17 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-delete";
-    final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
-    agent.waitUntilOnlineAsync().get();
+    agent.waitUntilOnlineAsync(materializer).get();
 
     assertThat(agent.isRunning(), is(true));
     assertThat(agent.getComputer().isOnline(), is(true));
 
-    agent.getComputer().doDoDelete();
+    SlaveComputer computer = agent.getComputer();
+    assert (computer != null);
+    computer.doDoDelete();
 
     await().atMost(10, TimeUnit.SECONDS).until(agent::isKilled);
     assertThat(agent.isKilled(), is(true));
@@ -124,7 +128,7 @@ public class MesosJenkinsAgentLifecycleTest {
   public void testRetentionStrategy(TestUtils.JenkinsRule j) throws Exception {
     MesosCloud cloud =
         new MesosCloud(
-            mesosCluster.getMesosUrl(),
+            mesosCluster.getMesosUrl().toString(),
             "MesosTest",
             "*",
             System.getProperty("user.name"),
@@ -132,15 +136,17 @@ public class MesosJenkinsAgentLifecycleTest {
             new ArrayList<>());
 
     final String name = "jenkins-node-delete";
-    final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 
     MesosJenkinsAgent agent = (MesosJenkinsAgent) cloud.startAgent(name, spec).get();
-    agent.waitUntilOnlineAsync().get();
+    agent.waitUntilOnlineAsync(materializer).get();
 
     assertThat(agent.isRunning(), is(true));
-    assertThat(agent.getComputer().isOnline(), is(true));
-    assertThat(agent.getComputer().isIdle(), is(true));
+
+    SlaveComputer computer = agent.getComputer();
+    assert (computer != null);
+    assertThat(computer.isOnline(), is(true));
+    assertThat(computer.isIdle(), is(true));
 
     // after 1 minute MesosRetentionStrategy will kill the task
     await().atMost(3, TimeUnit.MINUTES).until(agent::isKilled);

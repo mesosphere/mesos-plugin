@@ -53,12 +53,29 @@ public class MesosCloudProvisionTest {
     LabelAtom label = new LabelAtom("label");
     final String idleMin = "1";
     final MesosAgentSpecTemplate spec =
-        new MesosAgentSpecTemplate(label.toString(), Mode.EXCLUSIVE);
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
     List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
 
     MesosCloud cloud =
         new MesosCloud(
-            mesosCluster.getMesosUrl(),
+            mesosCluster.getMesosUrl().toString(),
             "MesosTest",
             "*",
             System.getProperty("user.name"),
@@ -86,11 +103,31 @@ public class MesosCloudProvisionTest {
   public void testStartAgent(TestUtils.JenkinsRule j) throws Exception {
     final String name = "jenkins-agent";
     final String idleMin = "1";
-    final MesosAgentSpecTemplate spec = new MesosAgentSpecTemplate(name, Mode.EXCLUSIVE);
+    LabelAtom label = new LabelAtom("label");
+    final MesosAgentSpecTemplate spec =
+        new MesosAgentSpecTemplate(
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            true,
+            "1",
+            "1",
+            "0",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "");
+
     List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
     MesosCloud cloud =
         new MesosCloud(
-            mesosCluster.getMesosUrl(),
+            mesosCluster.getMesosUrl().toString(),
             "MesosTest",
             "*",
             System.getProperty("user.name"),
@@ -116,7 +153,7 @@ public class MesosCloudProvisionTest {
     final JenkinsConfigClient jenkinsClient = new JenkinsConfigClient(j.createWebClient());
     final Response response =
         jenkinsClient.addMesosCloud(
-            mesosCluster.getMesosUrl(),
+            mesosCluster.getMesosUrl().toString(),
             "Jenkins Scheduler",
             "*",
             System.getProperty("user.name"),

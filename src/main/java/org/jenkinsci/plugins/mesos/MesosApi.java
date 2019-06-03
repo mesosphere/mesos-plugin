@@ -1,18 +1,21 @@
 package org.jenkinsci.plugins.mesos;
 
+import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import akka.stream.OverflowStrategy;
+import akka.stream.QueueOfferResult;
 import akka.stream.javadsl.*;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
+import com.mesosphere.usi.core.conf.SchedulerSettings;
 import com.mesosphere.usi.core.japi.Scheduler;
 import com.mesosphere.usi.core.models.*;
+import com.mesosphere.usi.repository.PodRecordRepository;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -24,14 +27,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
+import org.jenkinsci.plugins.mesos.api.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Option;
 import scala.concurrent.ExecutionContext;
 
 public class MesosApi {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosApi.class);
+
+  private final Settings operationalSettings;
 
   private final String frameworkName;
   private final String role;
@@ -39,9 +44,7 @@ public class MesosApi {
   private final String frameworkId;
   private final URL jenkinsUrl;
 
-  @XStreamOmitField private final MesosClient client;
-
-  @XStreamOmitField private final SourceQueueWithComplete<SpecUpdated> updates;
+  @XStreamOmitField private final SourceQueueWithComplete<SchedulerCommand> commands;
 
   private final ConcurrentHashMap<PodId, MesosJenkinsAgent> stateMap;
 
@@ -50,6 +53,8 @@ public class MesosApi {
   @XStreamOmitField private final ActorMaterializer materializer;
 
   @XStreamOmitField private final ExecutionContext context;
+
+  @XStreamOmitField private final PodRecordRepository repository;
 
   /**
    * Establishes a connection to Mesos and provides a simple interface to start and stop {@link
@@ -72,49 +77,86 @@ public class MesosApi {
     this.agentUser = agentUser;
     this.jenkinsUrl = jenkinsUrl;
 
-    ClassLoader classLoader = Jenkins.getInstanceOrNull().pluginManager.uberClassLoader;
+    ClassLoader classLoader = Jenkins.get().pluginManager.uberClassLoader;
 
     Config conf = ConfigFactory.load(classLoader);
-    Config clientConf =
-        conf.getConfig("mesos-client")
-            .withValue("master-url", ConfigValueFactory.fromAnyRef(masterUrl.toString()));
+    MesosClientSettings clientSettings =
+        MesosClientSettings.fromConfig(conf.getConfig("mesos-client"))
+            .withMasters(Collections.singletonList(masterUrl));
+    SchedulerSettings schedulerSettings = SchedulerSettings.load(classLoader);
 
-    MesosClientSettings clientSettings = MesosClientSettings.fromConfig(clientConf);
-    system = ActorSystem.create("mesos-scheduler", conf, classLoader);
-    context = system.dispatcher();
-    materializer = ActorMaterializer.create(system);
+    this.operationalSettings = Settings.load(classLoader);
 
-    client = connectClient(clientSettings).get();
+    this.system = ActorSystem.create("mesos-scheduler", conf, classLoader);
+    this.materializer = ActorMaterializer.create(system);
+    this.context = system.dispatcher();
 
-    stateMap = new ConcurrentHashMap<>();
+    this.stateMap = new ConcurrentHashMap<>();
+    this.repository = new MesosPodRecordRepository();
 
     logger.info("Starting USI scheduler flow.");
-    updates = runScheduler(SpecsSnapshot.empty(), client, materializer).get();
+    commands =
+        connectClient(clientSettings)
+            .thenCompose(client -> Scheduler.fromClient(client, repository, schedulerSettings))
+            .thenApply(builder -> runScheduler(builder.getFlow(), materializer))
+            .get();
   }
 
   /**
-   * Constructs a queue of {@link SpecUpdated} and passes the specs snapshot as the first item. All
-   * updates are processed by {@link MesosApi#updateState(StateEvent)}.
+   * Internal constructor for testing the API.
    *
-   * @param specsSnapshot The initial set of pod specs.
-   * @param client The Mesos client that is used.
+   * @param jenkinsUrl The Jenkins address to fetch the agent jar from.
+   * @param agentUser The username used for executing Mesos tasks.
+   * @param frameworkName The name of the framework the Mesos client should register as.
+   * @param frameworkId Unique identifier of the framework in Mesos.
+   * @param role The Mesos role to assume.
+   * @param schedulerFlow The USI scheduler flow constructed by {@link Scheduler#fromClient()}
+   * @param system The Akka actor system to use.
+   * @param materializer The Akka stream materializer to use.
+   */
+  public MesosApi(
+      URL jenkinsUrl,
+      String agentUser,
+      String frameworkName,
+      String frameworkId,
+      String role,
+      Flow<SchedulerCommand, StateEventOrSnapshot, NotUsed> schedulerFlow,
+      Settings operationalSettings,
+      ActorSystem system,
+      ActorMaterializer materializer) {
+    this.frameworkName = frameworkName;
+    this.frameworkId = frameworkId;
+    this.role = role;
+    this.agentUser = agentUser;
+    this.jenkinsUrl = jenkinsUrl;
+
+    this.operationalSettings = operationalSettings;
+
+    this.stateMap = new ConcurrentHashMap<>();
+    this.repository = new MesosPodRecordRepository();
+
+    this.commands = runScheduler(schedulerFlow, materializer);
+    this.context = system.dispatcher();
+    this.system = system;
+    this.materializer = materializer;
+  }
+
+  /**
+   * Constructs a queue of {@link SchedulerCommand}. All state events are processed by {@link
+   * MesosApi#updateState(StateEventOrSnapshot)}.
+   *
+   * @param schedulerFlow The scheduler flow from commands to events provided by USI.
    * @param materializer The {@link ActorMaterializer} used for the source queue.
    * @return A running source queue.
    */
-  private CompletableFuture<SourceQueueWithComplete<SpecUpdated>> runScheduler(
-      SpecsSnapshot specsSnapshot, MesosClient client, ActorMaterializer materializer) {
-    return Scheduler.asFlow(specsSnapshot, client, materializer)
-        .thenApply(
-            builder -> {
-              // We create a SourceQueue and assume that the very first item is a spec snapshot.
-              SourceQueueWithComplete<SpecUpdated> queue =
-                  Source.<SpecUpdated>queue(256, OverflowStrategy.fail())
-                      .via(builder.getFlow())
-                      .toMat(Sink.foreach(this::updateState), Keep.left())
-                      .run(materializer);
-
-              return queue;
-            });
+  private SourceQueueWithComplete<SchedulerCommand> runScheduler(
+      Flow<SchedulerCommand, StateEventOrSnapshot, NotUsed> schedulerFlow,
+      ActorMaterializer materializer) {
+    return Source.<SchedulerCommand>queue(
+            operationalSettings.getCommandQueueBufferSize(), OverflowStrategy.dropNew())
+        .via(schedulerFlow)
+        .toMat(Sink.foreach(this::updateState), Keep.left())
+        .run(materializer);
   }
 
   /**
@@ -124,39 +166,61 @@ public class MesosApi {
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
   public CompletionStage<Void> killAgent(String id) throws Exception {
-    PodSpec spec = stateMap.get(new PodId(id)).getPodSpec(Goal.Terminal$.MODULE$);
-    SpecUpdated update = new PodSpecUpdated(spec.id(), Option.apply(spec));
-    return updates.offer(update).thenRun(() -> {});
+    final SchedulerCommand command = new KillPod(new PodId(id));
+    return commands
+        .offer(command)
+        .thenAccept(
+            result -> {
+              if (result == QueueOfferResult.dropped()) {
+                logger.warn("USI command queue is full. Fail kill for {}", id);
+                throw new IllegalStateException(
+                    String.format("Kill command for %s was dropped.", id));
+              } else {
+                // TODO: Call crash strategy DCOS_OSS-5055
+                throw new IllegalStateException("The USI stream failed or is closed.");
+              }
+            });
   }
 
   /**
-   * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
-   * that pod
+   * Enqueue launch command for a new Jenkins agent.
    *
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
-  public CompletionStage<MesosJenkinsAgent> enqueueAgent(
-      MesosCloud cloud, String name, MesosAgentSpecTemplate spec)
+  public CompletionStage<MesosJenkinsAgent> enqueueAgent(String name, MesosAgentSpecTemplate spec)
       throws IOException, FormException, URISyntaxException {
 
     MesosJenkinsAgent mesosJenkinsAgent =
         new MesosJenkinsAgent(
-            cloud,
+            this,
             name,
             spec,
             "Mesos Jenkins Slave",
             jenkinsUrl,
             spec.getIdleTerminationMinutes(),
             spec.getReusable(),
-            Collections.emptyList());
-    PodSpec podSpec = mesosJenkinsAgent.getPodSpec(Goal.Running$.MODULE$);
-    SpecUpdated update = new PodSpecUpdated(podSpec.id(), Option.apply(podSpec));
+            Collections.emptyList(),
+            this.operationalSettings.getAgentTimeout());
+    LaunchPod launchCommand = spec.buildLaunchCommand(jenkinsUrl, name);
 
-    stateMap.put(podSpec.id(), mesosJenkinsAgent);
+    stateMap.put(launchCommand.podId(), mesosJenkinsAgent);
+
     // async add agent to queue
-    return updates
-        .offer(update)
-        .thenApply(result -> mesosJenkinsAgent); // TODO: handle QueueOfferResult.
+    return commands
+        .offer(launchCommand)
+        .thenApply(
+            result -> {
+              if (result == QueueOfferResult.enqueued()) {
+                return mesosJenkinsAgent;
+              } else if (result == QueueOfferResult.dropped()) {
+                logger.warn("USI command queue is full. Fail provisioning for {}", name);
+                throw new IllegalStateException(
+                    String.format("Launch command for %s was dropped.", name));
+              } else {
+                // TODO: Call crash strategy DCOS_OSS-5055
+                throw new IllegalStateException("The USI stream failed or is closed.");
+              }
+            });
   }
 
   /** Establish a connection to Mesos via the v1 client. */
@@ -188,14 +252,14 @@ public class MesosApi {
   /**
    * Callback for USI to process state events.
    *
-   * <p>This method will filter out {@link PodStatusUpdated} and pass them on to their {@link
+   * <p>This method will filter out {@link PodStatusUpdatedEvent} and pass them on to their {@link
    * MesosJenkinsAgent}. It should be threadsafe.
    *
-   * @param event The {@link PodStatusUpdated} for a USI pod.
+   * @param event The {@link PodStatusUpdatedEvent} for a USI pod.
    */
-  public void updateState(StateEvent event) {
-    if (event instanceof PodStatusUpdated) {
-      PodStatusUpdated podStateEvent = (PodStatusUpdated) event;
+  public void updateState(StateEventOrSnapshot event) {
+    if (event instanceof PodStatusUpdatedEvent) {
+      PodStatusUpdatedEvent podStateEvent = (PodStatusUpdatedEvent) event;
       logger.info("Got status update for pod {}", podStateEvent.id().value());
       stateMap.computeIfPresent(
           podStateEvent.id(),
