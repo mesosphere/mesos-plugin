@@ -165,7 +165,7 @@ public class MesosApi {
    *
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
-  public CompletionStage<Void> killAgent(String id) throws Exception {
+  public CompletionStage<Void> killAgent(String id) {
     final SchedulerCommand command = new KillPod(new PodId(id));
     return commands
         .offer(command)
