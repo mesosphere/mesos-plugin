@@ -162,11 +162,12 @@ public class MesosCloud extends AbstractCloudImpl {
                           logger.info("Agent {} is online", name);
                           return node;
                         })
-                    .exceptionally(e -> {
-                      logger.info("Agent {} failed to come online", name);
-                      mesosApi.killAgent(name);
-                      throw new CompletionException(e);
-                    });
+                    .exceptionally(
+                        e -> {
+                          logger.info("Agent {} failed to come online", name);
+                          mesosApi.killAgent(name);
+                          throw new CompletionException(e);
+                        });
               } catch (Exception ex) {
                 throw new CompletionException(ex);
               }
