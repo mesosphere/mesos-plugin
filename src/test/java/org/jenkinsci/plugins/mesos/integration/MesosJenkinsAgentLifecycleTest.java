@@ -165,6 +165,9 @@ public class MesosJenkinsAgentLifecycleTest {
         is(false));
 
     Jenkins instance = Jenkins.getInstanceOrNull();
+    if (instance == null) {
+      throw new IllegalStateException("Jenkins is null");
+    }
     HudsonPrivateSecurityRealm realm = new HudsonPrivateSecurityRealm(false);
     instance.setSecurityRealm(realm);
     FullControlOnceLoggedInAuthorizationStrategy strategy =
