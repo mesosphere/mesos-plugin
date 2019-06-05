@@ -10,6 +10,8 @@ import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Slave;
+import hudson.security.FullControlOnceLoggedInAuthorizationStrategy;
+import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.slaves.SlaveComputer;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -150,5 +152,23 @@ public class MesosJenkinsAgentLifecycleTest {
 
     // after 1 minute MesosRetentionStrategy will kill the task
     await().atMost(3, TimeUnit.MINUTES).until(agent::isKilled);
+  }
+
+  @Test
+  public void testJnlpAgentCommandContainsSecret(TestUtils.JenkinsRule j) throws Exception {
+    Jenkins instance = Jenkins.getInstanceOrNull();
+
+    HudsonPrivateSecurityRealm realm = new HudsonPrivateSecurityRealm(false);
+    instance.setSecurityRealm(realm);
+    FullControlOnceLoggedInAuthorizationStrategy strategy = new hudson.security.FullControlOnceLoggedInAuthorizationStrategy();
+
+    strategy.setAllowAnonymousRead(false);
+    instance.setAuthorizationStrategy(strategy);
+    instance.save();
+
+    final String name = "jenkins-jnlp-security";
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
+
+    assertThat(spec.buildLaunchCommand(j.getURL(), name).runSpec().shellCommand().contains("-secret"), is(true));
   }
 }
