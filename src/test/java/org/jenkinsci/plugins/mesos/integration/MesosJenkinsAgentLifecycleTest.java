@@ -160,7 +160,8 @@ public class MesosJenkinsAgentLifecycleTest {
 
     HudsonPrivateSecurityRealm realm = new HudsonPrivateSecurityRealm(false);
     instance.setSecurityRealm(realm);
-    FullControlOnceLoggedInAuthorizationStrategy strategy = new hudson.security.FullControlOnceLoggedInAuthorizationStrategy();
+    FullControlOnceLoggedInAuthorizationStrategy strategy =
+        new hudson.security.FullControlOnceLoggedInAuthorizationStrategy();
 
     strategy.setAllowAnonymousRead(false);
     instance.setAuthorizationStrategy(strategy);
@@ -169,6 +170,8 @@ public class MesosJenkinsAgentLifecycleTest {
     final String name = "jenkins-jnlp-security";
     final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 
-    assertThat(spec.buildLaunchCommand(j.getURL(), name).runSpec().shellCommand().contains("-secret"), is(true));
+    assertThat(
+        spec.buildLaunchCommand(j.getURL(), name).runSpec().shellCommand().contains("-secret"),
+        is(true));
   }
 }
