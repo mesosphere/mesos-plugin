@@ -20,6 +20,7 @@ import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -43,6 +44,7 @@ public class MesosApi {
   private final String agentUser;
   private final String frameworkId;
   private final URL jenkinsUrl;
+  private Duration agentTimeout;
 
   @XStreamOmitField private final SourceQueueWithComplete<SchedulerCommand> commands;
 
@@ -100,6 +102,8 @@ public class MesosApi {
             .thenCompose(client -> Scheduler.fromClient(client, repository, schedulerSettings))
             .thenApply(builder -> runScheduler(builder.getFlow(), materializer))
             .get();
+
+    this.agentTimeout = this.operationalSettings.getAgentTimeout();
   }
 
   /**
@@ -165,7 +169,7 @@ public class MesosApi {
    *
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
-  public CompletionStage<Void> killAgent(String id) throws Exception {
+  public CompletionStage<Void> killAgent(String id) {
     final SchedulerCommand command = new KillPod(new PodId(id));
     return commands
         .offer(command)
@@ -200,7 +204,7 @@ public class MesosApi {
             spec.getIdleTerminationMinutes(),
             spec.getReusable(),
             Collections.emptyList(),
-            this.operationalSettings.getAgentTimeout());
+            this.agentTimeout);
     LaunchPod launchCommand = spec.buildLaunchCommand(jenkinsUrl, name);
 
     stateMap.put(launchCommand.podId(), mesosJenkinsAgent);
@@ -268,6 +272,11 @@ public class MesosApi {
             return slave;
           });
     }
+  }
+
+  /** test method to set the agent timeout duration */
+  public void setAgentTimeout(Duration agentTimeout) {
+    this.agentTimeout = agentTimeout;
   }
 
   // Getters
