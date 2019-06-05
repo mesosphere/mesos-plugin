@@ -156,8 +156,15 @@ public class MesosJenkinsAgentLifecycleTest {
 
   @Test
   public void testJnlpAgentCommandContainsSecret(TestUtils.JenkinsRule j) throws Exception {
-    Jenkins instance = Jenkins.getInstanceOrNull();
+    final String name = "jenkins-jnlp-security";
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 
+    // before enabling security shell command contains no secret param
+    assertThat(
+        spec.buildLaunchCommand(j.getURL(), name).runSpec().shellCommand().contains("-secret"),
+        is(false));
+
+    Jenkins instance = Jenkins.getInstanceOrNull();
     HudsonPrivateSecurityRealm realm = new HudsonPrivateSecurityRealm(false);
     instance.setSecurityRealm(realm);
     FullControlOnceLoggedInAuthorizationStrategy strategy =
@@ -167,9 +174,7 @@ public class MesosJenkinsAgentLifecycleTest {
     instance.setAuthorizationStrategy(strategy);
     instance.save();
 
-    final String name = "jenkins-jnlp-security";
-    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
-
+    // after enabling security shell command contains secret
     assertThat(
         spec.buildLaunchCommand(j.getURL(), name).runSpec().shellCommand().contains("-secret"),
         is(true));
