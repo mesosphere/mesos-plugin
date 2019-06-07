@@ -19,8 +19,6 @@ import org.jenkinsci.plugins.mesos.api.LaunchCommandBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import static com.sun.xml.internal.ws.policy.sourcemodel.wspolicy.XmlToken.Optional;
-
 /** This is the Mesos agent pod spec config set by a user. */
 public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSpecTemplate> {
 
@@ -130,7 +128,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         .withDisk(this.getDisk())
         .withName(name)
         .withJenkinsUrl(jenkinsUrl)
-        .withImage(java.util.Optional.ofNullable(this.containerImage))
+        .withImage(Optional.ofNullable(this.containerImage))
         .build();
   }
 
