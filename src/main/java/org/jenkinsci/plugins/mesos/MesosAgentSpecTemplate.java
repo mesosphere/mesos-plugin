@@ -11,12 +11,15 @@ import hudson.util.FormValidation;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.mesos.api.LaunchCommandBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+
+import static com.sun.xml.internal.ws.policy.sourcemodel.wspolicy.XmlToken.Optional;
 
 /** This is the Mesos agent pod spec config set by a user. */
 public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSpecTemplate> {
@@ -40,6 +43,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private String agentAttributes;
   private final String additionalURIs;
   private String nodeProperties;
+  private String containerImage;
 
   @DataBoundConstructor
   public MesosAgentSpecTemplate(
@@ -59,7 +63,8 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       String jnlpArgs,
       String defaultAgent,
       String additionalURIs,
-      String nodeProperties) {
+      String nodeProperties,
+      String containerImage) {
     this.label = label;
     this.labelSet = Label.parse(label);
     this.mode = mode;
@@ -78,6 +83,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.jvmArgs = jvmArgs;
     this.additionalURIs = additionalURIs;
     this.nodeProperties = nodeProperties;
+    this.containerImage = StringUtils.isNotBlank(containerImage) ? containerImage : null;
     validate();
   }
 
@@ -124,6 +130,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         .withDisk(this.getDisk())
         .withName(name)
         .withJenkinsUrl(jenkinsUrl)
+        .withImage(java.util.Optional.ofNullable(this.containerImage))
         .build();
   }
 
@@ -206,5 +213,9 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public String getNodeProperties() {
     return nodeProperties;
+  }
+
+  public String getContainerImage() {
+    return this.containerImage;
   }
 }

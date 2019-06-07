@@ -22,6 +22,10 @@
         <f:textbox/>
     </f:entry>
 
+     <f:entry title="Docker image" field="containerImage">
+            <f:textbox/>
+        </f:entry>
+
     <f:advanced>
       <f:entry title="Agent Specs">
           <f:repeatable field="mesosAgentSpecTemplates">
