@@ -11,7 +11,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'kvish/container-info'
+    usiBranch = 'master'
     scalaVersion = '2.12'
     akkaVersion = '2.5.19'
 }
