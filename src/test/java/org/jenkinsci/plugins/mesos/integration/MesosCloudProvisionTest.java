@@ -45,7 +45,7 @@ public class MesosCloudProvisionTest {
 
   static MesosAgentConfig config =
       new MesosAgentConfig(
-          "posix",
+          "linux",
           "mesos",
           Option.apply("filesystem/linux,docker/runtime"),
           Option.apply("docker"));
