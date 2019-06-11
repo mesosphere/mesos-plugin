@@ -29,5 +29,5 @@ public class AgentSpecMother {
           "",
           "",
           "",
-          "");
+          "mesosphere/jenkins-dind:0.6.0-alpine");
 }
