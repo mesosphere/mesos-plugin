@@ -1,4 +1,5 @@
 <?jelly escape-by-default='true'?>
+<?jelly escape-by-default='true'?>
 
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
@@ -60,6 +61,10 @@
 
           <f:entry title="${%Node Properties}" field="nodeProperties">
               <f:number clazz="required number" default=""/>
+          </f:entry>
+
+          <f:entry title="Docker image" field="containerImage">
+              <f:textbox/>
           </f:entry>
 
     </table>

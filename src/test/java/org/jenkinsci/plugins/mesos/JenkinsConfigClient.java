@@ -86,6 +86,7 @@ public class JenkinsConfigClient {
                                     .add("defaultAgent", "")
                                     .add("additionalUris", "")
                                     .add("nodeProperties", "")
+                                    .add("containerImage", "mesosphere/jenkins-dind:0.6.0-alpine")
                                     .build())
                             .add("stapler-class", "org.jenkinsci.plugins.mesos.MesosCloud")
                             .add("$class", "org.jenkinsci.plugins.mesos.MesosCloud")
