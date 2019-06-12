@@ -12,7 +12,6 @@ import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
 import com.mesosphere.usi.core.models.SchedulerCommand;
 import com.mesosphere.usi.core.models.StateEventOrSnapshot;
-import com.mesosphere.utils.mesos.MesosAgentConfig;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Descriptor.FormException;
@@ -33,7 +32,6 @@ import org.jenkinsci.plugins.mesos.fixture.AgentSpecMother;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import scala.Option;
 
 @ExtendWith(JenkinsParameterResolver.class)
 class MesosApiTest {
@@ -43,19 +41,11 @@ class MesosApiTest {
   static ActorSystem system = ActorSystem.create("mesos-scheduler-test");
   static ActorMaterializer materializer = ActorMaterializer.create(system);
 
-  static MesosAgentConfig config =
-      new MesosAgentConfig(
-          "linux",
-          "mesos",
-          Option.apply("filesystem/linux,docker/runtime"),
-          Option.apply("docker"));
-
   @RegisterExtension
   static MesosClusterExtension mesosCluster =
       MesosClusterExtension.builder()
           .withMesosMasterUrl(String.format("zk://%s/mesos", zkServer.getConnectionUrl()))
           .withLogPrefix(MesosApiTest.class.getCanonicalName())
-          .withAgentConfig(config)
           .build(system, materializer);
 
   @Test

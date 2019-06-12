@@ -9,7 +9,6 @@ import static org.hamcrest.Matchers.lessThan;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
-import com.mesosphere.utils.mesos.MesosAgentConfig;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.FreeStyleBuild;
@@ -33,7 +32,6 @@ import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import scala.Option;
 
 @ExtendWith(TestUtils.JenkinsParameterResolver.class)
 public class MesosCloudProvisionTest {
@@ -43,19 +41,11 @@ public class MesosCloudProvisionTest {
   static ActorSystem system = ActorSystem.create("mesos-scheduler-test");
   static ActorMaterializer materializer = ActorMaterializer.create(system);
 
-  static MesosAgentConfig config =
-      new MesosAgentConfig(
-          "linux",
-          "mesos",
-          Option.apply("filesystem/linux,docker/runtime"),
-          Option.apply("docker"));
-
   @RegisterExtension
   static MesosClusterExtension mesosCluster =
       MesosClusterExtension.builder()
           .withMesosMasterUrl(String.format("zk://%s/mesos", zkServer.getConnectionUrl()))
           .withLogPrefix(MesosCloudProvisionTest.class.getCanonicalName())
-          .withAgentConfig(config)
           .build(system, materializer);
 
   @Test

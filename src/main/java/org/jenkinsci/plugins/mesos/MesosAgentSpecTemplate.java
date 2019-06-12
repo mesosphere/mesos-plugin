@@ -41,7 +41,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private String agentAttributes;
   private final String additionalURIs;
   private String nodeProperties;
-  private String containerImage;
+  private Optional<String> containerImage;
 
   @DataBoundConstructor
   public MesosAgentSpecTemplate(
@@ -81,7 +81,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.jvmArgs = jvmArgs;
     this.additionalURIs = additionalURIs;
     this.nodeProperties = nodeProperties;
-    this.containerImage = StringUtils.isNotBlank(containerImage) ? containerImage : null;
+    this.containerImage = Optional.ofNullable(containerImage).filter(s -> !s.isEmpty());
     validate();
   }
 
@@ -128,7 +128,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         .withDisk(this.getDisk())
         .withName(name)
         .withJenkinsUrl(jenkinsUrl)
-        .withImage(Optional.ofNullable(this.containerImage))
+        .withImage(this.containerImage)
         .build();
   }
 
@@ -213,7 +213,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return nodeProperties;
   }
 
-  public String getContainerImage() {
+  public Optional<String> getContainerImage() {
     return this.containerImage;
   }
 }
