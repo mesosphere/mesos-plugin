@@ -154,8 +154,7 @@ public class MesosApi {
    * @return A running source queue.
    */
   private SourceQueueWithComplete<SchedulerCommand> runScheduler(
-      Flow<SchedulerCommand, StateEvent, NotUsed> schedulerFlow,
-      ActorMaterializer materializer) {
+      Flow<SchedulerCommand, StateEvent, NotUsed> schedulerFlow, ActorMaterializer materializer) {
     return Source.<SchedulerCommand>queue(
             operationalSettings.getCommandQueueBufferSize(), OverflowStrategy.dropNew())
         .via(schedulerFlow)
