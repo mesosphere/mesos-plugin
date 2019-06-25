@@ -65,7 +65,7 @@ for more details.
 
 ### Configuring Jenkins jobs ###
 
-Finally, just add the label name you have configured in Mesos cloud configuration -> Advanced -> Slave Info -> Label String (default is `mesos`) 
+Finally, just add the label name you have configured in Mesos cloud configuration -> Advanced -> Slave Info -> Label String (default is `mesos`)
 to the jobs (configure -> Restrict where this project can run checkbox) that you want to run on a specific slave type inside Mesos cluster.
 
 ### Docker containers ###
@@ -115,31 +115,9 @@ To schedule slave disposal from a Pipeline job:
 
 Build the plugin as follows:
 
-        $ mvn package
+        $ docker build -t mesosphere/jenkins:0.x .
 
-This should build the Mesos plugin (mesos.hpi) in the `target` folder.
-
-> NOTE: If you want to build against a different version of Mesos than
-> the default you'll need to update the `mesos` version in `pom.xml`.
-> You should use the same (**recommended**) or compatible version as the
-> one your Mesos cluster is running on.
-
-
-### Building the Mesos native library ##
-
-First, [download](http://mesos.apache.org/downloads/) Mesos.
-
-> NOTE: Ensure the Mesos version you download is same (**recommended**) or compatible with the `mesos` version in `pom.xml`.
-
-Now, build it as follows:
-
-		$ cd mesos
-		$ mkdir build && cd build
-		$ ../configure
-		$ make
-
-This should build the Mesos native library in the `build/src/.libs` folder.
-
+This should build the Mesos plugin (mesos.hpi) in the `target` folder and add it to a jenkins docker container.
 
 ### Vagrant ###
 
