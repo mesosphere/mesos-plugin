@@ -91,7 +91,9 @@ public class LaunchCommandBuilder {
             convertListToSeq(Arrays.asList(this.cpus, this.memory, this.disk)),
             this.buildCommand(),
             this.role,
-            convertListToSeq(Arrays.asList(buildFetchUri())));
+            convertListToSeq(Arrays.asList(buildFetchUri())),
+            scala.Option.empty()
+        );
     return new LaunchPod(this.id, runTemplate);
   }
 

@@ -120,7 +120,7 @@ public class MesosApi {
       String frameworkName,
       String frameworkId,
       String role,
-      Flow<SchedulerCommand, StateEventOrSnapshot, NotUsed> schedulerFlow,
+      Flow<SchedulerCommand, StateEvent, NotUsed> schedulerFlow,
       Settings operationalSettings,
       ActorSystem system,
       ActorMaterializer materializer) {
@@ -150,7 +150,7 @@ public class MesosApi {
    * @return A running source queue.
    */
   private SourceQueueWithComplete<SchedulerCommand> runScheduler(
-      Flow<SchedulerCommand, StateEventOrSnapshot, NotUsed> schedulerFlow,
+      Flow<SchedulerCommand, StateEvent, NotUsed> schedulerFlow,
       ActorMaterializer materializer) {
     return Source.<SchedulerCommand>queue(
             operationalSettings.getCommandQueueBufferSize(), OverflowStrategy.dropNew())
@@ -240,7 +240,7 @@ public class MesosApi {
             .build();
 
     return MesosClient$.MODULE$
-        .apply(clientSettings, frameworkInfo, system, materializer)
+        .apply(clientSettings, frameworkInfo, scala.Option.empty(), system, materializer)
         .runWith(Sink.head(), materializer)
         .toCompletableFuture();
   }
