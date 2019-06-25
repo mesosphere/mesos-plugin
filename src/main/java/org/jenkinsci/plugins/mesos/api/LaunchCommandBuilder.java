@@ -9,12 +9,17 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import jenkins.model.Jenkins;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import scala.Option;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
+import scala.compat.java8.OptionConverters;
 
 /**
- * A simpler factory for building {@link com.mesosphere.usi.core.models.PodSpec} for Jenkins agents.
+ * A simpler factory for building {@link com.mesosphere.usi.core.models.LaunchPod} for Jenkins
+ * agents.
  */
 public class LaunchCommandBuilder {
 
@@ -28,11 +33,14 @@ public class LaunchCommandBuilder {
   private static final String AGENT_COMMAND_FORMAT =
       "java -DHUDSON_HOME=jenkins -server -Xmx%dm %s -jar ${MESOS_SANDBOX-.}/agent.jar %s %s -jnlpUrl %s";
 
+  private static final String JNLP_SECRET_FORMAT = "-secret %s";
+
   private PodId id = null;
   private ScalarRequirement cpus = null;
   private ScalarRequirement memory = null;
   private ScalarRequirement disk = null;
   private String role = "test";
+  private Optional<String> containerImage = Optional.empty();
 
   private int xmx = 0;
 
@@ -85,6 +93,11 @@ public class LaunchCommandBuilder {
     return this;
   }
 
+  public LaunchCommandBuilder withImage(Optional<String> containerImage) {
+    this.containerImage = containerImage;
+    return this;
+  }
+
   public LaunchPod build() throws MalformedURLException, URISyntaxException {
     final RunTemplate runTemplate =
         new RunTemplate(
@@ -92,8 +105,7 @@ public class LaunchCommandBuilder {
             this.buildCommand(),
             this.role,
             convertListToSeq(Arrays.asList(buildFetchUri())),
-            scala.Option.empty()
-        );
+            OptionConverters.toScala(this.containerImage));
     return new LaunchPod(this.id, runTemplate);
   }
 
@@ -109,8 +121,23 @@ public class LaunchCommandBuilder {
   }
 
   private String buildJnlpSecret() {
-    return ""; // TODO
-    // https://github.com/mesosphere/mesos-plugin/blob/master/src/main/java/org/jenkinsci/plugins/mesos/JenkinsScheduler.java#L232
+    String jnlpSecret = "";
+    if (getJenkins().isUseSecurity()) {
+      jnlpSecret =
+          String.format(
+              JNLP_SECRET_FORMAT,
+              jenkins.slaves.JnlpSlaveAgentProtocol.SLAVE_SECRET.mac(this.id.toString()));
+    }
+    return jnlpSecret;
+  }
+
+  @NonNull
+  private static Jenkins getJenkins() {
+    Jenkins jenkins = Jenkins.getInstanceOrNull();
+    if (jenkins == null) {
+      throw new IllegalStateException("Jenkins is null");
+    }
+    return jenkins;
   }
 
   /** @return the Jnlp url for the agent: http://[master]/computer/[slaveName]/slave-agent.jnlp */

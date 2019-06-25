@@ -20,6 +20,7 @@ import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -43,6 +44,7 @@ public class MesosApi {
   private final String agentUser;
   private final String frameworkId;
   private final URL jenkinsUrl;
+  private Duration agentTimeout;
 
   @XStreamOmitField private final SourceQueueWithComplete<SchedulerCommand> commands;
 
@@ -100,6 +102,8 @@ public class MesosApi {
             .thenCompose(client -> Scheduler.fromClient(client, repository, schedulerSettings))
             .thenApply(builder -> runScheduler(builder.getFlow(), materializer))
             .get();
+
+    this.agentTimeout = this.operationalSettings.getAgentTimeout();
   }
 
   /**
@@ -165,16 +169,26 @@ public class MesosApi {
    *
    * @return a {@link MesosJenkinsAgent} once it's queued for running.
    */
-  public CompletionStage<Void> killAgent(String id) throws Exception {
-    final SchedulerCommand command = new KillPod(new PodId(id));
+  public CompletionStage<Void> killAgent(String id) {
+    return killAgent(new PodId(id));
+  }
+
+  /**
+   * Enqueue spec for a Jenkins event, passing a non-null existing podId will trigger a kill for
+   * that pod
+   *
+   * @return a {@link MesosJenkinsAgent} once it's queued for running.
+   */
+  public CompletionStage<Void> killAgent(PodId podId) {
+    SchedulerCommand command = new KillPod(podId);
     return commands
         .offer(command)
         .thenAccept(
             result -> {
               if (result == QueueOfferResult.dropped()) {
-                logger.warn("USI command queue is full. Fail kill for {}", id);
+                logger.warn("USI command queue is full. Fail kill for {}", podId.value());
                 throw new IllegalStateException(
-                    String.format("Kill command for %s was dropped.", id));
+                    String.format("Kill command for %s was dropped.", podId.value()));
               } else {
                 // TODO: Call crash strategy DCOS_OSS-5055
                 throw new IllegalStateException("The USI stream failed or is closed.");
@@ -200,7 +214,7 @@ public class MesosApi {
             spec.getIdleTerminationMinutes(),
             spec.getReusable(),
             Collections.emptyList(),
-            this.operationalSettings.getAgentTimeout());
+            this.agentTimeout);
     LaunchPod launchCommand = spec.buildLaunchCommand(jenkinsUrl, name);
 
     stateMap.put(launchCommand.podId(), mesosJenkinsAgent);
@@ -257,17 +271,29 @@ public class MesosApi {
    *
    * @param event The {@link PodStatusUpdatedEvent} for a USI pod.
    */
-  public void updateState(StateEventOrSnapshot event) {
+  private void updateState(StateEventOrSnapshot event) {
     if (event instanceof PodStatusUpdatedEvent) {
       PodStatusUpdatedEvent podStateEvent = (PodStatusUpdatedEvent) event;
       logger.info("Got status update for pod {}", podStateEvent.id().value());
-      stateMap.computeIfPresent(
-          podStateEvent.id(),
-          (id, slave) -> {
-            slave.update(podStateEvent);
-            return slave;
-          });
+      MesosJenkinsAgent updated =
+          stateMap.computeIfPresent(
+              podStateEvent.id(),
+              (id, slave) -> {
+                slave.update(podStateEvent);
+                return slave;
+              });
+
+      // The agent, ie the pod, is not terminal and unknown to us. Kill it.
+      boolean terminal = podStateEvent.newStatus().forall(PodStatus::isTerminalOrUnreachable);
+      if (updated == null && !terminal) {
+        killAgent(podStateEvent.id());
+      }
     }
+  }
+
+  /** test method to set the agent timeout duration */
+  public void setAgentTimeout(Duration agentTimeout) {
+    this.agentTimeout = agentTimeout;
   }
 
   // Getters

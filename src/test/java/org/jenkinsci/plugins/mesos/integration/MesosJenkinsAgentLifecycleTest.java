@@ -4,20 +4,21 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Slave;
+import hudson.security.FullControlOnceLoggedInAuthorizationStrategy;
+import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.slaves.SlaveComputer;
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
-import org.jenkinsci.plugins.mesos.MesosCloud;
-import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
-import org.jenkinsci.plugins.mesos.TestUtils;
+import org.jenkinsci.plugins.mesos.*;
 import org.jenkinsci.plugins.mesos.fixture.AgentSpecMother;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -150,5 +151,64 @@ public class MesosJenkinsAgentLifecycleTest {
 
     // after 1 minute MesosRetentionStrategy will kill the task
     await().atMost(3, TimeUnit.MINUTES).until(agent::isKilled);
+  }
+
+  @Test
+  public void testJnlpAgentCommandContainsSecret(TestUtils.JenkinsRule j) throws Exception {
+    final String name = "jenkins-jnlp-security";
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
+
+    // before enabling security shell command contains no secret param
+    assertThat(
+        spec.buildLaunchCommand(j.getURL(), name).runSpec().shellCommand().contains("-secret"),
+        is(false));
+
+    Jenkins instance = Jenkins.getInstanceOrNull();
+    if (instance == null) {
+      throw new IllegalStateException("Jenkins is null");
+    }
+    HudsonPrivateSecurityRealm realm = new HudsonPrivateSecurityRealm(false);
+    instance.setSecurityRealm(realm);
+    FullControlOnceLoggedInAuthorizationStrategy strategy =
+        new hudson.security.FullControlOnceLoggedInAuthorizationStrategy();
+
+    strategy.setAllowAnonymousRead(false);
+    instance.setAuthorizationStrategy(strategy);
+    instance.save();
+
+    // after enabling security shell command contains secret
+    assertThat(
+        spec.buildLaunchCommand(j.getURL(), name).runSpec().shellCommand().contains("-secret"),
+        is(true));
+  }
+
+  @Test
+  public void testAgentTimeout(TestUtils.JenkinsRule j) throws Exception {
+    MesosCloud cloud =
+        new MesosCloud(
+            mesosCluster.getMesosUrl().toString(),
+            "MesosTest",
+            "*",
+            System.getProperty("user.name"),
+            j.getURL().toString(),
+            new ArrayList<>());
+
+    cloud.getMesosApi().setAgentTimeout(Duration.ofSeconds(1));
+
+    final String name = "jenkins-agent-timeout";
+
+    final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
+
+    ExecutionException e =
+        assertThrows(
+            ExecutionException.class,
+            () -> {
+              cloud.startAgent(name, spec).get();
+            });
+
+    assertThat(
+        e.getCause().getMessage(),
+        is(
+            "java.util.concurrent.TimeoutException: The stream has not been completed in 1 second."));
   }
 }
