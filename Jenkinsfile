@@ -13,10 +13,8 @@ ansiColor('xterm') {
   }
   node('JenkinsMarathonCI-Debian9-2018-12-17') {
     stage('Build') {
-      try {
-        checkout scm
-        sh 'docker build .'
-      }
+      checkout scm
+      sh 'docker build .'
     } 
   }
 }
