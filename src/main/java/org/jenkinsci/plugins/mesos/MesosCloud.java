@@ -339,7 +339,6 @@ public class MesosCloud extends Cloud {
       Mesos.getInstance(this).stopScheduler(true);
       Mesos.getInstance(this).startScheduler(jenkinsRootURL, this);
 
-      Metrics.metricRegistry().counter("mesos.cloud.restartMesos").inc();
     } else {
       Mesos.getInstance(this).updateScheduler(jenkinsRootURL, this);
       if(onDemandRegistration) {
@@ -402,7 +401,6 @@ public class MesosCloud extends Cloud {
 
   @Override
   public Collection<PlannedNode> provision(Label label, int excessWorkload) {
-    Metrics.metricRegistry().meter(getMetricName(label, "provision", "request")).mark(excessWorkload);
     LOGGER.info(String.format("Received request to provision %d executors for label %s", excessWorkload, label));
 
     List<PlannedNode> list = new ArrayList<PlannedNode>();

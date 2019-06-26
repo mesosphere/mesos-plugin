@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-/**
+/**e
  * This class acts as a buffer of Offers from Mesos.  By default it holds a maximum of 100 Offers.
  */
 public class OfferQueue {
@@ -76,13 +76,6 @@ public class OfferQueue {
      */
     public boolean offer(Protos.Offer offer) {
         boolean success = queue.offer(offer);
-
-        if (success) {
-            Metrics.metricRegistry().meter("mesos.offer.queue.added").mark();
-        } else {
-            Metrics.metricRegistry().meter("mesos.offer.queue.dropped").mark();
-        }
-
         return success;
     }
 
@@ -102,8 +95,6 @@ public class OfferQueue {
                             offerID.getValue()));
         } else {
             logger.info(String.format("Removed offer: %s", offerID.getValue()));
-
-            Metrics.metricRegistry().meter("mesos.offer.queue.removed").mark();
         }
     }
 

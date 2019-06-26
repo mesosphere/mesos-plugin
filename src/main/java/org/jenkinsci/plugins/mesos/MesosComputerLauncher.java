@@ -67,8 +67,6 @@ public class MesosComputerLauncher extends JNLPLauncher {
     // it restarts.
     MesosSlave node = computer.getNode();
     if (!mesos.isSchedulerRunning()) {
-      Metrics.metricRegistry().counter("mesos.computer.launcher.launch.fail").inc();
-
       LOGGER.warning("Not launching " + name +
                      " because the Mesos Jenkins scheduler is not running");
       if (node != null) {
