@@ -992,6 +992,11 @@ public class JenkinsScheduler implements Scheduler {
                 request.request.slaveInfo.getJnlpArgs(),
                 request.request.slave.name);
 
+        // Doing this replacement to support jenkins slaves on Windows
+        LOGGER.info("jenkinsCommand2Run before: "+jenkinsCommand2Run);
+        String replacedJenkinsCommand2Run = jenkinsCommand2Run.replace("${MESOS_SANDBOX-.}","%MESOS_SANDBOX%");
+        LOGGER.info("replacedJenkinsCommand2Run: "+replacedJenkinsCommand2Run);
+
         if (request.request.slaveInfo.getContainerInfo() != null &&
                 request.request.slaveInfo.getContainerInfo().getUseCustomDockerCommandShell()) {
             // Ref http://mesos.apache.org/documentation/latest/upgrades
@@ -1006,12 +1011,12 @@ public class JenkinsScheduler implements Scheduler {
             commandBuilder.setShell(false);
             commandBuilder.setValue(customShell);
             List args = new ArrayList();
-            args.add(jenkinsCommand2Run);
+            args.add(replacedJenkinsCommand2Run);
             commandBuilder.addAllArguments( args );
 
         } else {
             LOGGER.fine("About to use default shell ....");
-            commandBuilder.setValue(jenkinsCommand2Run);
+            commandBuilder.setValue(replacedJenkinsCommand2Run);
         }
 
         commandBuilder.addUris(
