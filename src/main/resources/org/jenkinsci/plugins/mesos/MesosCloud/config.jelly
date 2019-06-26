@@ -22,6 +22,14 @@
         <f:textbox/>
     </f:entry>
 
+    <f:optionalBlock name="customSsl" title="Use a custom SSL certificate">
+      <f:entry title="SSL Certificate">
+        <f:textarea name="sslCert" value="${it.sslCert}"/>
+      </f:entry>
+    </f:optionalBlock>
+
+    <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="mesosMasterUrl"/>
+
     <f:advanced>
       <f:entry title="Agent Specs">
           <f:repeatable field="mesosAgentSpecTemplates">
@@ -29,7 +37,5 @@
           </f:repeatable>
       </f:entry>
     </f:advanced>
-
-    <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="mesosMasterUrl"/>
 
 </j:jelly>

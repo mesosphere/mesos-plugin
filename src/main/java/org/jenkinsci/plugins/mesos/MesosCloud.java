@@ -49,7 +49,23 @@ public class MesosCloud extends AbstractCloudImpl {
 
   private final URL jenkinsUrl;
 
+  private final Optional<String> sslCert;
+
   private final transient List<MesosAgentSpecTemplate> mesosAgentSpecTemplates;
+
+  public class CustomSsl {
+
+    private String sslCert;
+
+    @DataBoundConstructor
+    public CustomSsl(String sslCert) {
+      this.sslCert = sslCert;
+    }
+
+    public String getSslCert() {
+      return this.sslCert;
+    }
+  }
 
   @DataBoundConstructor
   public MesosCloud(
@@ -58,6 +74,7 @@ public class MesosCloud extends AbstractCloudImpl {
       String role,
       String agentUser,
       String jenkinsUrl,
+      CustomSsl customSsl, // TODO: the SSL certificate should be provided by a credential provider.
       List<MesosAgentSpecTemplate> mesosAgentSpecTemplates)
       throws InterruptedException, ExecutionException {
     super("MesosCloud", null);
@@ -69,10 +86,13 @@ public class MesosCloud extends AbstractCloudImpl {
       throw new RuntimeException("Mesos Cloud URL validation failed", e);
     }
 
+    this.sslCert = (customSsl != null) ? Optional.of(customSsl.getSslCert()) : Optional.empty();
+
     this.agentUser = agentUser;
     this.mesosAgentSpecTemplates = mesosAgentSpecTemplates;
 
-    mesosApi = new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role);
+    mesosApi =
+        new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role, sslCert);
   }
 
   /**
@@ -346,6 +366,10 @@ public class MesosCloud extends AbstractCloudImpl {
 
   public String getRole() {
     return "*";
+  }
+
+  public CustomSsl getCustomSsl() {
+    return this.sslCert.map(CustomSsl::new).orElse(null);
   }
 
   /** @return Number of launching agents that are not connected yet. */

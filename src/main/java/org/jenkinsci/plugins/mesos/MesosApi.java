@@ -16,6 +16,7 @@ import com.mesosphere.usi.repository.PodRecordRepository;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigValueFactory;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -26,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
 import org.jenkinsci.plugins.mesos.api.Settings;
@@ -67,11 +69,17 @@ public class MesosApi {
    * @param agentUser The username used for executing Mesos tasks.
    * @param frameworkName The name of the framework the Mesos client should register as.
    * @param role The Mesos role to assume.
+   * @param sslCert An optional custom SSL certificate to secure the connection to Mesos.
    * @throws InterruptedException
    * @throws ExecutionException
    */
   public MesosApi(
-      URL masterUrl, URL jenkinsUrl, String agentUser, String frameworkName, String role)
+      URL masterUrl,
+      URL jenkinsUrl,
+      String agentUser,
+      String frameworkName,
+      String role,
+      Optional<String> sslCert)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
     this.frameworkId = UUID.randomUUID().toString();
@@ -81,7 +89,18 @@ public class MesosApi {
 
     ClassLoader classLoader = Jenkins.get().pluginManager.uberClassLoader;
 
-    Config conf = ConfigFactory.load(classLoader);
+    @Nonnull Config conf;
+    if (sslCert.isPresent()) {
+      conf =
+          ConfigFactory.parseString(
+                  "akka.ssl-config.trustManager.stores = [{ type: \"PEM\", data: ${cert.pem} }]")
+              .withValue("cert.pem", ConfigValueFactory.fromAnyRef(sslCert.get()))
+              .resolve()
+              .withFallback(ConfigFactory.load(classLoader));
+    } else {
+      conf = ConfigFactory.load(classLoader);
+    }
+
     MesosClientSettings clientSettings =
         MesosClientSettings.fromConfig(conf.getConfig("mesos-client"))
             .withMasters(Collections.singletonList(masterUrl));
