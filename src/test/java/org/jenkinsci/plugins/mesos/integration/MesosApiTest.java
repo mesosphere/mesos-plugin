@@ -18,6 +18,7 @@ import hudson.model.Descriptor.FormException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +58,14 @@ class MesosApiTest {
 
     URL mesosUrl = mesosCluster.getMesosUrl();
     MesosApi api =
-        new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
+        new MesosApi(
+            mesosUrl,
+            jenkinsUrl,
+            System.getProperty("user.name"),
+            "MesosTest",
+            "*",
+            Optional.empty(),
+            Optional.empty());
 
     final String name = "jenkins-start-agent";
     final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
@@ -73,7 +81,14 @@ class MesosApiTest {
     URL mesosUrl = mesosCluster.getMesosUrl();
     URL jenkinsUrl = j.getURL();
     MesosApi api =
-        new MesosApi(mesosUrl, jenkinsUrl, System.getProperty("user.name"), "MesosTest", "*");
+        new MesosApi(
+            mesosUrl,
+            jenkinsUrl,
+            System.getProperty("user.name"),
+            "MesosTest",
+            "*",
+            Optional.empty(),
+            Optional.empty());
     final String name = "jenkins-stop-agent";
     final MesosAgentSpecTemplate spec = AgentSpecMother.simple;
 

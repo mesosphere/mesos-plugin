@@ -50,10 +50,11 @@ public class MesosCloud extends AbstractCloudImpl {
   private final URL jenkinsUrl;
 
   private final Optional<String> sslCert;
+  private final Optional<DcosAuthorization> dcosAuthorization;
 
   private final transient List<MesosAgentSpecTemplate> mesosAgentSpecTemplates;
 
-  public class CustomSsl {
+  public static class CustomSsl {
 
     private String sslCert;
 
@@ -67,6 +68,33 @@ public class MesosCloud extends AbstractCloudImpl {
     }
   }
 
+  public static class DcosAuthorization {
+
+    private String secret;
+    private String uid;
+    private String dcosRoot;
+
+    @DataBoundConstructor
+    public DcosAuthorization(String uid, String dcosRoot, String secret)
+        throws MalformedURLException {
+      this.uid = uid;
+      this.secret = secret;
+      this.dcosRoot = dcosRoot;
+    }
+
+    public String getSecret() {
+      return this.secret;
+    }
+
+    public String getUid() {
+      return this.uid;
+    }
+
+    public String getDcosRoot() {
+      return this.dcosRoot;
+    }
+  }
+
   @DataBoundConstructor
   public MesosCloud(
       String mesosMasterUrl,
@@ -75,6 +103,7 @@ public class MesosCloud extends AbstractCloudImpl {
       String agentUser,
       String jenkinsUrl,
       CustomSsl customSsl, // TODO: the SSL certificate should be provided by a credential provider.
+      DcosAuthorization authorization, // TODO: use secret from credential provider.
       List<MesosAgentSpecTemplate> mesosAgentSpecTemplates)
       throws InterruptedException, ExecutionException {
     super("MesosCloud", null);
@@ -87,12 +116,20 @@ public class MesosCloud extends AbstractCloudImpl {
     }
 
     this.sslCert = (customSsl != null) ? Optional.of(customSsl.getSslCert()) : Optional.empty();
+    this.dcosAuthorization = Optional.ofNullable(authorization);
 
     this.agentUser = agentUser;
     this.mesosAgentSpecTemplates = mesosAgentSpecTemplates;
 
     mesosApi =
-        new MesosApi(this.mesosMasterUrl, this.jenkinsUrl, agentUser, frameworkName, role, sslCert);
+        new MesosApi(
+            this.mesosMasterUrl,
+            this.jenkinsUrl,
+            agentUser,
+            frameworkName,
+            role,
+            sslCert,
+            this.dcosAuthorization);
   }
 
   /**
@@ -370,6 +407,10 @@ public class MesosCloud extends AbstractCloudImpl {
 
   public CustomSsl getCustomSsl() {
     return this.sslCert.map(CustomSsl::new).orElse(null);
+  }
+
+  public DcosAuthorization getAuthentication() {
+    return this.dcosAuthorization.orElse(null);
   }
 
   /** @return Number of launching agents that are not connected yet. */

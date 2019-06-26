@@ -6,6 +6,8 @@ import akka.stream.ActorMaterializer;
 import akka.stream.OverflowStrategy;
 import akka.stream.QueueOfferResult;
 import akka.stream.javadsl.*;
+import com.mesosphere.mesos.client.CredentialsProvider;
+import com.mesosphere.mesos.client.DcosServiceAccountProvider;
 import com.mesosphere.mesos.client.MesosClient;
 import com.mesosphere.mesos.client.MesosClient$;
 import com.mesosphere.mesos.conf.MesosClientSettings;
@@ -19,6 +21,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import hudson.model.Descriptor.FormException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
@@ -30,9 +33,11 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
+import org.jenkinsci.plugins.mesos.MesosCloud.DcosAuthorization;
 import org.jenkinsci.plugins.mesos.api.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.compat.java8.OptionConverters;
 import scala.concurrent.ExecutionContext;
 
 public class MesosApi {
@@ -70,6 +75,7 @@ public class MesosApi {
    * @param frameworkName The name of the framework the Mesos client should register as.
    * @param role The Mesos role to assume.
    * @param sslCert An optional custom SSL certificate to secure the connection to Mesos.
+   * @param authorization An optional {@link CredentialsProvider} used to authorize with Mesos.
    * @throws InterruptedException
    * @throws ExecutionException
    */
@@ -79,7 +85,8 @@ public class MesosApi {
       String agentUser,
       String frameworkName,
       String role,
-      Optional<String> sslCert)
+      Optional<String> sslCert,
+      Optional<DcosAuthorization> authorization) // TODO: Use a different type.
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
     this.frameworkId = UUID.randomUUID().toString();
@@ -115,9 +122,27 @@ public class MesosApi {
     this.stateMap = new ConcurrentHashMap<>();
     this.repository = new MesosPodRecordRepository();
 
+    Optional<CredentialsProvider> provider =
+        authorization.map(
+            auth -> {
+              try {
+                CredentialsProvider p =
+                    new DcosServiceAccountProvider(
+                        auth.getUid(),
+                        auth.getSecret(),
+                        new URL(auth.getDcosRoot()),
+                        this.system,
+                        this.materializer,
+                        this.context);
+                return p;
+              } catch (MalformedURLException e) {
+                throw new RuntimeException("DC/OS URL validation failed", e);
+              }
+            });
+
     logger.info("Starting USI scheduler flow.");
     commands =
-        connectClient(clientSettings)
+        connectClient(clientSettings, provider)
             .thenCompose(client -> Scheduler.fromClient(client, repository, schedulerSettings))
             .thenApply(builder -> runScheduler(builder.getFlow(), materializer))
             .get();
@@ -256,7 +281,8 @@ public class MesosApi {
   }
 
   /** Establish a connection to Mesos via the v1 client. */
-  private CompletableFuture<MesosClient> connectClient(MesosClientSettings clientSettings) {
+  private CompletableFuture<MesosClient> connectClient(
+      MesosClientSettings clientSettings, Optional<CredentialsProvider> authorization) {
     Protos.FrameworkID frameworkId =
         Protos.FrameworkID.newBuilder().setValue(this.frameworkId).build();
     Protos.FrameworkInfo frameworkInfo =
@@ -272,7 +298,12 @@ public class MesosApi {
             .build();
 
     return MesosClient$.MODULE$
-        .apply(clientSettings, frameworkInfo, scala.Option.empty(), system, materializer)
+        .apply(
+            clientSettings,
+            frameworkInfo,
+            OptionConverters.toScala(authorization),
+            system,
+            materializer)
         .runWith(Sink.head(), materializer)
         .toCompletableFuture();
   }
