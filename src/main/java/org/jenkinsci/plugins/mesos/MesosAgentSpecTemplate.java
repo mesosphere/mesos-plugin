@@ -40,7 +40,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final boolean defaultAgent;
   private String agentAttributes;
   private final String additionalURIs;
-  private String nodeProperties;
   private Optional<String> containerImage;
 
   @DataBoundConstructor
@@ -61,7 +60,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       String jnlpArgs,
       String defaultAgent,
       String additionalURIs,
-      String nodeProperties,
       String containerImage) {
     this.label = label;
     this.labelSet = Label.parse(label);
@@ -80,7 +78,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.agentAttributes = agentAttributes != null ? agentAttributes.toString() : null;
     this.jvmArgs = jvmArgs;
     this.additionalURIs = additionalURIs;
-    this.nodeProperties = nodeProperties;
     this.containerImage = Optional.ofNullable(containerImage).filter(s -> !s.isEmpty());
     validate();
   }
@@ -207,10 +204,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public String getJnlpArgs() {
     return jnlpArgs;
-  }
-
-  public String getNodeProperties() {
-    return nodeProperties;
   }
 
   public Optional<String> getContainerImage() {
