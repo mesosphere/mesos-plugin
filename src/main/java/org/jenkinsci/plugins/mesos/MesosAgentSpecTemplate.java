@@ -126,6 +126,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         .withName(name)
         .withJenkinsUrl(jenkinsUrl)
         .withImage(this.containerImage)
+        .withJnlpArguments(this.jnlpArgs)
         .build();
   }
 
