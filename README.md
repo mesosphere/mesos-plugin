@@ -1,3 +1,7 @@
+<p align="center">
+  <a href='https://jenkins.mesosphere.com/service/jenkins/view/Marathon/job/Mesos%20Jenkins%20Plugin/job/mesos-plugin/job/master/'><img src='https://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=Mesos Jenkins Plugin/mesos-plugin/master'></a>
+</p>
+
 Jenkins on Mesos
 ----------------
 
