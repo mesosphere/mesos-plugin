@@ -204,7 +204,6 @@ public class JenkinsScheduler implements Scheduler {
             // Ask mesos to send all offers, even the those we declined earlier.
             // See comment in resourceOffers() for further details.
             driver.reviveOffers();
-            ctx.stop();
         }
     }
 
@@ -343,8 +342,6 @@ public class JenkinsScheduler implements Scheduler {
                                 recentlyAcceptedOffers.put(offer.getSlaveId().getValue(), IGNORE);
                             } catch (Exception e) {
                                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                            } finally {
-                                ctx.stop();
                             }
                             requests.remove(request);
                             processedRequests++;
@@ -357,8 +354,6 @@ public class JenkinsScheduler implements Scheduler {
                     declineShort(offer);
                     continue;
                 }
-            } finally {
-                offerContext.stop();
             }
         }
         if (processedRequests > 0) {
