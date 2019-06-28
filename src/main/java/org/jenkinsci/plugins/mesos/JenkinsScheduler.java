@@ -317,43 +317,41 @@ public class JenkinsScheduler implements Scheduler {
                 Metrics.metricRegistry().meter("mesos.scheduler.offers.processed."+offer.getSlaveId().getValue()).mark();
             }
 
-            try {
-                if (requests.isEmpty() && !buildsInQueue(Jenkins.getInstance().getQueue())) {
-                    unmatchedLabels.clear();
-                    // Decline offer for a longer period if no slave is waiting to get spawned.
-                    // This prevents unnecessarily getting offers every few seconds and causing
-                    // starvation when running a lot of frameworks.
-                    LOGGER.info("No slave in queue.");
-                    declineOffer(offer, mesosCloud.getDeclineOfferDurationDouble());
-                    continue;
-                }
+            if (requests.isEmpty() && !buildsInQueue(Jenkins.getInstance().getQueue())) {
+                unmatchedLabels.clear();
+                // Decline offer for a longer period if no slave is waiting to get spawned.
+                // This prevents unnecessarily getting offers every few seconds and causing
+                // starvation when running a lot of frameworks.
+                LOGGER.info("No slave in queue.");
+                declineOffer(offer, mesosCloud.getDeclineOfferDurationDouble());
+                continue;
+            }
 
-                boolean taskCreated = false;
+            boolean taskCreated = false;
 
-                if (isOfferAvailable(offer)) {
-                    for (Request request : requests) {
-                        // TODO: Dirty modification of list while traversing it.
-                        if (matches(offer, request)) {
-                            LOGGER.info("Offer matched! Creating mesos task " + request.request.slave.name);
-                            try {
-                                createMesosTask(offer, request);
-                                unmatchedLabels.remove(request.request.slaveInfo.getLabelString());
-                                taskCreated = true;
-                                recentlyAcceptedOffers.put(offer.getSlaveId().getValue(), IGNORE);
-                            } catch (Exception e) {
-                                LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                            }
-                            requests.remove(request);
-                            processedRequests++;
-                            break;
+            if (isOfferAvailable(offer)) {
+                for (Request request : requests) {
+                    // TODO: Dirty modification of list while traversing it.
+                    if (matches(offer, request)) {
+                        LOGGER.info("Offer matched! Creating mesos task " + request.request.slave.name);
+                        try {
+                            createMesosTask(offer, request);
+                            unmatchedLabels.remove(request.request.slaveInfo.getLabelString());
+                            taskCreated = true;
+                            recentlyAcceptedOffers.put(offer.getSlaveId().getValue(), IGNORE);
+                        } catch (Exception e) {
+                            LOGGER.log(Level.SEVERE, e.getMessage(), e);
                         }
+                        requests.remove(request);
+                        processedRequests++;
+                        break;
                     }
                 }
+            }
 
-                if (!taskCreated) {
-                    declineShort(offer);
-                    continue;
-                }
+            if (!taskCreated) {
+                declineShort(offer);
+                continue;
             }
         }
         if (processedRequests > 0) {
