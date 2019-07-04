@@ -36,7 +36,7 @@
           <executorCpus>0.1</executorCpus>
           <maxExecutors>4</maxExecutors>
           <executorMem>128</executorMem>
-          <remoteFSRoot>/mnt/mesos/sandbox</remoteFSRoot>
+          <remoteFSRoot>c:\jenkins\</remoteFSRoot>
           <idleTerminationMinutes>10</idleTerminationMinutes>
           <jvmArgs>-Xms512m -XX:+UseConcMarkSweepGC</jvmArgs>
           <jnlpArgs>-noReconnect</jnlpArgs>
