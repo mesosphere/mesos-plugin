@@ -38,15 +38,14 @@
           <executorMem>128</executorMem>
           <remoteFSRoot>c:\jenkins\</remoteFSRoot>
           <idleTerminationMinutes>10</idleTerminationMinutes>
-          <jvmArgs>-Xms512m -XX:+UseConcMarkSweepGC</jvmArgs>
+          <jvmArgs>-Xms16m -XX:+UseConcMarkSweepGC</jvmArgs>
           <jnlpArgs>-noReconnect</jnlpArgs>
           <containerInfo>
             <type>DOCKER</type>
             <dockerImage>winamd64/openjdk:8-jre-windowsservercore-1809</dockerImage>
             <networking>BRIDGE</networking>
-            <useCustomDockerCommandShell>true</useCustomDockerCommandShell>
-            <customDockerCommandShell>wrapper.sh</customDockerCommandShell>
-            <dockerPrivilegedMode>true</dockerPrivilegedMode>
+            <useCustomDockerCommandShell>false</useCustomDockerCommandShell>
+            <dockerPrivilegedMode>false</dockerPrivilegedMode>
             <dockerForcePullImage>false</dockerForcePullImage>
           </containerInfo>
           <mode>NORMAL</mode>
