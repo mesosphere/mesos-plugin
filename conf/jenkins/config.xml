@@ -49,6 +49,8 @@
             <dockerForcePullImage>false</dockerForcePullImage>
           </containerInfo>
           <mode>NORMAL</mode>
+          <slaveAttributesString>{&quot;os&quot;:&quot;windows&quot;}</slaveAttributesString>
+          <labelString>mesos-windows</labelString>
         </org.jenkinsci.plugins.mesos.MesosSlaveInfo>
       </slaveInfos>
     </org.jenkinsci.plugins.mesos.MesosCloud>
