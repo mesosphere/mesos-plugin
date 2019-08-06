@@ -63,6 +63,7 @@ class MesosApiTest {
             jenkinsUrl,
             System.getProperty("user.name"),
             "MesosTest",
+            "unique",
             "*",
             Optional.empty(),
             Optional.empty());
@@ -86,6 +87,7 @@ class MesosApiTest {
             jenkinsUrl,
             System.getProperty("user.name"),
             "MesosTest",
+            "unique",
             "*",
             Optional.empty(),
             Optional.empty());
