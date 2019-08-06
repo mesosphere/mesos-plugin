@@ -17,15 +17,12 @@ is automatically shut down.
 ## Table of Contents
 <!-- toc -->
 - __[Prerequisite](#prerequisite)__
-- __[Installing the plugin](#installing-the-plugin)__
-  - __[Configuring the plugin](#configuring-the-plugin)__
-  - __[Mesos slave setup](#mesos-slave-setup)__
-  - __[Adding Slave Info](#adding-slave-info)__
-  - __[Mesos slave attributes](#mesos-slave-attributes)__
-  - __[Mesos authentication](#mesos-authentication)__
-  - __[Checkpointing](#checkpointing)__
-  - __[Configuring Jenkins jobs](#configuring-jenkins-jobs)__
-  - __[Docker containers](#docker-containers)__
+- __[Installing the Plugin](#installing-the-plugin)__
+  - __[Configuring the Plugin](#configuring-the-plugin)__
+  - __[Adding Agent Specs](#adding-agent-specs)__
+  - __[Mesos Authentication](#mesos-authentication)__
+  - __[Configuring Jenkins Jobs](#configuring-jenkins-jobs)__
+  - __[Docker Containers](#docker-containers)__
   - __[Docker Configuration](#docker-configuration)__
   - __[Over provisioning flags](#over-provisioning-flags)__
 - __[Single-Use Slave](#single-use-slave)__
@@ -73,9 +70,10 @@ Label name is the key between the job and the required agent to execute the job.
 Ex: Heavy jobs can be assigned  label 'powerful_slave'(which has 'Slave Info' 20 Executor CPU, 10240M Executor Mem etc)
 and light weight jobs can be assigned label 'light_weight_slave'(which has  'Slave Info' 1 Executor CPU, 128M Executor Mem etc).
 
-### Mesos Authentication ###
+### DC/OS Authentication ###
 
-TODO
+The plugin can authenticate with a [DC/OS](https://docs.d2iq.com/mesosphere/dcos/1.13/security/ent/service-auth/) enterprise cluster. Simply check `Authorization` and enter the
+service user name, the DC/OS root URL and paste the servive user secret.
 
 ### Configuring Jenkins Jobs ###
 
