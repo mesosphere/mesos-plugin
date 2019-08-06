@@ -20,7 +20,7 @@ is automatically shut down.
 - __[Installing the Plugin](#installing-the-plugin)__
   - __[Configuring the Plugin](#configuring-the-plugin)__
   - __[Adding Agent Specs](#adding-agent-specs)__
-  - __[Mesos Authentication](#mesos-authentication)__
+  - __[DC/OS Authentication](#dcos-authentication)__
   - __[Configuring Jenkins Jobs](#configuring-jenkins-jobs)__
   - __[Docker Containers](#docker-containers)__
   - __[Docker Configuration](#docker-configuration)__
