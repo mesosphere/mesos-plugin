@@ -201,13 +201,9 @@ public class JenkinsScheduler implements Scheduler {
         Metrics.metricRegistry().meter("mesos.scheduler.slave.requests").mark();
         LOGGER.fine("Enqueuing jenkins slave request");
         requests.add(new Request(request, result));
-        if (driver != null) {
-            // Ask mesos to send all offers, even the those we declined earlier.
-            // See comment in resourceOffers() for further details.
-            Timer.Context ctx = Metrics.metricRegistry().timer("mesos.scheduler.revives").time();
-            driver.reviveOffers();
-            ctx.stop();
-        }
+        // Ask mesos to send all offers, even the those we declined earlier.
+        // See comment in resourceOffers() for further details.
+        reviveOffers();
     }
 
     public boolean reachedMinimumTimeToLive() {
@@ -316,6 +312,24 @@ public class JenkinsScheduler implements Scheduler {
         driver.declineOffer(offer.getId(), filters);
     }
 
+    private void reviveOffers() {
+        if (driver != null) {
+            LOGGER.info("Reviving offers");
+            Timer.Context ctx = Metrics.metricRegistry().timer("mesos.scheduler.revives").time();
+            driver.reviveOffers();
+            ctx.stop();
+        }
+    }
+
+    private void suppressOffers() {
+        if (driver != null) {
+            LOGGER.info("Suppressing offers");
+            Timer.Context ctx = Metrics.metricRegistry().timer("mesos.scheduler.suppresses").time();
+            driver.suppressOffers();
+            ctx.stop();
+        }
+    }
+
     private void processOffers() {
         List<Offer> offers = offerQueue.takeAll();
         LOGGER.info("Processing " + offers.size() + " offers.");
@@ -329,8 +343,7 @@ public class JenkinsScheduler implements Scheduler {
 
             final Timer.Context offerContext = Metrics.metricRegistry().timer("mesos.scheduler.offer.processing.time").time();
             try {
-                if (requests.isEmpty() && !buildsInQueue(Jenkins.getInstance().getQueue())) {
-                    unmatchedLabels.clear();
+                if (!pendingWork()) {
                     // Decline offer for a longer period if no slave is waiting to get spawned.
                     // This prevents unnecessarily getting offers every few seconds and causing
                     // starvation when running a lot of frameworks.
@@ -393,6 +406,13 @@ public class JenkinsScheduler implements Scheduler {
         for (Request request: requests) {
             unmatchedLabels.add(request.request.slaveInfo.getLabelString());
         }
+
+        // Note that even if the suppress call is dropped on the way to the master it is ok
+	// because we will do this check again when processing a subsequent offer.
+        if (!pendingWork()) {
+            unmatchedLabels.clear();
+            suppressOffers();
+        }
     }
 
     @Override
@@ -449,6 +469,12 @@ public class JenkinsScheduler implements Scheduler {
                 try {
                     while (true) {
                         processOffers();
+
+                        // By periodically doing this check we guard against the case that reviveOffers()
+                        // called from requestJenkinsSlave() got dropped before reaching the master.
+                        if (!requests.isEmpty()) {
+                            reviveOffers();
+                        }
                     }
                 } catch (Throwable t) {
                     LOGGER.severe("Offer processing thread failed with exception: " + ExceptionUtils.getStackTrace(t));
@@ -620,6 +646,23 @@ public class JenkinsScheduler implements Scheduler {
                             "  attributes:  " + (slaveAttributes == null ? ""  : slaveAttributes.toString()));
             return false;
         }
+    }
+
+    private boolean pendingWork() {
+        if (!requests.isEmpty()) {
+            return true;
+        }
+
+        hudson.model.Queue.Item[] items =  Jenkins.getInstance().getQueue().getItems();
+        if(items != null) {
+            for(hudson.model.Queue.Item item: items) {
+                // Check and return if there is an item in jenkins queue for which this MesosCloud can provsion a slave
+                if(mesosCloud.canProvision(item.getAssignedLabel())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean buildsInQueue(hudson.model.Queue queue) {
