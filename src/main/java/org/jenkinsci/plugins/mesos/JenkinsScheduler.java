@@ -19,6 +19,9 @@ package org.jenkinsci.plugins.mesos;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.codahale.metrics.Timer;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.Message;
+import com.google.protobuf.UnknownFieldSet;
 import com.google.protobuf.TextFormat;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Computer;
@@ -974,6 +977,16 @@ public class JenkinsScheduler implements Scheduler {
 
                 containerInfoBuilder.setDocker(dockerInfoBuilder);
                 break;
+            case MESOS:
+                LOGGER.info("Launching in Mesos Mode:" + containerInfo.getDockerImage());
+                ContainerInfo.MesosInfo.Builder mesosInfoBuilder = ContainerInfo.MesosInfo.newBuilder();
+                Image.Builder imageBuilder = Image.newBuilder().
+                        setType(Image.Type.DOCKER).
+                        setDocker(Image.Docker.newBuilder().setName(containerInfo.getDockerImage()));
+                mesosInfoBuilder.setImage(imageBuilder);
+                containerInfoBuilder.setMesos(mesosInfoBuilder);
+                break;
+
             default:
                 LOGGER.warning("Unknown container type:" + containerInfo.getType());
         }
