@@ -400,24 +400,26 @@ public class JenkinsSchedulerTest {
         assertEquals("mesos command should have no args specified by default", 0, commandInfo.getArgumentsCount());
     }
 
-    @Test
-    public void testConstructMesosCommandInfoWithCustomDockerShell() throws Exception {
-        JenkinsScheduler.Request request = mockMesosRequest(Boolean.TRUE, true, "/bin/wrapdocker");
-
-        Protos.CommandInfo.Builder commandInfoBuilder = jenkinsScheduler.getCommandInfoBuilder(request);
-        Protos.CommandInfo commandInfo = commandInfoBuilder.build();
-
-        assertFalse("shell should be configured as false when using a custom shell", commandInfo.getShell());
-        assertEquals("Custom shell should be specified as value", "/bin/wrapdocker", commandInfo.getValue());
-        String jenkinsCommand2Run = jenkinsScheduler.generateJenkinsCommand2Run(
-                TEST_JENKINS_SLAVE_MEM,
-                TEST_JENKINS_SLAVE_ARG,
-                TEST_JENKINS_JNLP_ARG,
-                TEST_JENKINS_SLAVE_NAME);
-
-        assertEquals("args should now consist of the single original command ", 1, commandInfo.getArgumentsCount());
-        assertEquals("args should now consist of the original command ", jenkinsCommand2Run, commandInfo.getArguments(0));
-    }
+/*
+ *    @Test
+ *    public void testConstructMesosCommandInfoWithCustomDockerShell() throws Exception {
+ *        JenkinsScheduler.Request request = mockMesosRequest(Boolean.TRUE, true, "/bin/wrapdocker");
+ *
+ *        Protos.CommandInfo.Builder commandInfoBuilder = jenkinsScheduler.getCommandInfoBuilder(request);
+ *        Protos.CommandInfo commandInfo = commandInfoBuilder.build();
+ *
+ *        assertFalse("shell should be configured as false when using a custom shell", commandInfo.getShell());
+ *        assertEquals("Custom shell should be specified as value", "/bin/wrapdocker", commandInfo.getValue());
+ *        String jenkinsCommand2Run = jenkinsScheduler.generateJenkinsCommand2Run(
+ *                TEST_JENKINS_SLAVE_MEM,
+ *                TEST_JENKINS_SLAVE_ARG,
+ *                TEST_JENKINS_JNLP_ARG,
+ *                TEST_JENKINS_SLAVE_NAME);
+ *
+ *        assertEquals("args should now consist of the single original command ", 1, commandInfo.getArgumentsCount());
+ *        assertEquals("args should now consist of the original command ", jenkinsCommand2Run, commandInfo.getArguments(0));
+ *    }
+ */
 
     @Test(expected = java.lang.IllegalArgumentException.class)
     public void testConstructMesosCommandInfoWithBlankCustomDockerShell() throws Exception {

@@ -980,6 +980,15 @@ public class JenkinsScheduler implements Scheduler {
             case MESOS:
                 LOGGER.info("Launching in Mesos Mode:" + containerInfo.getDockerImage());
                 ContainerInfo.MesosInfo.Builder mesosInfoBuilder = ContainerInfo.MesosInfo.newBuilder();
+                
+				// To support DinD, it is necessary to use a volume as UCR appears to be configuring `/` as an overlay FS
+                // by default
+                // TODO (bwood): Wrap this in some sort of "is DinD" option.
+                containerInfoBuilder.addVolumes(Volume.newBuilder()
+                                                    .setContainerPath("/var/lib/docker")
+                                                    .setHostPath("docker")
+                                                    .setMode(Mode.RW));
+
                 Image.Builder imageBuilder = Image.newBuilder().
                         setType(Image.Type.DOCKER).
                         setDocker(Image.Docker.newBuilder().setName(containerInfo.getDockerImage()));
@@ -1059,11 +1068,13 @@ public class JenkinsScheduler implements Scheduler {
             }
 
             LOGGER.fine( String.format( "About to use custom shell: %s " , customShell));
-            commandBuilder.setShell(false);
-            commandBuilder.setValue(customShell);
+            //commandBuilder.setShell(false);
+            //commandBuilder.setValue(customShell);
             List args = new ArrayList();
+            args.add(customShell);
+            args.add("&&");
             args.add(jenkinsCommand2Run);
-            commandBuilder.addAllArguments( args );
+            commandBuilder.setValue(StringUtils.join(args, " "));
 
         } else {
             LOGGER.fine("About to use default shell ....");
