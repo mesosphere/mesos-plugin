@@ -2,9 +2,12 @@ package org.jenkinsci.plugins.mesos;
 
 import static java.lang.Math.toIntExact;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
+import hudson.model.Item;
 import hudson.model.Label;
 import hudson.model.Node;
 import hudson.slaves.AbstractCloudImpl;
@@ -12,6 +15,7 @@ import hudson.slaves.Cloud;
 import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
+import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -28,6 +32,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.slf4j.Logger;
@@ -349,6 +354,25 @@ public class MesosCloud extends AbstractCloudImpl {
       } else {
         return FormValidation.ok();
       }
+    }
+
+    public ListBoxModel doFillCredentialsIdItems(
+        @AncestorInPath Item item, @QueryParameter String credentialsId) {
+      StandardListBoxModel result = new StandardListBoxModel();
+      if (item == null) {
+        if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+          return result.includeCurrentValue(credentialsId); // (2)
+        }
+      } else {
+        if (!item.hasPermission(Item.EXTENDED_READ)
+            && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+          return result.includeCurrentValue(credentialsId); // (2)
+        }
+      }
+      return result.includeEmptyValue()
+          .includeMatchingAs()
+          //          .includeMatchingAs(...) // (4)
+          .includeCurrentValue(credentialsId);
     }
 
     /**
