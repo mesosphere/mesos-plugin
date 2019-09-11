@@ -36,12 +36,12 @@ def populate_jenkins_config_xml(config_xml, master, name, port, role, user, mara
     tree, root = _get_xml_root(config_xml)
     mesos = root.find('./clouds/org.jenkinsci.plugins.mesos.MesosCloud')
 
-    _find_and_set(mesos, './master', master)
+    #_find_and_set(mesos, './masterMasterUrl', master)
     _find_and_set(mesos, './frameworkName', name)
     # This used to be host and port. Switching over to DNS Name to address COPS-3395.
-    _find_and_set(mesos, './jenkinsURL', mesos_dns_taskname(name, marathon_name, port))
+    _find_and_set(mesos, './jenkinsUrl', mesos_dns_taskname(name, marathon_name, port))
     _find_and_set(mesos, './role', role)
-    _find_and_set(mesos, './slavesUser', user)
+    _find_and_set(mesos, './agentUser', user)
 
     tree.write(config_xml)
 
