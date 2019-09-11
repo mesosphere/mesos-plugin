@@ -136,3 +136,23 @@ started with
 
 The code is formatted following the [Google Style Guide](https://github.com/google/styleguide).
 
+### On DC/OS Enterprise
+
+The `Dockerfile.dcos` defines a Docker image that supports DC/OS strict mode. It requires a service
+account to run. To setup one up with the DC/OS CLI
+
+1. Create service account secrets with
+   ```
+   dcos security org service-accounts keypair jenkins.private.pem jenkins.pub.pem
+   ```
+2. Create the actual service account
+   ```
+   dcos security org service-accounts create -p jenkins.pub.pem -d "Jenkins Service Account" jenkins-user 
+   ```
+3. Grant `jenkins-user` access:
+   ```
+   curl -L -X PUT -k -H "Authorization: token=$(dcos config show core.dcos_acs_token)" \
+     "$(dcos config show core.dcos_url)/acs/api/v1/acls/dcos:superuser/users/jenkins-user/full"
+   ```
+4. Deploy the Jenkins app defined in `dcos/jenkins-app.json`.
+

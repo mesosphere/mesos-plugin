@@ -32,9 +32,9 @@ USER root
 # install dependencies
 RUN apt-get update && apt-get install -y nginx python zip jq
 # libmesos bundle
-RUN curl -fsSL "$LIBMESOS_DOWNLOAD_URL" -o libmesos-bundle.tar.gz  \
-  && tar -C / -xzf libmesos-bundle.tar.gz  \
-  && rm libmesos-bundle.tar.gz
+# RUN curl -fsSL "$LIBMESOS_DOWNLOAD_URL" -o libmesos-bundle.tar.gz  \
+#  && tar -C / -xzf libmesos-bundle.tar.gz  \
+#  && rm libmesos-bundle.tar.gz
 # update to newer git version
 RUN echo "deb http://ftp.debian.org/debian testing main" >> /etc/apt/sources.list \
   && apt-get update && apt-get -t testing install -y git
@@ -43,23 +43,23 @@ RUN echo "deb http://ftp.debian.org/debian testing main" >> /etc/apt/sources.lis
 RUN echo 'networkaddress.cache.ttl=60' >> ${JAVA_HOME}/jre/lib/security/java.security
 
 # bootstrap scripts and needed dir setup
-COPY scripts/bootstrap.py /usr/local/jenkins/bin/bootstrap.py
-COPY scripts/export-libssl.sh /usr/local/jenkins/bin/export-libssl.sh
-COPY scripts/dcos-account.sh /usr/local/jenkins/bin/dcos-account.sh
+COPY dcos/scripts/bootstrap.py /usr/local/jenkins/bin/bootstrap.py
+COPY dcos/scripts/export-libssl.sh /usr/local/jenkins/bin/export-libssl.sh
+COPY dcos/scripts/dcos-account.sh /usr/local/jenkins/bin/dcos-account.sh
 RUN mkdir -p "$JENKINS_HOME" "${JENKINS_FOLDER}/war"
 
 # nginx setup
 RUN mkdir -p /var/log/nginx/jenkins
-COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY dcos/conf/nginx/nginx.conf /etc/nginx/nginx.conf
 
 # jenkins setup
-COPY conf/jenkins/config.xml "${JENKINS_STAGING}/config.xml"
-COPY conf/jenkins/jenkins.model.JenkinsLocationConfiguration.xml "${JENKINS_STAGING}/jenkins.model.JenkinsLocationConfiguration.xml"
-COPY conf/jenkins/nodeMonitors.xml "${JENKINS_STAGING}/nodeMonitors.xml"
-COPY scripts/init.groovy.d/mesos-auth.groovy "${JENKINS_STAGING}/init.groovy.d/mesos-auth.groovy"
+COPY dcos/conf/jenkins/config.xml "${JENKINS_STAGING}/config.xml"
+COPY dcos/conf/jenkins/jenkins.model.JenkinsLocationConfiguration.xml "${JENKINS_STAGING}/jenkins.model.JenkinsLocationConfiguration.xml"
+COPY dcos/conf/jenkins/nodeMonitors.xml "${JENKINS_STAGING}/nodeMonitors.xml"
+COPY dcos/scripts/init.groovy.d/mesos-auth.groovy "${JENKINS_STAGING}/init.groovy.d/mesos-auth.groovy"
 
 # add plugins
-COPY conf/plugins.conf /tmp/
+COPY dcos/conf/plugins.conf /tmp/
 RUN sed -i "s/\${BLUEOCEAN_VERSION}/${BLUEOCEAN_VERSION}/g" /tmp/plugins.conf
 RUN /usr/local/bin/install-plugins.sh < /tmp/plugins.conf
 
