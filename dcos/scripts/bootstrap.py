@@ -111,7 +111,6 @@ def main():
         jenkins_home_dir = os.environ['JENKINS_HOME']
         jenkins_framework_name = os.environ['JENKINS_FRAMEWORK_NAME']
         jenkins_app_context = os.environ['JENKINS_CONTEXT']
-        marathon_host = os.environ['HOST']
         marathon_nginx_port = os.environ['PORT0']
         marathon_jenkins_port = os.environ['PORT1']
         mesos_master = os.environ['JENKINS_MESOS_MASTER']

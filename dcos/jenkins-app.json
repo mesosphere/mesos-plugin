@@ -21,8 +21,17 @@
         "containerPath": "/var/jenkins_home",
         "hostPath": "/tmp/jenkins",
         "mode": "RW"
+      },
+      {
+        "containerPath": "private_key.pem",
+        "secret": "private_key"
       }
     ]
+  },
+  "secrets": {
+    "private_key": {
+      "source": "jenkins-user/private_key"
+    }
   },
   "env": {
     "SSH_KNOWN_HOSTS": "github.com",

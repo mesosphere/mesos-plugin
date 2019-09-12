@@ -132,7 +132,7 @@ public class MesosApi {
                     new DcosServiceAccountProvider(
                         auth.getUid(),
                         auth.getSecret(),
-                        new URL(auth.getDcosRoot()),
+                        new URL("https://master.mesos"), // TODO: do not hardcode DC/OS URL.
                         this.system,
                         this.materializer,
                         this.context);

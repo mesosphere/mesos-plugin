@@ -18,8 +18,6 @@ WORKDIR /tmp
 ENV JENKINS_FOLDER /usr/share/jenkins
 
 # Build Args
-ARG LIBMESOS_DOWNLOAD_URL=https://downloads.mesosphere.io/libmesos-bundle/libmesos-bundle-1.12.0.tar.gz
-ARG LIBMESOS_DOWNLOAD_SHA256=bd4a785393f0477da7f012bf9624aa7dd65aa243c94d38ffe94adaa10de30274
 ARG BLUEOCEAN_VERSION=1.17.0
 ARG JENKINS_STAGING=/usr/share/jenkins/ref/
 ARG MESOS_PLUG_HASH=5216d7ecef0bc8923ff510aec6659e2c7e7611cb
@@ -31,10 +29,6 @@ USER root
 
 # install dependencies
 RUN apt-get update && apt-get install -y nginx python zip jq
-# libmesos bundle
-# RUN curl -fsSL "$LIBMESOS_DOWNLOAD_URL" -o libmesos-bundle.tar.gz  \
-#  && tar -C / -xzf libmesos-bundle.tar.gz  \
-#  && rm libmesos-bundle.tar.gz
 # update to newer git version
 RUN echo "deb http://ftp.debian.org/debian testing main" >> /etc/apt/sources.list \
   && apt-get update && apt-get -t testing install -y git
@@ -44,7 +38,6 @@ RUN echo 'networkaddress.cache.ttl=60' >> ${JAVA_HOME}/jre/lib/security/java.sec
 
 # bootstrap scripts and needed dir setup
 COPY dcos/scripts/bootstrap.py /usr/local/jenkins/bin/bootstrap.py
-COPY dcos/scripts/export-libssl.sh /usr/local/jenkins/bin/export-libssl.sh
 COPY dcos/scripts/dcos-account.sh /usr/local/jenkins/bin/dcos-account.sh
 RUN mkdir -p "$JENKINS_HOME" "${JENKINS_FOLDER}/war"
 
@@ -52,27 +45,24 @@ RUN mkdir -p "$JENKINS_HOME" "${JENKINS_FOLDER}/war"
 RUN mkdir -p /var/log/nginx/jenkins
 COPY dcos/conf/nginx/nginx.conf /etc/nginx/nginx.conf
 
-# jenkins setup
+# Jenkins setup
 COPY dcos/conf/jenkins/config.xml "${JENKINS_STAGING}/config.xml"
 COPY dcos/conf/jenkins/jenkins.model.JenkinsLocationConfiguration.xml "${JENKINS_STAGING}/jenkins.model.JenkinsLocationConfiguration.xml"
 COPY dcos/conf/jenkins/nodeMonitors.xml "${JENKINS_STAGING}/nodeMonitors.xml"
 COPY dcos/scripts/init.groovy.d/mesos-auth.groovy "${JENKINS_STAGING}/init.groovy.d/mesos-auth.groovy"
 
-# add plugins
+# Add plugins
 COPY dcos/conf/plugins.conf /tmp/
 RUN sed -i "s/\${BLUEOCEAN_VERSION}/${BLUEOCEAN_VERSION}/g" /tmp/plugins.conf
 RUN /usr/local/bin/install-plugins.sh < /tmp/plugins.conf
 
-# add Mesos plugin
+# Add Mesos plugin
 COPY --from=build /home/gradle/project/build/libs/mesos.hpi "${JENKINS_STAGING}/plugins/mesos.hpi"
 
-# disable first-run wizard
+# Disable first-run wizard
 RUN echo 2.0 > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state
 
-CMD export LD_LIBRARY_PATH=/libmesos-bundle/lib:/libmesos-bundle/lib/mesos:$LD_LIBRARY_PATH \
-  && export MESOS_NATIVE_JAVA_LIBRARY=$(ls /libmesos-bundle/lib/libmesos-*.so)   \
-  && . /usr/local/jenkins/bin/export-libssl.sh       \
-  && /usr/local/jenkins/bin/bootstrap.py && nginx    \
+CMD /usr/local/jenkins/bin/bootstrap.py && nginx     \
   && . /usr/local/jenkins/bin/dcos-account.sh        \
   && java ${JVM_OPTS}                                \
      -Dhudson.model.DirectoryBrowserSupport.CSP="${JENKINS_CSP_OPTS}" \

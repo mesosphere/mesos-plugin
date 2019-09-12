@@ -30,6 +30,7 @@ is automatically shut down.
   - __[Pipeline jobs](#pipeline-jobs)__
 - __[Plugin Development](#plugin-development)__
   - __[Building the plugin](#building-the-plugin)__
+  - __[On DC/OS Enterprise](#on-dcos-enterprise)__
 <!-- /toc -->
 
 
@@ -149,10 +150,19 @@ account to run. To setup one up with the DC/OS CLI
    ```
    dcos security org service-accounts create -p jenkins.pub.pem -d "Jenkins Service Account" jenkins-user 
    ```
-3. Grant `jenkins-user` access:
+3. Store private key as secret so that the Jenkins master can access it
+   ```
+   dcos security secrets create-sa-secret ./jenkins.private.pem jenkins-user jenkins-user/private_key
+   ```
+4. Grant `jenkins-user` access:
    ```
    curl -L -X PUT -k -H "Authorization: token=$(dcos config show core.dcos_acs_token)" \
      "$(dcos config show core.dcos_url)/acs/api/v1/acls/dcos:superuser/users/jenkins-user/full"
    ```
-4. Deploy the Jenkins app defined in `dcos/jenkins-app.json`.
+   
+   or 
+   ```
+   dcos security org users grant jenkins-user dcos:mesos:master:task:user:nobody create
+   ```
+5. Deploy the Jenkins app defined in `dcos/jenkins-app.json`.
 
