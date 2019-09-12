@@ -87,7 +87,7 @@ public class MesosApi {
       String frameworkId,
       String role,
       Optional<String> sslCert,
-      Optional<DcosAuthorization> authorization) // TODO: Use a different type.
+      Optional<DcosAuthorization> authorization)
       throws InterruptedException, ExecutionException {
     this.frameworkName = frameworkName;
     this.frameworkId = frameworkId;
@@ -337,6 +337,8 @@ public class MesosApi {
                 slave.update(podStateEvent);
                 return slave;
               });
+
+      // TODO: Remove failed nodes and restart.
 
       // The agent, ie the pod, is not terminal and unknown to us. Kill it.
       boolean terminal = podStateEvent.newStatus().forall(PodStatus::isTerminalOrUnreachable);

@@ -21,16 +21,12 @@
         "containerPath": "/var/jenkins_home",
         "hostPath": "/tmp/jenkins",
         "mode": "RW"
-      },
-      {
-        "containerPath": "private_key.pem",
-        "secret": "private_key"
       }
     ]
   },
   "secrets": {
     "private_key": {
-      "source": "jenkins-user/private_key"
+      "source": "jenkins/private_key"
     }
   },
   "env": {
@@ -43,7 +39,11 @@
     "JENKINS_AGENT_USER": "root",
     "JENKINS_OPTS": "",
     "JENKINS_FRAMEWORK_NAME": "jenkins",
-    "MARATHON_NAME": "marathon"
+    "MARATHON_NAME": "marathon",
+    "DCOS_SERVICE_ACCOUNT": "jenkins",
+    "DCOS_SERVICE_ACCOUNT_PRIVATE_KEY": {
+      "secret": "private_key"
+    }
   },
   "labels": {
     "DCOS_SERVICE_SCHEME": "http",

@@ -206,7 +206,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return jnlpArgs;
   }
 
-  public Optional<String> getContainerImage() {
-    return this.containerImage;
+  public String getContainerImage() {
+    return this.containerImage.orElse(null);
   }
 }

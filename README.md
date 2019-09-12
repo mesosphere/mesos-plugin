@@ -148,11 +148,11 @@ account to run. To setup one up with the DC/OS CLI
    ```
 2. Create the actual service account
    ```
-   dcos security org service-accounts create -p jenkins.pub.pem -d "Jenkins Service Account" jenkins-user 
+   dcos security org service-accounts create -p jenkins.pub.pem -d "Jenkins Service Account" jenkins 
    ```
 3. Store private key as secret so that the Jenkins master can access it
    ```
-   dcos security secrets create-sa-secret ./jenkins.private.pem jenkins-user jenkins-user/private_key
+   dcos security secrets create -f ./jenkins.private.pem jenkins/private_key
    ```
 4. Grant `jenkins-user` access:
    ```
@@ -162,7 +162,7 @@ account to run. To setup one up with the DC/OS CLI
    
    or 
    ```
-   dcos security org users grant jenkins-user dcos:mesos:master:task:user:nobody create
+   dcos security org users grant jenkins dcos:mesos:master:task:user:nobody create
    ```
 5. Deploy the Jenkins app defined in `dcos/jenkins-app.json`.
 

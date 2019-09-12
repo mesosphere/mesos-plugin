@@ -104,7 +104,7 @@ public class MesosCloud extends AbstractCloudImpl {
     if (selfIsMesosTask()) {
       String mesosSandbox = System.getenv("MESOS_SANDBOX");
       this.sslCert = Optional.ofNullable(loadDcosCert(mesosSandbox));
-      this.dcosAuthorization = Optional.ofNullable(loadDcosAuthorization(mesosSandbox));
+      this.dcosAuthorization = Optional.ofNullable(loadDcosAuthorization());
     } else {
       this.sslCert = Optional.empty();
       this.dcosAuthorization = Optional.empty();
@@ -282,12 +282,11 @@ public class MesosCloud extends AbstractCloudImpl {
   }
 
   @CheckForNull
-  private static DcosAuthorization loadDcosAuthorization(String mesosSandbox) throws IOException {
-    final File privateKey = new File(mesosSandbox, ".ssl/private_key.pem");
-    if (privateKey.exists()) {
-      // TODO: do not hardcode user name.
-      return new DcosAuthorization(
-          "jenkins-user", FileUtils.readFileToString(privateKey, StandardCharsets.US_ASCII));
+  private static DcosAuthorization loadDcosAuthorization() throws IOException {
+    final String user = System.getenv("DCOS_SERVICE_ACCOUNT");
+    final String privateKey = System.getenv("DCOS_SERVICE_ACCOUNT_PRIVATE_KEY");
+    if (user != null && privateKey != null) {
+      return new DcosAuthorization(user, privateKey);
     } else {
       return null;
     }

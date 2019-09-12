@@ -25,16 +25,6 @@
       <agentUser>root</agentUser>
       <role>*</role>
       <jenkinsUrl></jenkinsUrl>
-      <sslCert>
-        <value class="string"></value>
-      </sslCert>
-      <dcosAuthorization>
-        <value class="org.jenkinsci.plugins.mesos.MesosCloud$DcosAuthorization">
-          <secret></secret>
-          <uid></uid>
-          <dcosRoot>https://master.mesos</dcosRoot>
-        </value>
-      </dcosAuthorization>
       <mesosAgentSpecTemplates>
         <org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate>
           <label>mesos</label>
@@ -55,9 +45,7 @@
           <jnlpArgs>-noReconnect</jnlpArgs>
           <defaultAgent>false</defaultAgent>
           <agentAttributes></agentAttributes>
-          <containerImage>
-            <value class="string">amazoncorretto:8</value>
-          </containerImage>
+          <containerImage>amazoncorretto:8</containerImage>
         </org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate>
       </mesosAgentSpecTemplates>
     </org.jenkinsci.plugins.mesos.MesosCloud>
