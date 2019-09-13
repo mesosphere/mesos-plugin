@@ -274,6 +274,7 @@ public class MesosApi {
         .thenApply(
             result -> {
               if (result == QueueOfferResult.enqueued()) {
+                logger.info("Queued new agent {}", name);
                 return mesosJenkinsAgent;
               } else if (result == QueueOfferResult.dropped()) {
                 logger.warn("USI command queue is full. Fail provisioning for {}", name);
