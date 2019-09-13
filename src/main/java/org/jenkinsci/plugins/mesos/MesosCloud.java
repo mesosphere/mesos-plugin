@@ -208,6 +208,8 @@ public class MesosCloud extends AbstractCloudImpl {
 
   /** @return the {@link MesosAgentSpecTemplate} for passed label or empty optional. */
   private Optional<MesosAgentSpecTemplate> getSpecForLabel(Label label) {
+    if (label == null) return Optional.empty();
+    
     for (MesosAgentSpecTemplate spec : this.mesosAgentSpecTemplates) {
       if (label.matches(spec.getLabelSet())) {
         return Optional.of(spec);
