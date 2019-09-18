@@ -28,7 +28,7 @@ ENV JENKINS_CSP_OPTS="sandbox; default-src 'none'; img-src 'self'; style-src 'se
 USER root
 
 # install dependencies
-RUN apt-get update && apt-get install -y nginx python zip jq
+RUN apt-get update && apt-get install -y nginx python zip jq gettext-base
 # update to newer git version
 RUN echo "deb http://ftp.debian.org/debian testing main" >> /etc/apt/sources.list \
   && apt-get update && apt-get -t testing install -y git
@@ -43,7 +43,7 @@ RUN mkdir -p "$JENKINS_HOME" "${JENKINS_FOLDER}/war"
 
 # nginx setup
 RUN mkdir -p /var/log/nginx/jenkins
-COPY dcos/conf/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY dcos/conf/nginx/nginx.conf.template /etc/nginx/nginx.conf.template
 
 # Jenkins setup
 COPY dcos/conf/jenkins/config.xml "${JENKINS_STAGING}/config.xml"
@@ -62,7 +62,8 @@ COPY --from=build /home/gradle/project/build/libs/mesos.hpi "${JENKINS_STAGING}/
 # Disable first-run wizard
 RUN echo 2.0 > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state
 
-CMD /usr/local/jenkins/bin/bootstrap.py && nginx     \
+CMD /usr/local/jenkins/bin/bootstrap.py              \
+  && envsubst '\$PORT0 \$PORT1 \$JENKINS_CONTEXT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx \
   && . /usr/local/jenkins/bin/dcos-account.sh        \
   && java ${JVM_OPTS}                                \
      -Dhudson.model.DirectoryBrowserSupport.CSP="${JENKINS_CSP_OPTS}" \

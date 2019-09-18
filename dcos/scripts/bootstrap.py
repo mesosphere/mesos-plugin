@@ -20,7 +20,7 @@ def mesos_dns_taskname(jenkins_service_name, marathon_name, nginx_port):
     return marathon_dns_url.format(service_name, marathon_name, nginx_port)
 
 
-def populate_jenkins_config_xml(config_xml, master, name, port, role, user, marathon_name):
+def populate_jenkins_config_xml(config_xml, name, port, role, user, marathon_name):
     """Modifies a Jenkins master's 'config.xml' at runtime. Essentially, this
     replaces certain configuration options of the Mesos plugin, such as the
     framework name and the Jenkins URL that agents use to connect back to the
@@ -63,32 +63,6 @@ def populate_jenkins_location_config(location_xml, url):
     tree.write(location_xml)
 
 
-def populate_nginx_config(config_file, nginx_port, jenkins_port, context):
-    """Modifies an nginx config, replacing the "magic" strings
-    '_XNGINX_PORT', '_XJENKINS_PORT' and '_XJENKINS_CONTEXT' with the real
-    value provided.
-
-    :param config_file: the path to an 'nginx.conf'
-    :param nginx_port: the Mesos port the task is running on
-    :param jenkins_port: the Mesos port the task is running on
-    :param context: the application's context, e.g. '/service/jenkins'
-    """
-    original = None
-    with open(config_file, 'r') as f:
-        original = f.readlines()
-
-    with open(config_file, 'w') as f:
-        for line in original:
-            if re.match(r'.*_XNGINX_PORT.*', line):
-                f.write(re.sub('_XNGINX_PORT', nginx_port, line))
-            elif re.match(r'.*_XJENKINS_PORT.*', line):
-                f.write(re.sub('_XJENKINS_PORT', jenkins_port, line))
-            elif re.match(r'.*_XJENKINS_CONTEXT.*', line):
-                f.write(re.sub('_XJENKINS_CONTEXT', context, line))
-            else:
-                f.write(line)
-
-
 def populate_known_hosts(hosts, dest_file):
     """Gather SSH public key from one or more hosts and write out the
     known_hosts file.
@@ -112,10 +86,7 @@ def main():
         jenkins_agent_role = os.environ['JENKINS_AGENT_ROLE']
         jenkins_home_dir = os.environ['JENKINS_HOME']
         jenkins_framework_name = os.environ['JENKINS_FRAMEWORK_NAME']
-        jenkins_app_context = os.environ['JENKINS_CONTEXT']
         marathon_nginx_port = os.environ['PORT0']
-        marathon_jenkins_port = os.environ['PORT1']
-        mesos_master = os.environ['JENKINS_MESOS_MASTER']
         ssh_known_hosts = os.environ['SSH_KNOWN_HOSTS']
         marathon_name = os.environ['MARATHON_NAME']
     except KeyError as e:
@@ -132,7 +103,6 @@ def main():
 
     populate_jenkins_config_xml(
         os.path.join(jenkins_home_dir, 'config.xml'),
-        mesos_master,
         jenkins_framework_name,
         marathon_nginx_port,
         jenkins_agent_role,
@@ -144,15 +114,6 @@ def main():
         jenkins_root_url)
 
     populate_known_hosts(ssh_known_hosts, '/etc/ssh/ssh_known_hosts')
-
-    # nginx changes here are really "run once". The context should never
-    # change as long as a Jenkins instance is alive, since the rewrite will
-    # be based on the app ID in Marathon, as will the volume on disk.
-    populate_nginx_config(
-        '/etc/nginx/nginx.conf',
-        marathon_nginx_port,
-        marathon_jenkins_port,
-        jenkins_app_context)
 
 
 def _get_xml_root(config_xml):

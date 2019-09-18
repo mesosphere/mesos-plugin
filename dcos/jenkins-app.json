@@ -35,7 +35,6 @@
     "JENKINS_SLAVE_AGENT_PORT": "50000",
     "JENKINS_AGENT_ROLE": "*",
     "JVM_OPTS": "-Xms1024m -Xmx1024m",
-    "JENKINS_MESOS_MASTER": "zk://zk-1.zk:2181,zk-2.zk:2181,zk-3.zk:2181,zk-4.zk:2181,zk-5.zk:2181/mesos",
     "JENKINS_AGENT_USER": "root",
     "JENKINS_OPTS": "",
     "JENKINS_FRAMEWORK_NAME": "jenkins",
