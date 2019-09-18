@@ -2,13 +2,14 @@ jenkins:
   agentProtocols:
     - "JNLP4-connect"
     - "Ping"
+  numExecutors: 0
   clouds:
     - mesos:
         agentUser: "${JENKINS_AGENT_USER:-root}"
         frameworkName: "${JENKINS_FRAMEWORK_NAME:-Jenkins Scheduler}"
-        jenkinsUrl: "http://jenkins.service.mesos:${PORT0:-8080}"
+        jenkinsUrl: "http://${JENKINS_FRAMEWORK_NAME:-jenkins}.${MARATHON_NAME:-marathon}.mesos:${PORT0:-8080}"
         mesosAgentSpecTemplates:
-          - containerImage: ""
+          - containerImage: "amazoncorretto:8"
             cpus: "0.1"
             defaultAgent: false
             disk: "0.0"
@@ -24,3 +25,7 @@ jenkins:
             remoteFsRoot: "jenkins"
         mesosMasterUrl: "${JENKINS_MESOS_MASTER:-http://leader.mesos:5050}"
         role: "${JENKINS_AGENT_ROLE:-*}"
+unclassified:
+  location:
+    adminAddress: "address not configured yet <nobody@nowhere>"
+    url: "http://jenkins.marathon.mesos:8768/"

@@ -48,7 +48,6 @@ ENV CASC_JENKINS_CONFIG /usr/local/jenkins/jenkins.yaml
 COPY dcos/conf/jenkins/configuration.yaml "${CASC_JENKINS_CONFIG}"
 
 # TODO: Replace *.xml configuration with definitions in jenkins.yaml.
-COPY dcos/conf/jenkins/jenkins.model.JenkinsLocationConfiguration.xml "${JENKINS_STAGING}/jenkins.model.JenkinsLocationConfiguration.xml"
 COPY dcos/conf/jenkins/nodeMonitors.xml "${JENKINS_STAGING}/nodeMonitors.xml"
 COPY dcos/scripts/init.groovy.d/mesos-auth.groovy "${JENKINS_STAGING}/init.groovy.d/mesos-auth.groovy"
 
