@@ -73,8 +73,9 @@ and light weight jobs can be assigned label 'light_weight_slave'(which has  'Sla
 
 ### DC/OS Authentication ###
 
-The plugin can authenticate with a [DC/OS](https://docs.d2iq.com/mesosphere/dcos/1.13/security/ent/service-auth/) enterprise cluster. Simply check `Authorization` and enter the
-service user name, the DC/OS root URL and paste the servive user secret.
+The plugin can authenticate with a [DC/OS](https://docs.d2iq.com/mesosphere/dcos/1.13/security/ent/service-auth/) enterprise cluster. 
+Simply run the environment variables `DCOS_SERVICE_ACCOUNT` containing the service account name and
+`DCOS_SERVICE_ACCOUNT_PRIVATE_KEY` containing the private key for the service account. See [On DC/OS Enterprise](#on-dcos-enterprise) for details.
 
 ### Configuring Jenkins Jobs ###
 

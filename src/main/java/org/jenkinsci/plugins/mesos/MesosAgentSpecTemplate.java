@@ -34,8 +34,8 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final int minExecutors;
   private final int maxExecutors;
   private final int executorMem;
-  private final String remoteFsRoot;
-  private final String jvmArgs;
+  private final String remoteFsRoot; // TODO: remove since it's not used
+  private final String jvmArgs; // TODO: remove since it's not used.
   private final String jnlpArgs;
   private final boolean defaultAgent;
   private String agentAttributes;
