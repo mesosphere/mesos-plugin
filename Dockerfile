@@ -34,8 +34,7 @@ RUN echo "deb http://ftp.debian.org/debian testing main" >> /etc/apt/sources.lis
 # Override the default property for DNS lookup caching
 RUN echo 'networkaddress.cache.ttl=60' >> ${JAVA_HOME}/jre/lib/security/java.security
 
-# bootstrap scripts and needed dir setup
-COPY dcos/scripts/dcos-account.sh /usr/local/jenkins/bin/dcos-account.sh
+# Create needed dir
 RUN mkdir -p "$JENKINS_HOME" "${JENKINS_FOLDER}/war"
 
 # Nginx setup
