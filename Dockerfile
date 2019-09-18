@@ -18,7 +18,6 @@ WORKDIR /tmp
 ENV JENKINS_FOLDER /usr/share/jenkins
 
 # Build Args
-ARG BLUEOCEAN_VERSION=1.17.0
 ARG JENKINS_STAGING=/usr/share/jenkins/ref/
 
 # Default policy according to https://wiki.jenkins.io/display/JENKINS/Configuring+Content+Security+Policy
@@ -39,7 +38,7 @@ RUN echo 'networkaddress.cache.ttl=60' >> ${JAVA_HOME}/jre/lib/security/java.sec
 COPY dcos/scripts/dcos-account.sh /usr/local/jenkins/bin/dcos-account.sh
 RUN mkdir -p "$JENKINS_HOME" "${JENKINS_FOLDER}/war"
 
-# nginx setup
+# Nginx setup
 RUN mkdir -p /var/log/nginx/jenkins
 COPY dcos/conf/nginx/nginx.conf.template /etc/nginx/nginx.conf.template
 
@@ -48,12 +47,10 @@ ENV CASC_JENKINS_CONFIG /usr/local/jenkins/jenkins.yaml
 COPY dcos/conf/jenkins/configuration.yaml "${CASC_JENKINS_CONFIG}"
 
 # TODO: Replace *.xml configuration with definitions in jenkins.yaml.
-COPY dcos/conf/jenkins/nodeMonitors.xml "${JENKINS_STAGING}/nodeMonitors.xml"
 COPY dcos/scripts/init.groovy.d/mesos-auth.groovy "${JENKINS_STAGING}/init.groovy.d/mesos-auth.groovy"
 
 # Add plugins
 COPY dcos/conf/plugins.conf /tmp/
-RUN sed -i "s/\${BLUEOCEAN_VERSION}/${BLUEOCEAN_VERSION}/g" /tmp/plugins.conf
 RUN /usr/local/bin/install-plugins.sh < /tmp/plugins.conf
 
 # Add Mesos plugin

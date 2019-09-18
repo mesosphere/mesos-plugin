@@ -155,13 +155,7 @@ account to run. To setup one up with the DC/OS CLI
    ```
    dcos security secrets create -f ./jenkins.private.pem jenkins/private_key
    ```
-4. Grant `jenkins-user` access:
-   ```
-   curl -L -X PUT -k -H "Authorization: token=$(dcos config show core.dcos_acs_token)" \
-     "$(dcos config show core.dcos_url)/acs/api/v1/acls/dcos:superuser/users/jenkins-user/full"
-   ```
-   
-   or 
+4. Grant `jenkins` service account rights to start Mesos tasks:
    ```
    dcos security org users grant jenkins dcos:mesos:master:task:user:nobody create
    ```
