@@ -28,4 +28,4 @@ jenkins:
 unclassified:
   location:
     adminAddress: "address not configured yet <nobody@nowhere>"
-    url: "http://jenkins.marathon.mesos:8768/"
+    url: "http://jenkins.marathon.mesos:${PORT0:-8080}/"

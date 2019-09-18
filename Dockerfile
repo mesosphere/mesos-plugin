@@ -46,9 +46,6 @@ COPY dcos/conf/nginx/nginx.conf.template /etc/nginx/nginx.conf.template
 ENV CASC_JENKINS_CONFIG /usr/local/jenkins/jenkins.yaml
 COPY dcos/conf/jenkins/configuration.yaml "${CASC_JENKINS_CONFIG}"
 
-# TODO: Replace *.xml configuration with definitions in jenkins.yaml.
-COPY dcos/scripts/init.groovy.d/mesos-auth.groovy "${JENKINS_STAGING}/init.groovy.d/mesos-auth.groovy"
-
 # Add plugins
 COPY dcos/conf/plugins.conf /tmp/
 RUN /usr/local/bin/install-plugins.sh < /tmp/plugins.conf
@@ -60,7 +57,6 @@ COPY --from=build /home/gradle/project/build/libs/mesos.hpi "${JENKINS_STAGING}/
 RUN echo 2.0 > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state
 
 CMD envsubst '\$PORT0 \$PORT1 \$JENKINS_CONTEXT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx \
-  && . /usr/local/jenkins/bin/dcos-account.sh        \
   && java ${JVM_OPTS}                                \
      -Dhudson.model.DirectoryBrowserSupport.CSP="${JENKINS_CSP_OPTS}" \
      -Dhudson.udp=-1                                 \
