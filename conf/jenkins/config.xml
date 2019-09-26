@@ -42,9 +42,27 @@
           <jnlpArgs>-noReconnect</jnlpArgs>
           <containerInfo>
             <type>DOCKER</type>
-            <dockerImage>winamd64/openjdk:8-jre-windowsservercore-1809</dockerImage>
+            <dockerImage>mesosphere/dotnet-builder:latest</dockerImage>
+            <volumes>
+              <org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
+                <containerPath>C:\Users\containeradministrator\.docker</containerPath>
+                <hostPath>c:\docker-tls\client\.docker</hostPath>
+                <readOnly>false</readOnly>
+              </org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Volume>
+            </volumes>
+            <parameters>
+              <org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Parameter>
+                <key>env</key>
+                <value>DOCKER_HOST=tcp://gateway.docker.internal:2376</value>
+              </org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Parameter>
+              <org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Parameter>
+                <key>env</key>
+                <value>DOCKER_TLS_VERIFY=1</value>
+              </org.jenkinsci.plugins.mesos.MesosSlaveInfo_-Parameter>
+            </parameters>
             <networking>BRIDGE</networking>
-            <useCustomDockerCommandShell>false</useCustomDockerCommandShell>
+	    <useCustomDockerCommandShell>true</useCustomDockerCommandShell>
+	    <customDockerCommandShell>wrapper.cmd</customDockerCommandShell>
             <dockerPrivilegedMode>false</dockerPrivilegedMode>
             <dockerForcePullImage>false</dockerForcePullImage>
           </containerInfo>
