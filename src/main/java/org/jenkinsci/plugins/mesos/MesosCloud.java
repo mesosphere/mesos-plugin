@@ -54,7 +54,7 @@ public class MesosCloud extends AbstractCloudImpl {
   private final String frameworkName;
   private final String frameworkId;
 
-  private final String agentUser;
+  private String agentUser;
   private final String role;
 
   private final URL jenkinsUrl;
@@ -82,6 +82,12 @@ public class MesosCloud extends AbstractCloudImpl {
       return this.uid;
     }
   }
+
+  // Legacy 1.x fields required for backwards compatibility
+  private transient String nativeLibraryPath;
+  private transient String master;
+  private transient String description;
+  private transient String slavesUser;
 
   @DataBoundConstructor
   public MesosCloud(
@@ -130,6 +136,11 @@ public class MesosCloud extends AbstractCloudImpl {
   }
 
   private Object readResolve() throws IOException {
+
+    // Migration from 1.x
+    if (this.agentUser == null && this.slavesUser != null) {
+      this.agentUser = this.slavesUser;
+    }
 
     if (selfIsMesosTask()) {
       String mesosSandbox = System.getenv("MESOS_SANDBOX");
