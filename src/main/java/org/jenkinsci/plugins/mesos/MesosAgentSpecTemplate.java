@@ -92,7 +92,9 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
     @Initializer(before = InitMilestone.PLUGINS_STARTED)
     public static void serilizationAliases() {
-      Items.XSTREAM2.addCompatibilityAlias("org.jenkinsci.plugins.mesos.MesosSlaveInfo", org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate.class);
+      Items.XSTREAM2.addCompatibilityAlias(
+          "org.jenkinsci.plugins.mesos.MesosSlaveInfo",
+          org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate.class);
     }
 
     /**

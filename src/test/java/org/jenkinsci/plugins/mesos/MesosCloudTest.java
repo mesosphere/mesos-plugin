@@ -1,6 +1,6 @@
 package org.jenkinsci.plugins.mesos;
 
-import com.thoughtworks.xstream.XStream;
+import hudson.util.XStream2;
 import java.io.File;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,8 +9,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class MesosCloudTest {
 
   @Test
-  void deserializeOldConfig() {
-    final XStream xstream = new XStream();
-    MesosCloud cloud = (MesosCloud)xstream.fromXML(new File("/Users/kjeschkies/Projects/mesos-plugin/src/test/resources/config_1.x.xml"));
+  void deserializeOldConfig(TestUtils.JenkinsRule j) {
+    final XStream2 xstream = new XStream2();
+//    MesosAgentSpecTemplate.DescriptorImpl.serilizationAliases();
+    MesosCloud cloud =
+        (MesosCloud)
+            xstream.fromXML(
+                new File(
+                    "/Users/kjeschkies/Projects/mesos-plugin/src/test/resources/config_1.x.xml"));
   }
 }

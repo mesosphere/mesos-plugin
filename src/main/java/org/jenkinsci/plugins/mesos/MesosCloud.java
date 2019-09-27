@@ -47,17 +47,17 @@ public class MesosCloud extends AbstractCloudImpl {
 
   private static final Logger logger = LoggerFactory.getLogger(MesosCloud.class);
 
-  private final URL mesosMasterUrl;
+  private URL mesosMasterUrl;
 
   @Nonnull private transient MesosApi mesosApi;
 
   private final String frameworkName;
-  private final String frameworkId;
+  private String frameworkId;
 
   private String agentUser;
   private final String role;
 
-  private final URL jenkinsUrl;
+  private final URL jenkinsURL;
 
   private transient Optional<String> sslCert;
   private transient Optional<DcosAuthorization> dcosAuthorization;
@@ -88,6 +88,12 @@ public class MesosCloud extends AbstractCloudImpl {
   private transient String master;
   private transient String description;
   private transient String slavesUser;
+  private transient String credentialsId;
+  private transient String cloudID;
+  private transient boolean checkpoint;
+  private transient boolean onDemandRegistration;
+  private transient int declineOfferDuration;
+  private transient List<MesosAgentSpecTemplate> slaveInfos;
 
   @DataBoundConstructor
   public MesosCloud(
@@ -95,14 +101,14 @@ public class MesosCloud extends AbstractCloudImpl {
       String frameworkName,
       String role,
       String agentUser,
-      String jenkinsUrl,
+      String jenkinsURL,
       List<? extends MesosAgentSpecTemplate> mesosAgentSpecTemplates)
       throws InterruptedException, ExecutionException, IOException {
     super("MesosCloud", null);
 
     try {
       this.mesosMasterUrl = new URL(mesosMasterUrl);
-      this.jenkinsUrl = new URL(jenkinsUrl);
+      this.jenkinsURL = new URL(jenkinsURL);
     } catch (MalformedURLException e) {
       throw new RuntimeException("Mesos Cloud URL validation failed", e);
     }
@@ -125,7 +131,7 @@ public class MesosCloud extends AbstractCloudImpl {
     this.mesosApi =
         new MesosApi(
             this.mesosMasterUrl,
-            this.jenkinsUrl,
+            this.jenkinsURL,
             this.agentUser,
             this.frameworkName,
             this.frameworkId,
@@ -140,8 +146,20 @@ public class MesosCloud extends AbstractCloudImpl {
     // Migration from 1.x
     if (this.agentUser == null && this.slavesUser != null) {
       this.agentUser = this.slavesUser;
+    } else {
+      this.agentUser = "nobody";
     }
 
+    if (this.frameworkId == null) {
+      this.frameworkId = "???"; // Is this this.cloudID?
+    }
+
+    if (this.mesosMasterUrl == null) {
+      // TODO: infer from zk this.master
+      this.mesosMasterUrl = new URL("http://leader.mesos:5050");
+    }
+
+    // Load details if we are running in DC/OS.
     if (selfIsMesosTask()) {
       String mesosSandbox = System.getenv("MESOS_SANDBOX");
       this.sslCert = Optional.ofNullable(loadDcosCert(mesosSandbox));
@@ -151,11 +169,16 @@ public class MesosCloud extends AbstractCloudImpl {
       this.dcosAuthorization = Optional.empty();
     }
 
+    // TODO: set mesosAgentSpecTemplates
+    assert this.slaveInfos != null : "Slave infos was null";
+    logger.info("Agent template size {}", this.slaveInfos.size());
+    assert this.slaveInfos.size() == 3;
+
     try {
       this.mesosApi =
           new MesosApi(
               this.mesosMasterUrl,
-              this.jenkinsUrl,
+              this.jenkinsURL,
               this.agentUser,
               this.frameworkName,
               this.frameworkId,
@@ -476,8 +499,8 @@ public class MesosCloud extends AbstractCloudImpl {
     return this.frameworkName;
   }
 
-  public String getJenkinsUrl() {
-    return this.jenkinsUrl.toString();
+  public String getJenkinsURL() {
+    return this.jenkinsURL.toString();
   }
 
   public String getAgentUser() {
