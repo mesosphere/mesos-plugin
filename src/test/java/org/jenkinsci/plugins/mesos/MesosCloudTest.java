@@ -1,5 +1,11 @@
 package org.jenkinsci.plugins.mesos;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.notNullValue;
+
 import hudson.util.XStream2;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,7 +25,11 @@ public class MesosCloudTest {
             Thread.currentThread().getContextClassLoader());
 
     final XStream2 xstream = new XStream2();
-    //    MesosAgentSpecTemplate.DescriptorImpl.serilizationAliases();
     MesosCloud cloud = (MesosCloud) xstream.fromXML(oldConfig);
+
+    assertThat(cloud.getMesosAgentSpecTemplates(), hasSize(38));
+    cloud.getMesosAgentSpecTemplates().forEach(template -> {
+      assertThat(template.getCpu(), is(notNullValue()));
+    });
   }
 }

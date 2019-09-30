@@ -160,6 +160,12 @@ public class MesosCloud extends AbstractCloudImpl {
       this.mesosMasterUrl = new URL("http://leader.mesos:5050");
     }
 
+    if (this.mesosAgentSpecTemplates == null && this.slaveInfos != null) {
+      this.mesosAgentSpecTemplates = this.slaveInfos;
+    } else if (this.mesosAgentSpecTemplates == null) {
+      this.mesosAgentSpecTemplates = new ArrayList<>();
+    }
+
     // Load details if we are running in DC/OS.
     if (selfIsMesosTask()) {
       String mesosSandbox = System.getenv("MESOS_SANDBOX");
@@ -170,34 +176,22 @@ public class MesosCloud extends AbstractCloudImpl {
       this.dcosAuthorization = Optional.empty();
     }
 
-    // TODO: set mesosAgentSpecTemplates
-    assert this.slaveInfos != null : "Slave infos was null";
-    logger.info("Agent template size {}", this.slaveInfos.size());
-    assert this.slaveInfos.size() > 0 : "Slave infos is empty";
-    //    for (MesosAgentSpecTemplate info : this.slaveInfos) {
-    //      assert info.slaveCpus != null;
-    //    }
-
-    try {
-      this.mesosApi =
-          new MesosApi(
-              this.mesosMasterUrl,
-              this.jenkinsURL,
-              this.agentUser,
-              this.frameworkName,
-              this.frameworkId,
-              this.role,
-              this.sslCert,
-              this.dcosAuthorization);
+//    try {
+      this.mesosApi = null;
+//          new MesosApi(
+//              this.mesosMasterUrl,
+//              this.jenkinsURL,
+//              this.agentUser,
+//              this.frameworkName,
+//              this.frameworkId,
+//              this.role,
+//              this.sslCert,
+//              this.dcosAuthorization);
       logger.info("Initialized Mesos API object after deserialization.");
-    } catch (InterruptedException | ExecutionException e) {
-      logger.error("Failed initialize Mesos API object", e);
-      throw new RuntimeException("Failed to initialize Mesos API object after deserialization.", e);
-    }
-
-    if (this.mesosAgentSpecTemplates == null) {
-      this.mesosAgentSpecTemplates = new ArrayList<>();
-    }
+//    } catch (InterruptedException | ExecutionException e) {
+//      logger.error("Failed initialize Mesos API object", e);
+//      throw new RuntimeException("Failed to initialize Mesos API object after deserialization.", e);
+//    }
 
     return this;
   }
