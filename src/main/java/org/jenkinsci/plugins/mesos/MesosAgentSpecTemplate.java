@@ -2,11 +2,8 @@ package org.jenkinsci.plugins.mesos;
 
 import com.mesosphere.usi.core.models.LaunchPod;
 import hudson.Extension;
-import hudson.init.InitMilestone;
-import hudson.init.Initializer;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import hudson.model.Items;
 import hudson.model.Label;
 import hudson.model.Node;
 import hudson.model.labels.LabelAtom;
@@ -88,13 +85,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
     public DescriptorImpl() {
       load();
-    }
-
-    @Initializer(before = InitMilestone.PLUGINS_STARTED)
-    public static void serilizationAliases() {
-      Items.XSTREAM2.addCompatibilityAlias(
-          "org.jenkinsci.plugins.mesos.MesosSlaveInfo",
-          org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate.class);
     }
 
     /**

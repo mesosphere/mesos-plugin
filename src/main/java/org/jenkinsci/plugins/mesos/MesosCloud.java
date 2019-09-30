@@ -93,7 +93,6 @@ public class MesosCloud extends AbstractCloudImpl {
   private transient boolean checkpoint;
   private transient boolean onDemandRegistration;
   private transient int declineOfferDuration;
-  //  private transient List<MesosSlaveInfo> slaveInfos;
   private transient List<MesosAgentSpecTemplate> slaveInfos;
 
   @DataBoundConstructor
