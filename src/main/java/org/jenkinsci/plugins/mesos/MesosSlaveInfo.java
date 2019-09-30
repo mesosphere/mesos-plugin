@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.mesos;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Node;
 import java.util.Collections;
 import java.util.List;
@@ -18,16 +19,25 @@ public class MesosSlaveInfo {
   private transient Double slaveCpus;
   private transient Double diskNeeded;
   private transient int slaveMem;
+
+  @SuppressFBWarnings("UUF_UNUSED_FIELD")
   private transient Double executorCpus;
+
   private transient int minExecutors;
   private transient int maxExecutors;
   private transient int executorMem;
+
+  @SuppressFBWarnings("UUF_UNUSED_FIELD")
   private transient String remoteFSRoot;
+
   private transient int idleTerminationMinutes;
   private transient String jvmArgs;
   private transient String jnlpArgs;
   private transient boolean defaultSlave;
+
+  @SuppressFBWarnings("UUF_UNUSED_FIELD")
   private transient List<URI> additionalURIs;
+
   private transient ContainerInfo containerInfo;
 
   /**
