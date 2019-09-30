@@ -93,7 +93,8 @@ public class MesosCloud extends AbstractCloudImpl {
   private transient boolean checkpoint;
   private transient boolean onDemandRegistration;
   private transient int declineOfferDuration;
-  private transient List<MesosSlaveInfo> slaveInfos;
+  //  private transient List<MesosSlaveInfo> slaveInfos;
+  private transient List<MesosAgentSpecTemplate> slaveInfos;
 
   @DataBoundConstructor
   public MesosCloud(
@@ -173,6 +174,9 @@ public class MesosCloud extends AbstractCloudImpl {
     assert this.slaveInfos != null : "Slave infos was null";
     logger.info("Agent template size {}", this.slaveInfos.size());
     assert this.slaveInfos.size() > 0 : "Slave infos is empty";
+    //    for (MesosAgentSpecTemplate info : this.slaveInfos) {
+    //      assert info.slaveCpus != null;
+    //    }
 
     try {
       this.mesosApi =
