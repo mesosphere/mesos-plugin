@@ -137,7 +137,7 @@ public class MesosCloud extends AbstractCloudImpl {
             this.frameworkName,
             this.frameworkId,
             this.role,
-            sslCert,
+            this.sslCert,
             this.dcosAuthorization);
     logger.info("Initialized Mesos API object.");
   }
@@ -157,7 +157,7 @@ public class MesosCloud extends AbstractCloudImpl {
 
     if (this.mesosMasterUrl == null) {
       // TODO: infer from zk this.master
-      this.mesosMasterUrl = new URL("http://leader.mesos:5050");
+      this.mesosMasterUrl = new URL(this.master);
     }
 
     if (this.mesosAgentSpecTemplates == null && this.slaveInfos != null) {
@@ -176,22 +176,22 @@ public class MesosCloud extends AbstractCloudImpl {
       this.dcosAuthorization = Optional.empty();
     }
 
-//    try {
-      this.mesosApi = null;
-//          new MesosApi(
-//              this.mesosMasterUrl,
-//              this.jenkinsURL,
-//              this.agentUser,
-//              this.frameworkName,
-//              this.frameworkId,
-//              this.role,
-//              this.sslCert,
-//              this.dcosAuthorization);
+    try {
+      this.mesosApi =
+          new MesosApi(
+              this.mesosMasterUrl,
+              this.jenkinsURL,
+              this.agentUser,
+              this.frameworkName,
+              this.frameworkId,
+              this.role,
+              this.sslCert,
+              this.dcosAuthorization);
       logger.info("Initialized Mesos API object after deserialization.");
-//    } catch (InterruptedException | ExecutionException e) {
-//      logger.error("Failed initialize Mesos API object", e);
-//      throw new RuntimeException("Failed to initialize Mesos API object after deserialization.", e);
-//    }
+    } catch (InterruptedException | ExecutionException e) {
+      logger.error("Failed initialize Mesos API object", e);
+      throw new RuntimeException("Failed to initialize Mesos API object after deserialization.", e);
+    }
 
     return this;
   }

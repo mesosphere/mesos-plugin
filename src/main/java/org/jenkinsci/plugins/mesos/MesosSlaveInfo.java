@@ -7,8 +7,8 @@ import org.apache.mesos.Protos.ContainerInfo.DockerInfo.Network;
 
 /**
  * This POJO describes a Jenkins agent for Mesos on 0.x and 1.x of the plugin. It is used to migrate
- * older configurations to {@link MesosAgentSpecTemplate} during deserialization. See {@link MesosCloud#readResolve()}
- * for the full migration.
+ * older configurations to {@link MesosAgentSpecTemplate} during deserialization. See {@link
+ * MesosCloud#readResolve()} for the full migration.
  */
 public class MesosSlaveInfo {
 
