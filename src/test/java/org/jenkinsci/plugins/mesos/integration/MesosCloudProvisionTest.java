@@ -54,7 +54,18 @@ public class MesosCloudProvisionTest {
     final int idleMin = 1;
     final MesosAgentSpecTemplate spec =
         new MesosAgentSpecTemplate(
-            label.toString(), Mode.EXCLUSIVE, "0.1", "32", idleMin, 1, 1, "0", "", false, "", "");
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            1,
+            1,
+            "0",
+            "",
+            false,
+            Collections.emptyList(),
+            "");
     List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
 
     MesosCloud cloud =
@@ -90,7 +101,18 @@ public class MesosCloudProvisionTest {
     LabelAtom label = new LabelAtom("label");
     final MesosAgentSpecTemplate spec =
         new MesosAgentSpecTemplate(
-            label.toString(), Mode.EXCLUSIVE, "0.1", "32", idleMin, 1, 1, "0", "", false, "", "");
+            label.toString(),
+            Mode.EXCLUSIVE,
+            "0.1",
+            "32",
+            idleMin,
+            1,
+            1,
+            "0",
+            "",
+            false,
+            Collections.emptyList(),
+            "");
 
     List<MesosAgentSpecTemplate> specTemplates = Collections.singletonList(spec);
     MesosCloud cloud =

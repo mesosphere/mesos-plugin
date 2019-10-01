@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.mesos.fixture;
 
 import hudson.model.Node.Mode;
+import java.util.Collections;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 
 /**
@@ -12,7 +13,18 @@ public class AgentSpecMother {
 
   public static final MesosAgentSpecTemplate simple =
       new MesosAgentSpecTemplate(
-          "label", Mode.EXCLUSIVE, "0.1", "32", 1, 1, 1, "0", "", false, "", "");
+          "label",
+          Mode.EXCLUSIVE,
+          "0.1",
+          "32",
+          1,
+          1,
+          1,
+          "0",
+          "",
+          false,
+          Collections.emptyList(),
+          "");
 
   public static final MesosAgentSpecTemplate docker =
       new MesosAgentSpecTemplate(
@@ -26,6 +38,6 @@ public class AgentSpecMother {
           "1",
           "",
           false,
-          "",
+          Collections.emptyList(),
           "mesosphere/jenkins-dind:0.6.0-alpine");
 }
