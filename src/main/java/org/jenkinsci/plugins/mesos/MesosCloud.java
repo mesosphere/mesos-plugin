@@ -112,9 +112,8 @@ public class MesosCloud extends AbstractCloudImpl {
     } catch (MalformedURLException e) {
       throw new RuntimeException(
           String.format(
-              String.format(
-                  "Mesos Cloud URL validation failed for Mesos %s, Jenkins %s",
-                  mesosMasterUrl, jenkinsURL)),
+              "Mesos Cloud URL validation failed for Mesos %s, Jenkins %s",
+              mesosMasterUrl, jenkinsURL),
           e);
     }
 
