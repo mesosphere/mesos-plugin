@@ -35,7 +35,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final int maxExecutors;
   private final String jnlpArgs;
   private final boolean defaultAgent;
-  private String agentAttributes;
   private final String additionalURIs;
   private String containerImage;
 
@@ -49,7 +48,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       String minExecutors,
       String maxExecutors,
       String disk,
-      String agentAttributes,
       String jnlpArgs,
       String defaultAgent,
       String additionalURIs,
@@ -66,7 +64,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.disk = Double.parseDouble(disk);
     this.jnlpArgs = StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "";
     this.defaultAgent = Boolean.valueOf(defaultAgent);
-    this.agentAttributes = agentAttributes != null ? agentAttributes.toString() : null;
     this.additionalURIs = additionalURIs;
     this.containerImage = containerImage;
     validate();
@@ -159,10 +156,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public boolean getReusable() {
     return this.reusable;
-  }
-
-  public String getAgentAttributes() {
-    return agentAttributes;
   }
 
   public boolean isDefaultAgent() {

@@ -34,10 +34,6 @@
              <f:textbox clazz="required" default="0.0"/>
          </f:entry>
 
-         <f:entry title="${%Mesos Offer Selection Attributes}" field="agentAttributes">
-                 <f:textbox/>
-         </f:entry>
-
          <f:entry title="${%Additional Jenkins Agent Agent JNLP arguments}" field="jnlpArgs">
              <f:textbox default="-noReconnect"/>
          </f:entry>
