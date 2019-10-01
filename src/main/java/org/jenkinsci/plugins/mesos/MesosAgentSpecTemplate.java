@@ -12,6 +12,7 @@ import hudson.util.FormValidation;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -74,7 +75,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.disk = Double.parseDouble(disk);
     this.jnlpArgs = StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "";
     this.defaultAgent = defaultAgent;
-    this.additionalURIs = additionalURIs;
+    this.additionalURIs = Optional.ofNullable(additionalURIs).orElse(Collections.emptyList());
     this.containerImage = containerImage;
     validate();
   }
