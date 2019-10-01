@@ -33,8 +33,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final double disk;
   private final int minExecutors;
   private final int maxExecutors;
-  private final int executorMem;
-  private final String jvmArgs; // TODO: remove since it's not used.
   private final String jnlpArgs;
   private final boolean defaultAgent;
   private String agentAttributes;
@@ -51,9 +49,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       String minExecutors,
       String maxExecutors,
       String disk,
-      String executorMem,
       String agentAttributes,
-      String jvmArgs,
       String jnlpArgs,
       String defaultAgent,
       String additionalURIs,
@@ -68,11 +64,9 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.minExecutors = Integer.parseInt(minExecutors) < 1 ? 1 : Integer.parseInt(minExecutors);
     this.maxExecutors = Integer.parseInt(maxExecutors);
     this.disk = Double.parseDouble(disk);
-    this.executorMem = Integer.parseInt(executorMem);
     this.jnlpArgs = StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "";
     this.defaultAgent = Boolean.valueOf(defaultAgent);
     this.agentAttributes = agentAttributes != null ? agentAttributes.toString() : null;
-    this.jvmArgs = jvmArgs;
     this.additionalURIs = additionalURIs;
     this.containerImage = containerImage;
     validate();
@@ -185,14 +179,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public int getMaxExecutors() {
     return maxExecutors;
-  }
-
-  public int getExecutorMem() {
-    return executorMem;
-  }
-
-  public String getJvmArgs() {
-    return jvmArgs;
   }
 
   public String getJnlpArgs() {
