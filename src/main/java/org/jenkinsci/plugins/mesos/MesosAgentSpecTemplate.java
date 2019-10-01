@@ -33,11 +33,8 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final double disk;
   private final int minExecutors;
   private final int maxExecutors;
-  private final int executorMem; // TODO: remove since it's not used
-  private final String jvmArgs; // TODO: remove since it's not used.
   private final String jnlpArgs;
   private final boolean defaultAgent;
-  private String agentAttributes; // TODO: remove since it's not used
   private final String additionalURIs;
   private String containerImage;
 
@@ -51,9 +48,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       int minExecutors,
       int maxExecutors,
       String disk,
-      int executorMem,
-      String agentAttributes,
-      String jvmArgs,
       String jnlpArgs,
       boolean defaultAgent,
       String additionalURIs,
@@ -68,11 +62,8 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.minExecutors = minExecutors;
     this.maxExecutors = maxExecutors;
     this.disk = Double.parseDouble(disk);
-    this.executorMem = executorMem;
     this.jnlpArgs = StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "";
     this.defaultAgent = defaultAgent;
-    this.agentAttributes = agentAttributes != null ? agentAttributes.toString() : null;
-    this.jvmArgs = jvmArgs;
     this.additionalURIs = additionalURIs;
     this.containerImage = containerImage;
     validate();
@@ -121,8 +112,8 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         .withDisk(this.getDisk())
         .withName(name)
         .withJenkinsUrl(jenkinsUrl)
-        .withImage(Optional.ofNullable(this.containerImage).filter(s -> !s.isEmpty()))
-        .withJnlpArguments(this.jnlpArgs)
+        .withImage(Optional.ofNullable(this.getContainerImage()).filter(s -> !s.isEmpty()))
+        .withJnlpArguments(this.getJnlpArgs())
         .build();
   }
 
@@ -167,10 +158,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return this.reusable;
   }
 
-  public String getAgentAttributes() {
-    return agentAttributes;
-  }
-
   public boolean isDefaultAgent() {
     return defaultAgent;
   }
@@ -185,14 +172,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public int getMaxExecutors() {
     return maxExecutors;
-  }
-
-  public int getExecutorMem() {
-    return executorMem;
-  }
-
-  public String getJvmArgs() {
-    return jvmArgs;
   }
 
   public String getJnlpArgs() {

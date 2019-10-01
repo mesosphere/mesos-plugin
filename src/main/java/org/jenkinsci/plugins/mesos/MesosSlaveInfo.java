@@ -23,15 +23,20 @@ public class MesosSlaveInfo {
   @SuppressFBWarnings("UUF_UNUSED_FIELD")
   private transient Double executorCpus;
 
+  @SuppressFBWarnings("UUF_UNUSED_FIELD")
+  private transient int executorMem;
+
   private transient int minExecutors;
   private transient int maxExecutors;
-  private transient int executorMem;
 
   @SuppressFBWarnings("UUF_UNUSED_FIELD")
   private transient String remoteFSRoot;
 
   private transient int idleTerminationMinutes;
+
+  @SuppressFBWarnings("UUF_UNUSED_FIELD")
   private transient String jvmArgs;
+
   private transient String jnlpArgs;
   private transient boolean defaultSlave;
 
@@ -57,9 +62,6 @@ public class MesosSlaveInfo {
         this.minExecutors,
         this.maxExecutors,
         this.diskNeeded.toString(),
-        this.executorMem,
-        "",
-        this.jvmArgs,
         this.jnlpArgs,
         this.defaultSlave,
         "", // TODO: support additional URIs in MesosAgentSpecTemplate
