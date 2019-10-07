@@ -12,7 +12,7 @@ repositories {
 }
 
 ext {
-    usiBranch = 'karsten/support-mesos-1.9'
+    usiBranch = 'master'
     scalaVersion = '2.12'
     akkaVersion = '2.5.19'
 }
