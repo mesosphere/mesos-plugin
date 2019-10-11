@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.mesos.MesosSlaveInfo.ContainerInfo;
 import org.jenkinsci.plugins.mesos.api.LaunchCommandBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -36,7 +37,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final String jnlpArgs;
   private final boolean defaultAgent;
   private final String additionalURIs;
-  private String containerImage;
+  private final ContainerInfo containerInfo;
 
   @DataBoundConstructor
   public MesosAgentSpecTemplate(
@@ -51,7 +52,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       String jnlpArgs,
       boolean defaultAgent,
       String additionalURIs,
-      String containerImage) {
+      ContainerInfo containerInfo) {
     this.label = label;
     this.labelSet = Label.parse(label);
     this.mode = mode;
@@ -65,7 +66,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.jnlpArgs = StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "";
     this.defaultAgent = defaultAgent;
     this.additionalURIs = additionalURIs;
-    this.containerImage = containerImage;
+    this.containerInfo = containerInfo;
     validate();
   }
 
@@ -112,7 +113,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         .withDisk(this.getDisk())
         .withName(name)
         .withJenkinsUrl(jenkinsUrl)
-        .withImage(Optional.ofNullable(this.getContainerImage()).filter(s -> !s.isEmpty()))
+        .withContainerInfo(Optional.ofNullable(this.getContainerInfo()))
         .withJnlpArguments(this.getJnlpArgs())
         .build();
   }
@@ -178,7 +179,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return jnlpArgs;
   }
 
-  public String getContainerImage() {
-    return this.containerImage;
+  public ContainerInfo getContainerInfo() {
+    return this.containerInfo;
   }
 }

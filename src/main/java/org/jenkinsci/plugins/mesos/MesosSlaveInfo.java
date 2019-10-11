@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Node;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo.Network;
 
 /**
@@ -65,7 +66,7 @@ public class MesosSlaveInfo {
         this.jnlpArgs,
         this.defaultSlave,
         "", // TODO: support additional URIs in MesosAgentSpecTemplate
-        this.containerInfo.dockerImage);
+        this.containerInfo);
   }
 
   public static class URI {
@@ -100,8 +101,9 @@ public class MesosSlaveInfo {
     private final boolean dockerPrivilegedMode;
     private final boolean dockerForcePullImage;
     private final boolean dockerImageCustomizable;
+    private boolean isDind;
 
-    private ContainerInfo(
+    public ContainerInfo(
         String type,
         String dockerImage,
         boolean dockerPrivilegedMode,
@@ -137,6 +139,62 @@ public class MesosSlaveInfo {
         this.portMappings = portMappings;
       }
     }
+
+    public boolean getIsDind() {
+      return this.isDind;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public String getDockerImage() {
+      return dockerImage;
+    }
+
+    public boolean getDockerPrivilegedMode() {
+      return dockerPrivilegedMode;
+    }
+
+    public List<Parameter> getParameters() {
+      return parameters;
+    }
+
+    public String getNetworking() {
+      if (networking != null) {
+        return networking;
+      } else {
+        return DEFAULT_NETWORKING;
+      }
+    }
+
+    public boolean getDockerForcePullImage() {
+      return dockerForcePullImage;
+    }
+
+    public boolean hasPortMappings() {
+      return portMappings != null && !portMappings.isEmpty();
+    }
+
+    public List<PortMapping> getPortMappings() {
+      if (portMappings != null) {
+        return portMappings;
+      } else {
+        return Collections.emptyList();
+      }
+    }
+
+    public List<NetworkInfo> getNetworkInfos() {
+      return networkInfos;
+    }
+
+    public boolean hasNetworkInfos() {
+      return networkInfos != null && !networkInfos.isEmpty();
+    }
+
+    public List<Volume> getVolumes() {
+      return volumes;
+    }
   }
 
   public static class Parameter {
@@ -148,9 +206,17 @@ public class MesosSlaveInfo {
       this.key = key;
       this.value = value;
     }
+
+    public String getKey() {
+      return key;
+    }
+
+    public String getValue() {
+      return value;
+    }
   }
 
-  static class Volume {
+  public static class Volume {
 
     private final String containerPath;
     private final String hostPath;
@@ -161,9 +227,21 @@ public class MesosSlaveInfo {
       this.hostPath = hostPath;
       this.readOnly = readOnly;
     }
+
+    public String getContainerPath() {
+      return containerPath;
+    }
+
+    public String getHostPath() {
+      return hostPath;
+    }
+
+    public boolean isReadOnly() {
+      return readOnly;
+    }
   }
 
-  static class PortMapping {
+  public static class PortMapping {
 
     // TODO validate 1 to 65535
     private final Integer containerPort;
@@ -175,14 +253,38 @@ public class MesosSlaveInfo {
       this.hostPort = hostPort;
       this.protocol = protocol;
     }
+
+    public Integer getContainerPort() {
+      return containerPort;
+    }
+
+    public Integer getHostPort() {
+      return hostPort;
+    }
+
+    public String getProtocol() {
+      return protocol;
+    }
   }
 
-  static class NetworkInfo {
+  public static class NetworkInfo {
 
     private final String networkName;
 
     private NetworkInfo(String networkName) {
       this.networkName = networkName;
+    }
+
+    public String getNetworkName() {
+      return networkName;
+    }
+
+    public boolean hasNetworkName() {
+      return networkName != null && !networkName.isEmpty();
+    }
+
+    public Optional<String> getOptionalNetworkName() {
+      return Optional.of(this.networkName).filter(String::isEmpty);
     }
   }
 }

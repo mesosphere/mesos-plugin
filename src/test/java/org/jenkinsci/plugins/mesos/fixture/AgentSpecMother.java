@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.mesos.fixture;
 
 import hudson.model.Node.Mode;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
+import org.jenkinsci.plugins.mesos.MesosSlaveInfo.ContainerInfo;
 
 /**
  * A Mother object for {@link org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate}.
@@ -12,7 +13,7 @@ public class AgentSpecMother {
 
   public static final MesosAgentSpecTemplate simple =
       new MesosAgentSpecTemplate(
-          "label", Mode.EXCLUSIVE, "0.1", "32", 1, 1, 1, "0", "", false, "", "");
+          "label", Mode.EXCLUSIVE, "0.1", "32", 1, 1, 1, "0", "", false, "", null);
 
   public static final MesosAgentSpecTemplate docker =
       new MesosAgentSpecTemplate(
@@ -27,5 +28,5 @@ public class AgentSpecMother {
           "",
           false,
           "",
-          "mesosphere/jenkins-dind:0.6.0-alpine");
+          new ContainerInfo("DOCKER", "mesosphere/jenkins-dind:0.6.0-alpine"));
 }
