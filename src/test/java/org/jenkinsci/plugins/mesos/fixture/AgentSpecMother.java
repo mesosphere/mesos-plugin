@@ -39,7 +39,7 @@ public class AgentSpecMother {
               "sleep 1234",
               Collections.emptyList(),
               Collections.emptyList(),
-              null,
+              ContainerInfo.DEFAULT_NETWORKING,
               Collections.emptyList(),
               Collections.emptyList()));
 }

@@ -79,7 +79,7 @@ public class RunTemplateFactory {
 
   /**
    * This is a small USI {@link TaskBuilder} that wraps the {@link SimpleTaskInfoBuilder} and adds
-   * {@link org.apache.mesos.v1.Protos.ContainerInfo} to the Mesos task info.
+   * {@link org.apache.mesos.v1.Protos.ContainerInfo} to the Mesos task info if defined.
    */
   public static class ContainerInfoTaskInfoBuilder implements TaskBuilder {
 
@@ -122,6 +122,13 @@ public class RunTemplateFactory {
       this.getContainerInfoBuilder(matchedOffer, "what name?", builder);
     }
 
+    /**
+     * This is the original v1.1 JenkinsScheduler.getContainerInfoBuilder.
+     *
+     * @param offer The Mesos offer.
+     * @param agentName ???
+     * @param taskBuilder The Mesos task info builder.
+     */
     private void getContainerInfoBuilder(
         Offer offer, String agentName, TaskInfo.Builder taskBuilder) {
       ContainerInfo.Type containerType = ContainerInfo.Type.valueOf(this.containerInfo.getType());
@@ -133,25 +140,24 @@ public class RunTemplateFactory {
         case DOCKER:
           logger.info("Launching in Docker Mode:" + this.containerInfo.getDockerImage());
           DockerInfo.Builder dockerInfoBuilder =
-              DockerInfo.newBuilder() //
+              DockerInfo.newBuilder()
                   .setImage(this.containerInfo.getDockerImage())
                   .setPrivileged(this.containerInfo.getDockerPrivilegedMode())
                   .setForcePullImage(this.containerInfo.getDockerForcePullImage());
 
-          if (this.containerInfo.getParameters() != null) {
-            for (MesosAgentSpecTemplate.Parameter parameter : this.containerInfo.getParameters()) {
-              logger.info(
-                  "Adding Docker parameter '"
-                      + parameter.getKey()
-                      + ":"
-                      + parameter.getValue()
-                      + "'");
-              dockerInfoBuilder.addParameters(
-                  Parameter.newBuilder()
-                      .setKey(parameter.getKey())
-                      .setValue(parameter.getValue())
-                      .build());
-            }
+          for (MesosAgentSpecTemplate.Parameter parameter :
+              this.containerInfo.getParametersOrEmpty()) {
+            logger.info(
+                "Adding Docker parameter '"
+                    + parameter.getKey()
+                    + ":"
+                    + parameter.getValue()
+                    + "'");
+            dockerInfoBuilder.addParameters(
+                Parameter.newBuilder()
+                    .setKey(parameter.getKey())
+                    .setValue(parameter.getValue())
+                    .build());
           }
 
           String networking = this.containerInfo.getNetworking();
@@ -163,7 +169,8 @@ public class RunTemplateFactory {
           }
 
           if (this.containerInfo.hasPortMappings()) {
-            List<MesosAgentSpecTemplate.PortMapping> portMappings = this.containerInfo.getPortMappings();
+            List<MesosAgentSpecTemplate.PortMapping> portMappings =
+                this.containerInfo.getPortMappings();
             Set<Long> portsToUse = findPortsToUse(offer, portMappings.size());
             String roleToUse = findRoleForPorts(offer);
             Iterator<Long> iterator = portsToUse.iterator();
@@ -230,36 +237,33 @@ public class RunTemplateFactory {
           logger.warn("Unknown container type:" + this.containerInfo.getType());
       }
 
-      if (this.containerInfo.getVolumes() != null) {
-        for (MesosAgentSpecTemplate.Volume volume : this.containerInfo.getVolumes()) {
-          logger.info("Adding volume '" + volume.getContainerPath() + "'");
-          Volume.Builder volumeBuilder =
-              Volume.newBuilder()
-                  .setContainerPath(volume.getContainerPath())
-                  .setMode(volume.isReadOnly() ? Mode.RO : Mode.RW);
-          if (!volume.getHostPath().isEmpty()) {
-            volumeBuilder.setHostPath(volume.getHostPath());
-          }
-          containerInfoBuilder.addVolumes(volumeBuilder.build());
+      for (MesosAgentSpecTemplate.Volume volume : this.containerInfo.getVolumesOrEmpty()) {
+        logger.info("Adding volume '" + volume.getContainerPath() + "'");
+        Volume.Builder volumeBuilder =
+            Volume.newBuilder()
+                .setContainerPath(volume.getContainerPath())
+                .setMode(volume.isReadOnly() ? Mode.RO : Mode.RW);
+        if (!volume.getHostPath().isEmpty()) {
+          volumeBuilder.setHostPath(volume.getHostPath());
         }
+        containerInfoBuilder.addVolumes(volumeBuilder.build());
       }
 
-      if (this.containerInfo.hasNetworkInfos()) {
-        for (MesosAgentSpecTemplate.NetworkInfo networkInfo : this.containerInfo.getNetworkInfos()) {
+      for (MesosAgentSpecTemplate.NetworkInfo networkInfo :
+          this.containerInfo.getNetworkInfosOrEmpty()) {
 
-          NetworkInfo.Builder networkInfoBuilder = NetworkInfo.newBuilder();
+        NetworkInfo.Builder networkInfoBuilder = NetworkInfo.newBuilder();
 
-          networkInfo
-              .getOptionalNetworkName()
-              .ifPresent(
-                  networkName -> {
-                    // Add the virtual network specified, trimming edges for whitespace
-                    networkInfoBuilder.setName(networkName.trim());
-                    logger.info("Launching container on network " + networkName);
-                  });
+        networkInfo
+            .getOptionalNetworkName()
+            .ifPresent(
+                networkName -> {
+                  // Add the virtual network specified, trimming edges for whitespace
+                  networkInfoBuilder.setName(networkName.trim());
+                  logger.info("Launching container on network " + networkName);
+                });
 
-          containerInfoBuilder.addNetworkInfos(networkInfoBuilder.build());
-        }
+        containerInfoBuilder.addNetworkInfos(networkInfoBuilder.build());
       }
 
       taskBuilder.setContainer(containerInfoBuilder.build());

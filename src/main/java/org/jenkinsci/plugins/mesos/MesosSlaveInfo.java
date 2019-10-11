@@ -63,7 +63,8 @@ public class MesosSlaveInfo {
         this.diskNeeded.toString(),
         this.jnlpArgs,
         this.defaultSlave,
-        "", // TODO: support additional URIs in MesosAgentSpecTemplate see https://github.com/mesosphere/jenkins-mesos-plugin/pull/70
+        "", // TODO: support additional URIs in MesosAgentSpecTemplate see
+        // https://github.com/mesosphere/jenkins-mesos-plugin/pull/70
         this.containerInfo);
   }
 
@@ -83,5 +84,4 @@ public class MesosSlaveInfo {
       return value;
     }
   }
-
 }

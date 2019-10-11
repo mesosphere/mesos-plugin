@@ -192,7 +192,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final List<Volume> volumes;
     private final List<Parameter> parameters;
     private final String networking;
-    private static final String DEFAULT_NETWORKING = Network.BRIDGE.name();
+    public static final String DEFAULT_NETWORKING = Network.BRIDGE.name();
     private final List<PortMapping> portMappings;
     private final List<NetworkInfo> networkInfos;
     private final boolean useCustomDockerCommandShell;
@@ -259,12 +259,12 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       return parameters;
     }
 
+    public List<Parameter> getParametersOrEmpty() {
+      return (this.parameters != null) ? this.parameters : Collections.emptyList();
+    }
+
     public String getNetworking() {
-      if (networking != null) {
-        return networking;
-      } else {
-        return DEFAULT_NETWORKING;
-      }
+      return (networking != null) ? networking : DEFAULT_NETWORKING;
     }
 
     public boolean getDockerForcePullImage() {
@@ -276,15 +276,15 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     }
 
     public List<PortMapping> getPortMappings() {
-      if (portMappings != null) {
-        return portMappings;
-      } else {
-        return Collections.emptyList();
-      }
+      return (portMappings != null) ? portMappings : Collections.emptyList();
     }
 
     public List<NetworkInfo> getNetworkInfos() {
       return networkInfos;
+    }
+
+    public List<NetworkInfo> getNetworkInfosOrEmpty() {
+      return (this.networkInfos != null) ? this.networkInfos : Collections.emptyList();
     }
 
     public boolean hasNetworkInfos() {
@@ -293,6 +293,10 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
     public List<Volume> getVolumes() {
       return volumes;
+    }
+
+    public List<Volume> getVolumesOrEmpty() {
+      return (this.volumes != null) ? this.volumes : Collections.emptyList();
     }
   }
 
