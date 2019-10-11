@@ -11,8 +11,6 @@ import akka.stream.ActorMaterializer;
 import com.mesosphere.utils.mesos.MesosClusterExtension;
 import com.mesosphere.utils.zookeeper.ZookeeperServerExtension;
 import hudson.model.Slave;
-import hudson.security.FullControlOnceLoggedInAuthorizationStrategy;
-import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.slaves.SlaveComputer;
 import java.time.Duration;
 import java.util.ArrayList;
