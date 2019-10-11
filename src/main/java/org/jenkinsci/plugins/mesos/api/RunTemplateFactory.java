@@ -30,7 +30,7 @@ import org.apache.mesos.v1.Protos.TaskInfo;
 import org.apache.mesos.v1.Protos.Value;
 import org.apache.mesos.v1.Protos.Volume;
 import org.apache.mesos.v1.Protos.Volume.Mode;
-import org.jenkinsci.plugins.mesos.MesosSlaveInfo;
+import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
@@ -59,7 +59,7 @@ public class RunTemplateFactory {
       String shellCommand,
       String role,
       List<FetchUri> fetchUris,
-      Optional<MesosSlaveInfo.ContainerInfo> containerInfo) {
+      Optional<MesosAgentSpecTemplate.ContainerInfo> containerInfo) {
     TaskBuilder taskBuilder =
         new SimpleTaskInfoBuilder(
             convertListToSeq(requirements),
@@ -90,7 +90,7 @@ public class RunTemplateFactory {
     public static final String MESOS_DEFAULT_ROLE = "*";
 
     final TaskBuilder simpleTaskInfoBuilder;
-    final MesosSlaveInfo.ContainerInfo containerInfo;
+    final MesosAgentSpecTemplate.ContainerInfo containerInfo;
 
     /**
      * Constructs a new {@link TaskBuilder}.
@@ -102,7 +102,7 @@ public class RunTemplateFactory {
      * @param containerInfo The additional container information.
      */
     public ContainerInfoTaskInfoBuilder(
-        TaskBuilder taskInfoBuilder, MesosSlaveInfo.ContainerInfo containerInfo) {
+        TaskBuilder taskInfoBuilder, MesosAgentSpecTemplate.ContainerInfo containerInfo) {
       this.simpleTaskInfoBuilder = taskInfoBuilder;
       this.containerInfo = containerInfo;
     }
@@ -139,7 +139,7 @@ public class RunTemplateFactory {
                   .setForcePullImage(this.containerInfo.getDockerForcePullImage());
 
           if (this.containerInfo.getParameters() != null) {
-            for (MesosSlaveInfo.Parameter parameter : this.containerInfo.getParameters()) {
+            for (MesosAgentSpecTemplate.Parameter parameter : this.containerInfo.getParameters()) {
               logger.info(
                   "Adding Docker parameter '"
                       + parameter.getKey()
@@ -163,13 +163,13 @@ public class RunTemplateFactory {
           }
 
           if (this.containerInfo.hasPortMappings()) {
-            List<MesosSlaveInfo.PortMapping> portMappings = this.containerInfo.getPortMappings();
+            List<MesosAgentSpecTemplate.PortMapping> portMappings = this.containerInfo.getPortMappings();
             Set<Long> portsToUse = findPortsToUse(offer, portMappings.size());
             String roleToUse = findRoleForPorts(offer);
             Iterator<Long> iterator = portsToUse.iterator();
             Value.Ranges.Builder portRangesBuilder = Value.Ranges.newBuilder();
 
-            for (MesosSlaveInfo.PortMapping portMapping : portMappings) {
+            for (MesosAgentSpecTemplate.PortMapping portMapping : portMappings) {
               PortMapping.Builder portMappingBuilder =
                   PortMapping.newBuilder() //
                       .setContainerPort(portMapping.getContainerPort()) //
@@ -231,7 +231,7 @@ public class RunTemplateFactory {
       }
 
       if (this.containerInfo.getVolumes() != null) {
-        for (MesosSlaveInfo.Volume volume : this.containerInfo.getVolumes()) {
+        for (MesosAgentSpecTemplate.Volume volume : this.containerInfo.getVolumes()) {
           logger.info("Adding volume '" + volume.getContainerPath() + "'");
           Volume.Builder volumeBuilder =
               Volume.newBuilder()
@@ -245,7 +245,7 @@ public class RunTemplateFactory {
       }
 
       if (this.containerInfo.hasNetworkInfos()) {
-        for (MesosSlaveInfo.NetworkInfo networkInfo : this.containerInfo.getNetworkInfos()) {
+        for (MesosAgentSpecTemplate.NetworkInfo networkInfo : this.containerInfo.getNetworkInfos()) {
 
           NetworkInfo.Builder networkInfoBuilder = NetworkInfo.newBuilder();
 

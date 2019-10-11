@@ -11,11 +11,13 @@ import hudson.util.FormValidation;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.mesos.MesosSlaveInfo.ContainerInfo;
+import org.apache.mesos.Protos.ContainerInfo.DockerInfo.Network;
 import org.jenkinsci.plugins.mesos.api.LaunchCommandBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -181,5 +183,207 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public ContainerInfo getContainerInfo() {
     return this.containerInfo;
+  }
+
+  public static class ContainerInfo {
+
+    private final String type;
+    private final String dockerImage;
+    private final List<Volume> volumes;
+    private final List<Parameter> parameters;
+    private final String networking;
+    private static final String DEFAULT_NETWORKING = Network.BRIDGE.name();
+    private final List<PortMapping> portMappings;
+    private final List<NetworkInfo> networkInfos;
+    private final boolean useCustomDockerCommandShell;
+    private final String customDockerCommandShell;
+    private final boolean dockerPrivilegedMode;
+    private final boolean dockerForcePullImage;
+    private final boolean dockerImageCustomizable;
+    private boolean isDind;
+
+    public ContainerInfo(
+        String type,
+        String dockerImage,
+        boolean dockerPrivilegedMode,
+        boolean dockerForcePullImage,
+        boolean dockerImageCustomizable,
+        boolean useCustomDockerCommandShell,
+        String customDockerCommandShell,
+        List<Volume> volumes,
+        List<Parameter> parameters,
+        String networking,
+        List<PortMapping> portMappings,
+        List<NetworkInfo> networkInfos) {
+      this.type = type;
+      this.dockerImage = dockerImage;
+      this.dockerPrivilegedMode = dockerPrivilegedMode;
+      this.dockerForcePullImage = dockerForcePullImage;
+      this.dockerImageCustomizable = dockerImageCustomizable;
+      this.useCustomDockerCommandShell = useCustomDockerCommandShell;
+      this.customDockerCommandShell = customDockerCommandShell;
+      this.volumes = volumes;
+      this.parameters = parameters;
+      this.networkInfos = networkInfos;
+
+      if (networking == null) {
+        this.networking = DEFAULT_NETWORKING;
+      } else {
+        this.networking = networking;
+      }
+
+      if (Network.HOST.equals(Network.valueOf(networking))) {
+        this.portMappings = Collections.emptyList();
+      } else {
+        this.portMappings = portMappings;
+      }
+    }
+
+    public boolean getIsDind() {
+      return this.isDind;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public String getDockerImage() {
+      return dockerImage;
+    }
+
+    public boolean getDockerPrivilegedMode() {
+      return dockerPrivilegedMode;
+    }
+
+    public List<Parameter> getParameters() {
+      return parameters;
+    }
+
+    public String getNetworking() {
+      if (networking != null) {
+        return networking;
+      } else {
+        return DEFAULT_NETWORKING;
+      }
+    }
+
+    public boolean getDockerForcePullImage() {
+      return dockerForcePullImage;
+    }
+
+    public boolean hasPortMappings() {
+      return portMappings != null && !portMappings.isEmpty();
+    }
+
+    public List<PortMapping> getPortMappings() {
+      if (portMappings != null) {
+        return portMappings;
+      } else {
+        return Collections.emptyList();
+      }
+    }
+
+    public List<NetworkInfo> getNetworkInfos() {
+      return networkInfos;
+    }
+
+    public boolean hasNetworkInfos() {
+      return networkInfos != null && !networkInfos.isEmpty();
+    }
+
+    public List<Volume> getVolumes() {
+      return volumes;
+    }
+  }
+
+  public static class Parameter {
+
+    private final String key;
+    private final String value;
+
+    public Parameter(String key, String value) {
+      this.key = key;
+      this.value = value;
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public String getValue() {
+      return value;
+    }
+  }
+
+  public static class Volume {
+
+    private final String containerPath;
+    private final String hostPath;
+    private final boolean readOnly;
+
+    private Volume(String containerPath, String hostPath, boolean readOnly) {
+      this.containerPath = containerPath;
+      this.hostPath = hostPath;
+      this.readOnly = readOnly;
+    }
+
+    public String getContainerPath() {
+      return containerPath;
+    }
+
+    public String getHostPath() {
+      return hostPath;
+    }
+
+    public boolean isReadOnly() {
+      return readOnly;
+    }
+  }
+
+  public static class PortMapping {
+
+    // TODO validate 1 to 65535
+    private final Integer containerPort;
+    private final Integer hostPort;
+    private final String protocol;
+
+    private PortMapping(Integer containerPort, Integer hostPort, String protocol) {
+      this.containerPort = containerPort;
+      this.hostPort = hostPort;
+      this.protocol = protocol;
+    }
+
+    public Integer getContainerPort() {
+      return containerPort;
+    }
+
+    public Integer getHostPort() {
+      return hostPort;
+    }
+
+    public String getProtocol() {
+      return protocol;
+    }
+  }
+
+  public static class NetworkInfo {
+
+    private final String networkName;
+
+    private NetworkInfo(String networkName) {
+      this.networkName = networkName;
+    }
+
+    public String getNetworkName() {
+      return networkName;
+    }
+
+    public boolean hasNetworkName() {
+      return networkName != null && !networkName.isEmpty();
+    }
+
+    public Optional<String> getOptionalNetworkName() {
+      return Optional.of(this.networkName).filter(String::isEmpty);
+    }
   }
 }

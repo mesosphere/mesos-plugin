@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import jenkins.model.Jenkins;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jenkinsci.plugins.mesos.MesosSlaveInfo.ContainerInfo;
+import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate.ContainerInfo;
 import scala.Option;
 
 /**
