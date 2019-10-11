@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.mesos.fixture;
 
 import hudson.model.Node.Mode;
+import java.util.Collections;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.jenkinsci.plugins.mesos.MesosSlaveInfo.ContainerInfo;
 
@@ -28,5 +29,17 @@ public class AgentSpecMother {
           "",
           false,
           "",
-          new ContainerInfo("DOCKER", "mesosphere/jenkins-dind:0.6.0-alpine"));
+          new ContainerInfo(
+              "DOCKER",
+              "mesosphere/jenkins-dind:0.6.0-alpine",
+              false,
+              false,
+              false,
+              true,
+              "sleep 1234",
+              Collections.emptyList(),
+              Collections.emptyList(),
+              null,
+              Collections.emptyList(),
+              Collections.emptyList()));
 }

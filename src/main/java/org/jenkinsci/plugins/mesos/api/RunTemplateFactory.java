@@ -25,7 +25,6 @@ import org.apache.mesos.v1.Protos.Image;
 import org.apache.mesos.v1.Protos.NetworkInfo;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.Parameter;
-import org.apache.mesos.v1.Protos.Request;
 import org.apache.mesos.v1.Protos.Resource;
 import org.apache.mesos.v1.Protos.TaskInfo;
 import org.apache.mesos.v1.Protos.Value;
