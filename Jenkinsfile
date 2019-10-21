@@ -22,7 +22,7 @@ ansiColor('xterm') {
         junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
 
         sh 'sudo -E ./gradlew zipSandboxes --info'
-        sh 'sudo -rf sandboxes'
+        sh 'sudo rm -rf sandboxes'
         archive includes: 'build/distributions/sandboxes.zip'
 
         publishHTML (target: [ alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'build/reports/spotbugs/', reportFiles: '*.html', reportName: 'SpotBugs' ])
