@@ -17,7 +17,8 @@ ansiColor('xterm') {
       try {
         checkout scm
         sh 'sudo -E ./ci/provision.sh 1.7.0'
-        sh 'sudo -E ./gradlew check checkTocs zipSandboxes --info'
+        sh 'sudo -E ./gradlew check checkTocs --info'
+        sh 'sudo -E ./gradlew zipSandboxes --info'
         sh 'sudo -rf sandboxes'
       } finally {
         junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
