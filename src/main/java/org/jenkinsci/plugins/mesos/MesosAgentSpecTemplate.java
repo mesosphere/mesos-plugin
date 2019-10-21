@@ -355,7 +355,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final String protocol;
 
     @DataBoundConstructor
-    private PortMapping(Integer containerPort, Integer hostPort, String protocol) {
+    public PortMapping(Integer containerPort, Integer hostPort, String protocol) {
       this.containerPort = containerPort;
       this.hostPort = hostPort;
       this.protocol = protocol;
