@@ -202,6 +202,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final boolean dockerImageCustomizable;
     private boolean isDind;
 
+    @DataBoundConstructor
     public ContainerInfo(
         String type,
         String dockerImage,
@@ -305,6 +306,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final String key;
     private final String value;
 
+    @DataBoundConstructor
     public Parameter(String key, String value) {
       this.key = key;
       this.value = value;
@@ -325,7 +327,8 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final String hostPath;
     private final boolean readOnly;
 
-    private Volume(String containerPath, String hostPath, boolean readOnly) {
+    @DataBoundConstructor
+    public Volume(String containerPath, String hostPath, boolean readOnly) {
       this.containerPath = containerPath;
       this.hostPath = hostPath;
       this.readOnly = readOnly;
@@ -351,6 +354,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final Integer hostPort;
     private final String protocol;
 
+    @DataBoundConstructor
     private PortMapping(Integer containerPort, Integer hostPort, String protocol) {
       this.containerPort = containerPort;
       this.hostPort = hostPort;
@@ -374,7 +378,8 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
     private final String networkName;
 
-    private NetworkInfo(String networkName) {
+    @DataBoundConstructor
+    public NetworkInfo(String networkName) {
       this.networkName = networkName;
     }
 
