@@ -206,6 +206,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     public ContainerInfo(
         String type,
         String dockerImage,
+        boolean isDind,
         boolean dockerPrivilegedMode,
         boolean dockerForcePullImage,
         boolean dockerImageCustomizable,
@@ -226,6 +227,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       this.volumes = volumes;
       this.parameters = parameters;
       this.networkInfos = networkInfos;
+      this.isDind = isDind;
 
       if (networking == null) {
         this.networking = DEFAULT_NETWORKING;

@@ -69,6 +69,13 @@ jenkinsPlugin {
     }
 }
 
+task zipSandboxes(type: Zip) {
+    from 'sandboxes/'
+    exclude '**/provisioner'
+    archiveName 'sandboxes.zip'
+}
+
+
 tasks.withType(com.github.spotbugs.SpotBugsTask) {
     reports {
         xml.enabled = false

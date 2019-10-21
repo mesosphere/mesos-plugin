@@ -35,6 +35,7 @@ public class AgentSpecMother {
               true,
               false,
               false,
+              false,
               true,
               "sleep 1234",
               Collections.emptyList(),
