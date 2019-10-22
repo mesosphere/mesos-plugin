@@ -74,7 +74,7 @@ task zipSandboxes(type: Zip) {
 
     from 'sandboxes/'
     exclude '**/provisioner'
-    archiveName "sandboxes-${buildTag.replaceAll("[^a-zA-Z0-9\\.\\-]", "_")}.zip"
+    archiveName "sandboxes-${buildTag.replaceAll("[^a-zA-Z0-9\\.\\-]", "-")}.zip"
 }
 
 

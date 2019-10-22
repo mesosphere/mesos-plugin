@@ -22,7 +22,6 @@ import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo.Network;
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo.PortMapping;
 import org.apache.mesos.v1.Protos.Image;
-import org.apache.mesos.v1.Protos.NetworkInfo;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.Parameter;
 import org.apache.mesos.v1.Protos.Resource;
@@ -254,23 +253,6 @@ public class RunTemplateFactory {
           volumeBuilder.setHostPath(volume.getHostPath());
         }
         containerInfoBuilder.addVolumes(volumeBuilder.build());
-      }
-
-      for (MesosAgentSpecTemplate.NetworkInfo networkInfo :
-          this.containerInfo.getNetworkInfosOrEmpty()) {
-
-        NetworkInfo.Builder networkInfoBuilder = NetworkInfo.newBuilder();
-
-        networkInfo
-            .getOptionalNetworkName()
-            .ifPresent(
-                networkName -> {
-                  // Add the virtual network specified, trimming edges for whitespace
-                  networkInfoBuilder.setName(networkName.trim());
-                  logger.info("Launching container on network " + networkName);
-                });
-
-        containerInfoBuilder.addNetworkInfos(networkInfoBuilder.build());
       }
 
       taskBuilder.setContainer(containerInfoBuilder.build());

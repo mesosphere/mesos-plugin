@@ -195,11 +195,13 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final String networking;
     public static final String DEFAULT_NETWORKING = Network.BRIDGE.name();
     private final List<PortMapping> portMappings;
-    private final List<NetworkInfo> networkInfos;
     private final boolean dockerPrivilegedMode;
     private final boolean dockerForcePullImage;
     private final boolean dockerImageCustomizable;
     private boolean isDind;
+
+    @SuppressFBWarnings("UUF_UNUSED_FIELD")
+    private transient List<Object> networkInfos;
 
     @SuppressFBWarnings("UUF_UNUSED_FIELD")
     private transient boolean useCustomDockerCommandShell;
@@ -218,8 +220,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         List<Volume> volumes,
         List<Parameter> parameters,
         String networking,
-        List<PortMapping> portMappings,
-        List<NetworkInfo> networkInfos) {
+        List<PortMapping> portMappings) {
       this.type = type;
       this.dockerImage = dockerImage;
       this.dockerPrivilegedMode = dockerPrivilegedMode;
@@ -227,7 +228,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       this.dockerImageCustomizable = dockerImageCustomizable;
       this.volumes = volumes;
       this.parameters = parameters;
-      this.networkInfos = networkInfos;
       this.isDind = isDind;
 
       if (networking == null) {
@@ -281,18 +281,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
     public List<PortMapping> getPortMappings() {
       return (portMappings != null) ? portMappings : Collections.emptyList();
-    }
-
-    public List<NetworkInfo> getNetworkInfos() {
-      return networkInfos;
-    }
-
-    public List<NetworkInfo> getNetworkInfosOrEmpty() {
-      return (this.networkInfos != null) ? this.networkInfos : Collections.emptyList();
-    }
-
-    public boolean hasNetworkInfos() {
-      return networkInfos != null && !networkInfos.isEmpty();
     }
 
     public List<Volume> getVolumes() {
@@ -374,28 +362,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
     public String getProtocol() {
       return protocol;
-    }
-  }
-
-  public static class NetworkInfo {
-
-    private final String networkName;
-
-    @DataBoundConstructor
-    public NetworkInfo(String networkName) {
-      this.networkName = networkName;
-    }
-
-    public String getNetworkName() {
-      return networkName;
-    }
-
-    public boolean hasNetworkName() {
-      return networkName != null && !networkName.isEmpty();
-    }
-
-    public Optional<String> getOptionalNetworkName() {
-      return Optional.of(this.networkName).filter(String::isEmpty);
     }
   }
 }
