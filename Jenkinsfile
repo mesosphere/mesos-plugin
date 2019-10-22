@@ -16,6 +16,9 @@ ansiColor('xterm') {
     stage('Build') {
       try {
         checkout scm
+	// Verify Docker is running.
+	sh 'sudo -E docker --version'
+
         sh 'sudo -E ./ci/provision.sh 1.7.0'
         sh 'sudo -E ./gradlew check checkTocs --info'
       } finally {
