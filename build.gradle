@@ -70,9 +70,11 @@ jenkinsPlugin {
 }
 
 task zipSandboxes(type: Zip) {
+    def buildTag = System.getenv("BUILD_TAG") ?: "undefined"
+    
     from 'sandboxes/'
     exclude '**/provisioner'
-    archiveName "sandboxes-${ System.getenv("BUILD_TAG")}.zip"
+    archiveName "sandboxes-${buildTag.replaceAll("[^a-zA-Z0-9\\.\\-]", "_")}.zip"
 }
 
 
