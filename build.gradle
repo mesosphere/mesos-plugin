@@ -72,7 +72,7 @@ jenkinsPlugin {
 task zipSandboxes(type: Zip) {
     from 'sandboxes/'
     exclude '**/provisioner'
-    archiveName 'sandboxes.zip'
+    archiveName "sandboxes-${ System.getenv("BUILD_TAG")}.zip"
 }
 
 

@@ -26,7 +26,7 @@ ansiColor('xterm') {
 
         sh 'sudo -E ./gradlew zipSandboxes --info'
         sh 'sudo rm -rf sandboxes'
-        archive includes: 'build/distributions/sandboxes.zip'
+        archive includes: 'build/distributions/sandboxes-*.zip'
 
         publishHTML (target: [ alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'build/reports/spotbugs/', reportFiles: '*.html', reportName: 'SpotBugs' ])
       }
