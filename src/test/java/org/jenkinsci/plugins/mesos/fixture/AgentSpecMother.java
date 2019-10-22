@@ -31,9 +31,9 @@ public class AgentSpecMother {
           "",
           new ContainerInfo(
               "DOCKER",
-              "alpine:3", // "mesosphere/jenkins-dind:0.6.0-alpine",
-              false,
-              false,
+              "mesosphere/jenkins-dind:0.6.0-alpine",
+              true,
+              true,
               false,
               false,
               true,
