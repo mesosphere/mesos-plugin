@@ -181,7 +181,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public static class ContainerInfo extends AbstractDescribableImpl<ContainerInfo> {
 
-
     private final String type;
     private final String dockerImage;
     private final List<Volume> volumes;
