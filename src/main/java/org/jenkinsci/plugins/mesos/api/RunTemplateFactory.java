@@ -23,7 +23,6 @@ import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo.Network;
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo.PortMapping;
 import org.apache.mesos.v1.Protos.Image;
 import org.apache.mesos.v1.Protos.Offer;
-import org.apache.mesos.v1.Protos.Parameter;
 import org.apache.mesos.v1.Protos.Resource;
 import org.apache.mesos.v1.Protos.TaskInfo;
 import org.apache.mesos.v1.Protos.Value;
@@ -150,21 +149,6 @@ public class RunTemplateFactory {
                   .setImage(this.containerInfo.getDockerImage())
                   .setPrivileged(this.containerInfo.getDockerPrivilegedMode())
                   .setForcePullImage(this.containerInfo.getDockerForcePullImage());
-
-          for (MesosAgentSpecTemplate.Parameter parameter :
-              this.containerInfo.getParametersOrEmpty()) {
-            logger.info(
-                "Adding Docker parameter '"
-                    + parameter.getKey()
-                    + ":"
-                    + parameter.getValue()
-                    + "'");
-            dockerInfoBuilder.addParameters(
-                Parameter.newBuilder()
-                    .setKey(parameter.getKey())
-                    .setValue(parameter.getValue())
-                    .build());
-          }
 
           String networking = this.containerInfo.getNetworking();
           dockerInfoBuilder.setNetwork(Network.valueOf(networking));

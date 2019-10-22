@@ -14,8 +14,7 @@ import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate.ContainerInfo;
 public class AgentSpecMother {
 
   public static final MesosAgentSpecTemplate simple =
-      new MesosAgentSpecTemplate(
-          "label", Mode.EXCLUSIVE, "0.1", "32", 1, 1, 1, "0", "", false, "", null);
+      new MesosAgentSpecTemplate("label", Mode.EXCLUSIVE, "0.1", "32", 1, 1, 1, "0", "", "", null);
 
   public static final MesosAgentSpecTemplate docker =
       new MesosAgentSpecTemplate(
@@ -28,7 +27,6 @@ public class AgentSpecMother {
           1,
           "1",
           "",
-          false,
           "",
           new ContainerInfo(
               "DOCKER",
@@ -36,8 +34,6 @@ public class AgentSpecMother {
               true,
               true,
               false,
-              false,
-              Collections.emptyList(),
               Collections.emptyList(),
               Network.HOST.name(),
               Collections.emptyList()));

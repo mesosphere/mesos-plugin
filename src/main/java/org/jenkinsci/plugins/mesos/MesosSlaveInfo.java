@@ -62,7 +62,6 @@ public class MesosSlaveInfo {
         this.maxExecutors,
         this.diskNeeded.toString(),
         this.jnlpArgs,
-        this.defaultSlave,
         "", // TODO: support additional URIs in MesosAgentSpecTemplate see
         // https://github.com/mesosphere/jenkins-mesos-plugin/pull/70
         this.containerInfo);

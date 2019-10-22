@@ -38,7 +38,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final int minExecutors;
   private final int maxExecutors;
   private final String jnlpArgs;
-  private final boolean defaultAgent;
   private final String additionalURIs;
   private final ContainerInfo containerInfo;
 
@@ -53,7 +52,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       int maxExecutors,
       String disk,
       String jnlpArgs,
-      boolean defaultAgent,
       String additionalURIs,
       ContainerInfo containerInfo) {
     this.label = label;
@@ -67,7 +65,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.maxExecutors = maxExecutors;
     this.disk = Double.parseDouble(disk);
     this.jnlpArgs = StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "";
-    this.defaultAgent = defaultAgent;
     this.additionalURIs = additionalURIs;
     this.containerInfo = containerInfo;
     validate();
@@ -162,10 +159,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return this.reusable;
   }
 
-  public boolean isDefaultAgent() {
-    return defaultAgent;
-  }
-
   public String getAdditionalURIs() {
     return additionalURIs;
   }
@@ -191,14 +184,18 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final String type;
     private final String dockerImage;
     private final List<Volume> volumes;
-    private final List<Parameter> parameters;
     private final String networking;
     public static final String DEFAULT_NETWORKING = Network.BRIDGE.name();
     private final List<PortMapping> portMappings;
     private final boolean dockerPrivilegedMode;
     private final boolean dockerForcePullImage;
-    private final boolean dockerImageCustomizable;
     private boolean isDind;
+
+    @SuppressFBWarnings("UUF_UNUSED_FIELD")
+    private transient boolean dockerImageCustomizable;
+
+    @SuppressFBWarnings("UUF_UNUSED_FIELD")
+    private transient List<Object> parameters;
 
     @SuppressFBWarnings("UUF_UNUSED_FIELD")
     private transient List<Object> networkInfos;
@@ -216,18 +213,14 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         boolean isDind,
         boolean dockerPrivilegedMode,
         boolean dockerForcePullImage,
-        boolean dockerImageCustomizable,
         List<Volume> volumes,
-        List<Parameter> parameters,
         String networking,
         List<PortMapping> portMappings) {
       this.type = type;
       this.dockerImage = dockerImage;
       this.dockerPrivilegedMode = dockerPrivilegedMode;
       this.dockerForcePullImage = dockerForcePullImage;
-      this.dockerImageCustomizable = dockerImageCustomizable;
       this.volumes = volumes;
-      this.parameters = parameters;
       this.isDind = isDind;
 
       if (networking == null) {
@@ -259,14 +252,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       return dockerPrivilegedMode;
     }
 
-    public List<Parameter> getParameters() {
-      return parameters;
-    }
-
-    public List<Parameter> getParametersOrEmpty() {
-      return (this.parameters != null) ? this.parameters : Collections.emptyList();
-    }
-
     public String getNetworking() {
       return (networking != null) ? networking : DEFAULT_NETWORKING;
     }
@@ -289,26 +274,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
     public List<Volume> getVolumesOrEmpty() {
       return (this.volumes != null) ? this.volumes : Collections.emptyList();
-    }
-  }
-
-  public static class Parameter {
-
-    private final String key;
-    private final String value;
-
-    @DataBoundConstructor
-    public Parameter(String key, String value) {
-      this.key = key;
-      this.value = value;
-    }
-
-    public String getKey() {
-      return key;
-    }
-
-    public String getValue() {
-      return value;
     }
   }
 
