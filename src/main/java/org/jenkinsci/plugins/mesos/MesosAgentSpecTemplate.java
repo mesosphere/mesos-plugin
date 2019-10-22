@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.mesos;
 
 import com.mesosphere.usi.core.models.commands.LaunchPod;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
@@ -195,12 +196,16 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     public static final String DEFAULT_NETWORKING = Network.BRIDGE.name();
     private final List<PortMapping> portMappings;
     private final List<NetworkInfo> networkInfos;
-    private final boolean useCustomDockerCommandShell;
-    private final String customDockerCommandShell;
     private final boolean dockerPrivilegedMode;
     private final boolean dockerForcePullImage;
     private final boolean dockerImageCustomizable;
     private boolean isDind;
+
+    @SuppressFBWarnings("UUF_UNUSED_FIELD")
+    private transient boolean useCustomDockerCommandShell;
+
+    @SuppressFBWarnings("UUF_UNUSED_FIELD")
+    private transient String customDockerCommandShell;
 
     @DataBoundConstructor
     public ContainerInfo(
@@ -210,8 +215,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         boolean dockerPrivilegedMode,
         boolean dockerForcePullImage,
         boolean dockerImageCustomizable,
-        boolean useCustomDockerCommandShell,
-        String customDockerCommandShell, // TODO: is this still required?
         List<Volume> volumes,
         List<Parameter> parameters,
         String networking,
@@ -222,8 +225,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       this.dockerPrivilegedMode = dockerPrivilegedMode;
       this.dockerForcePullImage = dockerForcePullImage;
       this.dockerImageCustomizable = dockerImageCustomizable;
-      this.useCustomDockerCommandShell = useCustomDockerCommandShell;
-      this.customDockerCommandShell = customDockerCommandShell;
       this.volumes = volumes;
       this.parameters = parameters;
       this.networkInfos = networkInfos;
