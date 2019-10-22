@@ -211,7 +211,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         boolean dockerForcePullImage,
         boolean dockerImageCustomizable,
         boolean useCustomDockerCommandShell,
-        String customDockerCommandShell,
+        String customDockerCommandShell, // TODO: is this still required?
         List<Volume> volumes,
         List<Parameter> parameters,
         String networking,
