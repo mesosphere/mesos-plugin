@@ -37,6 +37,8 @@ public class MesosSlaveInfo {
   private transient String jvmArgs;
 
   private transient String jnlpArgs;
+
+  @SuppressFBWarnings("UUF_UNUSED_FIELD")
   private transient boolean defaultSlave;
 
   @SuppressFBWarnings("UUF_UNUSED_FIELD")

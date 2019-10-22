@@ -35,6 +35,5 @@ public class AgentSpecMother {
               true,
               false,
               Collections.emptyList(),
-              Network.HOST.name(),
-              Collections.emptyList()));
+              Network.HOST.name()));
 }

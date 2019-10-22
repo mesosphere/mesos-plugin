@@ -158,44 +158,6 @@ public class RunTemplateFactory {
             containerInfoBuilder.setHostname(agentName);
           }
 
-          if (this.containerInfo.hasPortMappings()) {
-            List<MesosAgentSpecTemplate.PortMapping> portMappings =
-                this.containerInfo.getPortMappings();
-            Set<Long> portsToUse = findPortsToUse(offer, portMappings.size());
-            String roleToUse = findRoleForPorts(offer);
-            Iterator<Long> iterator = portsToUse.iterator();
-            Value.Ranges.Builder portRangesBuilder = Value.Ranges.newBuilder();
-
-            for (MesosAgentSpecTemplate.PortMapping portMapping : portMappings) {
-              PortMapping.Builder portMappingBuilder =
-                  PortMapping.newBuilder() //
-                      .setContainerPort(portMapping.getContainerPort()) //
-                      .setProtocol(portMapping.getProtocol());
-
-              Long portToUse =
-                  portMapping.getHostPort() == null
-                      ? iterator.next()
-                      : Long.valueOf(portMapping.getHostPort());
-
-              portMappingBuilder.setHostPort(portToUse.intValue());
-
-              portRangesBuilder.addRange(
-                  Value.Range.newBuilder().setBegin(portToUse).setEnd(portToUse));
-
-              logger.info("Adding portMapping: " + portMapping);
-              dockerInfoBuilder.addPortMappings(portMappingBuilder);
-            }
-
-            taskBuilder.addResources(
-                Resource.newBuilder()
-                    .setName("ports")
-                    .setType(Value.Type.RANGES)
-                    .setRole(roleToUse)
-                    .setRanges(portRangesBuilder));
-          } else {
-            logger.info("No portMappings found");
-          }
-
           containerInfoBuilder.setDocker(dockerInfoBuilder);
           break;
         case MESOS:
@@ -240,55 +202,6 @@ public class RunTemplateFactory {
       }
 
       taskBuilder.setContainer(containerInfoBuilder.build());
-    }
-
-    @VisibleForTesting
-    SortedSet<Long> findPortsToUse(Offer offer, int maxCount) {
-      SortedSet<Long> portsToUse = new TreeSet<Long>();
-      List<Value.Range> portRangesList = null;
-
-      // Locate the port resource in the offer
-      for (Resource resource : offer.getResourcesList()) {
-        if (resource.getName().equals(PORT_RESOURCE_NAME)) {
-          portRangesList = resource.getRanges().getRangeList();
-          break;
-        }
-      }
-
-      logger.info("portRangesList=" + portRangesList);
-
-      /**
-       * We need to find maxCount ports to use. We are provided a list of port ranges to use We are
-       * assured by the offer check that we have enough ports to use
-       */
-      // Check this port range for ports that we can use
-      if (portRangesList != null) {
-        for (Value.Range currentPortRange : portRangesList) {
-          // Check each port until we reach the end of the current range
-          long begin = currentPortRange.getBegin();
-          long end = currentPortRange.getEnd();
-          for (long candidatePort = begin;
-              candidatePort <= end && portsToUse.size() < maxCount;
-              candidatePort++) {
-            portsToUse.add(candidatePort);
-          }
-        }
-      }
-
-      return portsToUse;
-    }
-
-    @VisibleForTesting
-    String findRoleForPorts(Offer offer) {
-
-      String role = MESOS_DEFAULT_ROLE;
-      // Locate the port resource in the offer
-      for (Resource resource : offer.getResourcesList()) {
-        if (resource.getName().equals(PORT_RESOURCE_NAME)) {
-          role = resource.getRole();
-        }
-      }
-      return role;
     }
   }
 }

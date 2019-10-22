@@ -38,6 +38,8 @@
              <f:textbox default="-noReconnect"/>
          </f:entry>
 
+         <f:optionalProperty title="${%Configure Containerizer}" field="containerInfo"/>
+
     </table>
 
 </j:jelly>

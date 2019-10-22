@@ -179,17 +179,20 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     return this.containerInfo;
   }
 
-  public static class ContainerInfo {
+  public static class ContainerInfo extends AbstractDescribableImpl<ContainerInfo> {
+
 
     private final String type;
     private final String dockerImage;
     private final List<Volume> volumes;
     private final String networking;
     public static final String DEFAULT_NETWORKING = Network.BRIDGE.name();
-    private final List<PortMapping> portMappings;
     private final boolean dockerPrivilegedMode;
     private final boolean dockerForcePullImage;
     private boolean isDind;
+
+    @SuppressFBWarnings("UUF_UNUSED_FIELD")
+    private transient List<Object> portMappings;
 
     @SuppressFBWarnings("UUF_UNUSED_FIELD")
     private transient boolean dockerImageCustomizable;
@@ -214,8 +217,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         boolean dockerPrivilegedMode,
         boolean dockerForcePullImage,
         List<Volume> volumes,
-        String networking,
-        List<PortMapping> portMappings) {
+        String networking) {
       this.type = type;
       this.dockerImage = dockerImage;
       this.dockerPrivilegedMode = dockerPrivilegedMode;
@@ -227,12 +229,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         this.networking = DEFAULT_NETWORKING;
       } else {
         this.networking = networking;
-      }
-
-      if (Network.HOST.equals(Network.valueOf(networking))) {
-        this.portMappings = Collections.emptyList();
-      } else {
-        this.portMappings = portMappings;
       }
     }
 
@@ -260,14 +256,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       return dockerForcePullImage;
     }
 
-    public boolean hasPortMappings() {
-      return portMappings != null && !portMappings.isEmpty();
-    }
-
-    public List<PortMapping> getPortMappings() {
-      return (portMappings != null) ? portMappings : Collections.emptyList();
-    }
-
     public List<Volume> getVolumes() {
       return volumes;
     }
@@ -275,9 +263,17 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     public List<Volume> getVolumesOrEmpty() {
       return (this.volumes != null) ? this.volumes : Collections.emptyList();
     }
+
+    @Extension
+    public static final class DescriptorImpl extends Descriptor<ContainerInfo> {
+
+      public DescriptorImpl() {
+        load();
+      }
+    }
   }
 
-  public static class Volume {
+  public static class Volume extends AbstractDescribableImpl<Volume> {
 
     private final String containerPath;
     private final String hostPath;
@@ -301,32 +297,13 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     public boolean isReadOnly() {
       return readOnly;
     }
-  }
 
-  public static class PortMapping {
+    @Extension
+    public static final class DescriptorImpl extends Descriptor<Volume> {
 
-    // TODO validate 1 to 65535
-    private final Integer containerPort;
-    private final Integer hostPort;
-    private final String protocol;
-
-    @DataBoundConstructor
-    public PortMapping(Integer containerPort, Integer hostPort, String protocol) {
-      this.containerPort = containerPort;
-      this.hostPort = hostPort;
-      this.protocol = protocol;
-    }
-
-    public Integer getContainerPort() {
-      return containerPort;
-    }
-
-    public Integer getHostPort() {
-      return hostPort;
-    }
-
-    public String getProtocol() {
-      return protocol;
+      public DescriptorImpl() {
+        load();
+      }
     }
   }
 }
