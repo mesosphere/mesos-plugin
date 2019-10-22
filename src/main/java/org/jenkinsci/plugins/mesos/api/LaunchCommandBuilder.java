@@ -107,6 +107,7 @@ public class LaunchCommandBuilder {
   public LaunchPod build() throws MalformedURLException, URISyntaxException {
     final RunTemplate runTemplate =
         RunTemplateFactory.newRunTemplate(
+            this.id.value(),
             Arrays.asList(this.cpus, this.memory, this.disk),
             this.buildCommand(),
             this.role,

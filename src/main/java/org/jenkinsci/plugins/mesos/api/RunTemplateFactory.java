@@ -47,6 +47,8 @@ public class RunTemplateFactory {
    * <p>The template uses either the {@link SimpleTaskInfoBuilder} or a custom {@link
    * ContainerInfoTaskInfoBuilder}.
    *
+   * @param agentName The name of the Mesos task/Jenkins agent, {@link
+   *     LaunchCommandBuilder#withName(String)}.
    * @param requirements The resource requirements for a Jenkins agent.
    * @param shellCommand The shell command built by {@link LaunchCommandBuilder}.
    * @param role The Mesos role the Jenkins agent will assume.
@@ -55,6 +57,7 @@ public class RunTemplateFactory {
    * @return the new USI run template.
    */
   static RunTemplate newRunTemplate(
+      String agentName,
       List<ResourceRequirement> requirements,
       String shellCommand,
       String role,
@@ -68,7 +71,7 @@ public class RunTemplateFactory {
             convertListToSeq(fetchUris),
             Option.empty());
     if (containerInfo.isPresent()) {
-      taskBuilder = new ContainerInfoTaskInfoBuilder(taskBuilder, containerInfo.get());
+      taskBuilder = new ContainerInfoTaskInfoBuilder(agentName, taskBuilder, containerInfo.get());
     }
     return new LegacyLaunchRunTemplate(role, taskBuilder);
   }
@@ -91,6 +94,7 @@ public class RunTemplateFactory {
 
     final TaskBuilder simpleTaskInfoBuilder;
     final MesosAgentSpecTemplate.ContainerInfo containerInfo;
+    final String agentName;
 
     /**
      * Constructs a new {@link TaskBuilder}.
@@ -98,11 +102,15 @@ public class RunTemplateFactory {
      * <p>This is basically a port of JenkinsScheduler.getContainerInfoBuilder from v1.1 of the
      * plugin.
      *
+     * @param agentName The name of the Jenkins agent.
      * @param taskInfoBuilder The original {@link SimpleTaskInfoBuilder}.
      * @param containerInfo The additional container information.
      */
     public ContainerInfoTaskInfoBuilder(
-        TaskBuilder taskInfoBuilder, MesosAgentSpecTemplate.ContainerInfo containerInfo) {
+        String agentName,
+        TaskBuilder taskInfoBuilder,
+        MesosAgentSpecTemplate.ContainerInfo containerInfo) {
+      this.agentName = agentName;
       this.simpleTaskInfoBuilder = taskInfoBuilder;
       this.containerInfo = containerInfo;
     }
@@ -119,18 +127,17 @@ public class RunTemplateFactory {
         Seq<Resource> taskResources,
         Map<TaskName, Seq<Resource>> peerTaskResources) {
       this.simpleTaskInfoBuilder.buildTask(builder, matchedOffer, taskResources, peerTaskResources);
-      this.getContainerInfoBuilder(matchedOffer, "what name?", builder);
+      this.getContainerInfoBuilder(matchedOffer, builder);
     }
 
     /**
      * This is the original v1.1 JenkinsScheduler.getContainerInfoBuilder.
      *
      * @param offer The Mesos offer.
-     * @param agentName ???
+     * @param agentName The name of the Jenkins agent
      * @param taskBuilder The Mesos task info builder.
      */
-    private void getContainerInfoBuilder(
-        Offer offer, String agentName, TaskInfo.Builder taskBuilder) {
+    private void getContainerInfoBuilder(Offer offer, TaskInfo.Builder taskBuilder) {
       ContainerInfo.Type containerType = ContainerInfo.Type.valueOf(this.containerInfo.getType());
 
       ContainerInfo.Builder containerInfoBuilder =
