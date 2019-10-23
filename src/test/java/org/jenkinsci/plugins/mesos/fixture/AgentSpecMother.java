@@ -35,5 +35,5 @@ public class AgentSpecMother {
               true,
               false,
               Collections.emptyList(),
-              Network.HOST.name()));
+              Network.BRIDGE.name()));
 }
