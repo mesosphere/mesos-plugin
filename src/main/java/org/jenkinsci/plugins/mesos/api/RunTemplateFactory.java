@@ -82,7 +82,7 @@ public class RunTemplateFactory {
 
     public static final String PORT_RESOURCE_NAME = "ports";
     public static final String MESOS_DEFAULT_ROLE = "*";
-    public static final Network DEFAULT_NETWORKING = Network.BRIDGE;
+    public static final Network DEFAULT_NETWORKING = Network.HOST;
 
     final TaskBuilder simpleTaskInfoBuilder;
     final MesosAgentSpecTemplate.ContainerInfo containerInfo;
