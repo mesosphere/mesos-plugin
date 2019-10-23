@@ -18,7 +18,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
-import org.apache.mesos.Protos.ContainerInfo.DockerInfo.Network;
 import org.jenkinsci.plugins.mesos.api.LaunchCommandBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -184,11 +183,12 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     private final String type;
     private final String dockerImage;
     private final List<Volume> volumes;
-    private final String networking;
-    public static final String DEFAULT_NETWORKING = Network.BRIDGE.name();
     private final boolean dockerPrivilegedMode;
     private final boolean dockerForcePullImage;
     private boolean isDind;
+
+    @SuppressFBWarnings("UUF_UNUSED_FIELD")
+    private transient String networking;
 
     @SuppressFBWarnings("UUF_UNUSED_FIELD")
     private transient List<Object> portMappings;
@@ -215,20 +215,13 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         boolean isDind,
         boolean dockerPrivilegedMode,
         boolean dockerForcePullImage,
-        List<Volume> volumes,
-        String networking) {
+        List<Volume> volumes) {
       this.type = type;
       this.dockerImage = dockerImage;
       this.dockerPrivilegedMode = dockerPrivilegedMode;
       this.dockerForcePullImage = dockerForcePullImage;
       this.volumes = volumes;
       this.isDind = isDind;
-
-      if (networking == null) {
-        this.networking = DEFAULT_NETWORKING;
-      } else {
-        this.networking = networking;
-      }
     }
 
     public boolean getIsDind() {
@@ -245,10 +238,6 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
     public boolean getDockerPrivilegedMode() {
       return dockerPrivilegedMode;
-    }
-
-    public String getNetworking() {
-      return (networking != null) ? networking : DEFAULT_NETWORKING;
     }
 
     public boolean getDockerForcePullImage() {
