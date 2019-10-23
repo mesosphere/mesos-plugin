@@ -2,12 +2,11 @@ package org.jenkinsci.plugins.mesos.api;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.mesosphere.usi.core.models.*;
+import com.mesosphere.usi.core.models.PodId;
 import com.mesosphere.usi.core.models.commands.LaunchPod;
 import com.mesosphere.usi.core.models.resources.ScalarRequirement;
 import com.mesosphere.usi.core.models.template.FetchUri;
 import com.mesosphere.usi.core.models.template.RunTemplate;
-import com.mesosphere.usi.core.models.template.SimpleRunTemplateFactory$;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,10 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import jenkins.model.Jenkins;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate.ContainerInfo;
 import scala.Option;
-import scala.collection.JavaConverters;
-import scala.collection.Seq;
-import scala.compat.java8.OptionConverters;
 
 /**
  * A simpler factory for building {@link com.mesosphere.usi.core.models.commands.LaunchPod} for
@@ -48,7 +45,7 @@ public class LaunchCommandBuilder {
   private ScalarRequirement disk = null;
   private String role = "test";
   private List<FetchUri> additionalFetchUris = Collections.emptyList();
-  private Optional<String> containerImage = Optional.empty();
+  private Optional<ContainerInfo> containerInfo = Optional.empty();
 
   private int xmx = 0;
 
@@ -101,8 +98,8 @@ public class LaunchCommandBuilder {
     return this;
   }
 
-  public LaunchCommandBuilder withImage(Optional<String> containerImage) {
-    this.containerImage = containerImage;
+  public LaunchCommandBuilder withContainerInfo(Optional<ContainerInfo> containerInfo) {
+    this.containerInfo = containerInfo;
     return this;
   }
 
@@ -118,12 +115,13 @@ public class LaunchCommandBuilder {
 
   public LaunchPod build() throws MalformedURLException, URISyntaxException {
     final RunTemplate runTemplate =
-        SimpleRunTemplateFactory$.MODULE$.apply(
-            convertListToSeq(Arrays.asList(this.cpus, this.memory, this.disk)),
+        RunTemplateFactory.newRunTemplate(
+            this.id.value(),
+            Arrays.asList(this.cpus, this.memory, this.disk),
             this.buildCommand(),
             this.role,
-            convertListToSeq(buildFetchUris()),
-            OptionConverters.toScala(this.containerImage));
+            this.buildFetchUris(),
+            this.containerInfo);
     return new LaunchPod(this.id, runTemplate);
   }
 
@@ -139,7 +137,7 @@ public class LaunchCommandBuilder {
   }
 
   @VisibleForTesting
-  private String buildJnlpSecret() {
+  String buildJnlpSecret() {
     String jnlpSecret = "";
     if (getJenkins().isUseSecurity()) {
       jnlpSecret =
@@ -174,9 +172,5 @@ public class LaunchCommandBuilder {
         .addAll(this.additionalFetchUris)
         .add(jenkinsAgentFetchUri)
         .build();
-  }
-
-  private <T> Seq<T> convertListToSeq(List<T> inputList) {
-    return JavaConverters.asScalaIteratorConverter(inputList.iterator()).asScala().toSeq();
   }
 }
