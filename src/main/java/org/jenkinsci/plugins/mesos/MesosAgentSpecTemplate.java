@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.mesos;
 
-import com.mesosphere.usi.core.models.FetchUri;
-import com.mesosphere.usi.core.models.LaunchPod;
+import com.mesosphere.usi.core.models.commands.LaunchPod;
+import com.mesosphere.usi.core.models.template.FetchUri;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
