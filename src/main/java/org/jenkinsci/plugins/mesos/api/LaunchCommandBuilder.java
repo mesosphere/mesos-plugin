@@ -104,6 +104,7 @@ public class LaunchCommandBuilder {
   }
 
   public LaunchCommandBuilder withAdditionalFetchUris(List<FetchUri> additionalFetchUris) {
+
     this.additionalFetchUris = additionalFetchUris;
     return this;
   }
