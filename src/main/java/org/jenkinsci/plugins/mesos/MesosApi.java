@@ -17,6 +17,8 @@ import com.mesosphere.usi.core.models.*;
 import com.mesosphere.usi.core.models.commands.KillPod;
 import com.mesosphere.usi.core.models.commands.LaunchPod;
 import com.mesosphere.usi.core.models.commands.SchedulerCommand;
+import com.mesosphere.usi.metrics.dropwizard.conf.HistorgramSettings;
+import com.mesosphere.usi.metrics.dropwizard.conf.MetricsSettings;
 import com.mesosphere.usi.repository.PodRecordRepository;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -40,6 +42,7 @@ import org.jenkinsci.plugins.mesos.MesosCloud.DcosAuthorization;
 import org.jenkinsci.plugins.mesos.api.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Option;
 import scala.compat.java8.OptionConverters;
 import scala.concurrent.ExecutionContext;
 
@@ -129,8 +132,20 @@ public class MesosApi {
     this.repository = new MesosPodRecordRepository();
 
     // Inject metrics and credentials provider.
+    MetricsSettings metricsSettings =
+        new MetricsSettings(
+            frameworkName,
+            HistorgramSettings.apply(
+                HistorgramSettings.apply$default$1(),
+                HistorgramSettings.apply$default$2(),
+                HistorgramSettings.apply$default$3(),
+                HistorgramSettings.apply$default$4(),
+                HistorgramSettings.apply$default$5()),
+            Option.empty(),
+            Option.empty());
     final com.mesosphere.usi.metrics.Metrics metrics =
-        new com.mesosphere.usi.metrics.dropwizard.DropwizardMetrics(null, Metrics.metricRegistry());
+        new com.mesosphere.usi.metrics.dropwizard.DropwizardMetrics(
+            metricsSettings, Metrics.metricRegistry());
 
     Optional<CredentialsProvider> provider =
         authorization.map(
