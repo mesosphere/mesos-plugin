@@ -127,6 +127,9 @@ public class MesosApi {
     this.stateMap = new ConcurrentHashMap<>();
     this.repository = new MesosPodRecordRepository();
 
+    // Inject metrics and credentials provider.
+    //Metrics metrics = new com.mesosphere.usi.metrics.dropwizard.DropwizardMetrics(null, Metrics.metricRegistry());
+
     Optional<CredentialsProvider> provider =
         authorization.map(
             auth -> {

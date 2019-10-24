@@ -28,8 +28,11 @@ dependencies {
     api group: 'com.mesosphere.usi', name: 'core', version: usiVersion
     api group: 'com.mesosphere.usi', name: 'core-models', version: usiVersion
     api group: 'com.mesosphere.usi', name: 'mesos-client', version: usiVersion
+    api group: 'com.mesosphere.usi', name: 'metrics-dropwizard', version: usiVersion
     api group: 'com.mesosphere.usi', name: 'persistence', version: usiVersion
     api group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+
+    jenkinsPlugins 'org.jenkins-ci.plugins:metrics:4.0.2.5@jar'
 
     // Test dependencies
     testImplementation 'com.squareup.okhttp3:okhttp:3.14.1'

@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.*;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
