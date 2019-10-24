@@ -13,10 +13,14 @@ repositories {
         name "Mesosphere Public Repo"
         url "https://downloads.mesosphere.com/maven"
     }
+    maven {
+        name "Mesosphere Snapshot Repo"
+        url "https://downloads.mesosphere.com/maven-snapshot"
+    }
 }
 
 ext {
-    usiVersion= '0.1.9'
+    usiVersion= '0.1.12-eadff2e-SNAPSHOT'
     scalaVersion = '2.12'
     akkaVersion = '2.5.19'
 }

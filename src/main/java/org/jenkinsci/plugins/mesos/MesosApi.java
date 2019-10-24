@@ -33,6 +33,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
+import jenkins.metrics.api.Metrics;
 import jenkins.model.Jenkins;
 import org.apache.mesos.v1.Protos;
 import org.jenkinsci.plugins.mesos.MesosCloud.DcosAuthorization;
@@ -128,7 +129,8 @@ public class MesosApi {
     this.repository = new MesosPodRecordRepository();
 
     // Inject metrics and credentials provider.
-    //Metrics metrics = new com.mesosphere.usi.metrics.dropwizard.DropwizardMetrics(null, Metrics.metricRegistry());
+    final com.mesosphere.usi.metrics.Metrics metrics =
+        new com.mesosphere.usi.metrics.dropwizard.DropwizardMetrics(null, Metrics.metricRegistry());
 
     Optional<CredentialsProvider> provider =
         authorization.map(
@@ -152,7 +154,8 @@ public class MesosApi {
     logger.info("Starting USI scheduler flow.");
     commands =
         connectClient(clientSettings, provider)
-            .thenCompose(client -> Scheduler.fromClient(client, repository, schedulerSettings))
+            .thenCompose(
+                client -> Scheduler.fromClient(client, repository, metrics, schedulerSettings))
             .thenApply(builder -> runScheduler(builder.getFlow(), materializer))
             .get();
 
