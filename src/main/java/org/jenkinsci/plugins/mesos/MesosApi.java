@@ -6,6 +6,7 @@ import akka.stream.ActorMaterializer;
 import akka.stream.OverflowStrategy;
 import akka.stream.QueueOfferResult;
 import akka.stream.javadsl.*;
+import com.google.common.annotations.VisibleForTesting;
 import com.mesosphere.mesos.client.CredentialsProvider;
 import com.mesosphere.mesos.client.DcosServiceAccountProvider;
 import com.mesosphere.mesos.client.MesosClient;
@@ -134,7 +135,7 @@ public class MesosApi {
     // Inject metrics and credentials provider.
     MetricsSettings metricsSettings =
         new MetricsSettings(
-            frameworkName,
+            sanitize(frameworkName),
             HistorgramSettings.apply(
                 HistorgramSettings.apply$default$1(),
                 HistorgramSettings.apply$default$2(),
@@ -372,6 +373,11 @@ public class MesosApi {
         stateMap.remove(podStateEvent.id());
       }
     }
+  }
+
+  /** @return a santized prefix for Dropwizard metrics. */
+  public static String sanitize(String prefix) {
+    return prefix.replaceAll("[^a-zA-Z0-9\\-\\.]", "-");
   }
 
   /** test method to set the agent timeout duration */
