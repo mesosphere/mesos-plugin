@@ -20,7 +20,7 @@ repositories {
 }
 
 ext {
-    usiVersion= '0.1.12-eadff2e-SNAPSHOT'
+    usiVersion= '0.1.13'
     scalaVersion = '2.12'
     akkaVersion = '2.5.19'
 }
