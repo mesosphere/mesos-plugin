@@ -34,6 +34,7 @@ public class LaunchCommandBuilder {
   // We allocate extra memory for the JVM
   private static final int JVM_XMX = 32;
 
+  //TODO@kjoshi, this needs to change for Windows Agents.
   private static final String AGENT_COMMAND_FORMAT =
       "java -DHUDSON_HOME=jenkins -server -Xmx%dm %s -jar ${MESOS_SANDBOX-.}/agent.jar %s %s -jnlpUrl %s";
 
@@ -51,6 +52,7 @@ public class LaunchCommandBuilder {
 
   private String jvmArgString = "";
   private String jnlpArgString = "";
+  private String agentAttributeString = "";
 
   private URL jenkinsMaster = null;
 
@@ -111,6 +113,11 @@ public class LaunchCommandBuilder {
 
   public LaunchCommandBuilder withJnlpArguments(String args) {
     this.jnlpArgString = args;
+    return this;
+  }
+
+  public LaunchCommandBuilder withAgentAttribute(String agentAttribute) {
+    this.agentAttributeString = agentAttribute;
     return this;
   }
 

@@ -45,6 +45,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
   private final int minExecutors;
   private final int maxExecutors;
   private final String jnlpArgs;
+  private final String agentAttributes;
   private final List<MesosSlaveInfo.URI> additionalURIs;
   private final ContainerInfo containerInfo;
 
@@ -59,6 +60,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
       int maxExecutors,
       String disk,
       String jnlpArgs,
+      String agentAttributes,
       List<MesosSlaveInfo.URI> additionalURIs,
       ContainerInfo containerInfo) {
     this.label = label;
@@ -72,6 +74,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
     this.maxExecutors = maxExecutors;
     this.disk = Double.parseDouble(disk);
     this.jnlpArgs = StringUtils.isNotBlank(jnlpArgs) ? jnlpArgs : "";
+    this.agentAttributes = StringUtils.isNotBlank(agentAttributes) ? agentAttributes : "";
     this.additionalURIs = (additionalURIs != null) ? additionalURIs : Collections.emptyList();
     this.containerInfo = containerInfo;
     validate();
@@ -141,6 +144,7 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
         .withJenkinsUrl(jenkinsUrl)
         .withContainerInfo(Optional.ofNullable(this.getContainerInfo()))
         .withJnlpArguments(this.getJnlpArgs())
+        .withAgentAttribute(this.getAgentAttributes())
         .withAdditionalFetchUris(fetchUris)
         .build();
   }
@@ -200,6 +204,10 @@ public class MesosAgentSpecTemplate extends AbstractDescribableImpl<MesosAgentSp
 
   public String getJnlpArgs() {
     return jnlpArgs;
+  }
+
+  public String getAgentAttributes() {
+    return agentAttributes;
   }
 
   public ContainerInfo getContainerInfo() {
