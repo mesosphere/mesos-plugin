@@ -7,6 +7,8 @@ import com.mesosphere.usi.core.models.commands.LaunchPod;
 import com.mesosphere.usi.core.models.resources.ScalarRequirement;
 import com.mesosphere.usi.core.models.template.FetchUri;
 import com.mesosphere.usi.core.models.template.RunTemplate;
+import com.mesosphere.usi.core.models.constraints.AgentAttributeFilter;
+import com.mesosphere.usi.core.models.constraints.DefaultAgentFilter$;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,11 +16,14 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import jenkins.model.Jenkins;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate.ContainerInfo;
+import scala.collection.JavaConverters;
 import scala.Option;
 
 /**
@@ -130,7 +135,14 @@ public class LaunchCommandBuilder {
             this.role,
             this.buildFetchUris(),
             this.containerInfo);
-    return new LaunchPod(this.id, runTemplate);
+    Optional<Map<String, Object>> agentAttributes = buildAgentAttributesMap();
+
+    if(agentAttributes.isPresent()) {
+      return new LaunchPod(this.id, runTemplate, new AgentAttributeFilter(JavaConverters.mapAsScalaMap(agentAttributes.get())));
+    } else {
+      return new LaunchPod(this.id, runTemplate, DefaultAgentFilter$.MODULE$);
+    }
+
   }
 
   /** @return the agent shell command for the Mesos task. */
@@ -163,6 +175,15 @@ public class LaunchCommandBuilder {
       throw new IllegalStateException("Jenkins is null");
     }
     return jenkins;
+  }
+
+  private Optional<Map<String, Object>> buildAgentAttributesMap() {
+    if (agentAttributeString.isEmpty()) {
+      return Optional.empty();
+    }
+    HashMap<String, Object> agentAttributes = new HashMap<>();
+    Arrays.stream(agentAttributeString.split(",")).forEach(attribute -> agentAttributes.put(attribute.split(":")[0], attribute.split(":")[1]));
+    return Optional.of(agentAttributes);
   }
 
   /** @return the Jnlp url for the agent: http://[master]/computer/[slaveName]/slave-agent.jnlp */
