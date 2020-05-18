@@ -9,7 +9,10 @@ import com.mesosphere.usi.core.models.resources.ResourceRequirement;
 import com.mesosphere.usi.core.models.template.FetchUri;
 import com.mesosphere.usi.core.models.template.LegacyLaunchRunTemplate;
 import com.mesosphere.usi.core.models.template.RunTemplate;
+import com.mesosphere.usi.core.models.template.SimpleRunTemplateFactory.DockerEntrypoint$;
+import com.mesosphere.usi.core.models.template.SimpleRunTemplateFactory.Shell;
 import com.mesosphere.usi.core.models.template.SimpleRunTemplateFactory.SimpleTaskInfoBuilder;
+import com.mesosphere.usi.core.models.template.SimpleRunTemplateFactory.SimpleTaskInfoBuilder$;
 import java.util.List;
 import java.util.Optional;
 import org.apache.mesos.v1.Protos.ContainerInfo;
@@ -24,10 +27,8 @@ import org.apache.mesos.v1.Protos.Volume.Mode;
 import org.jenkinsci.plugins.mesos.MesosAgentSpecTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Option;
-import scala.collection.JavaConverters;
-import scala.collection.Seq;
 import scala.collection.immutable.Map;
+import scala.collection.immutable.Seq;
 
 /** The builder is used by {@link LaunchCommandBuilder} to construct a USI {@link RunTemplate}. */
 public class RunTemplateFactory {
@@ -54,21 +55,23 @@ public class RunTemplateFactory {
       String role,
       List<FetchUri> fetchUris,
       Optional<MesosAgentSpecTemplate.ContainerInfo> containerInfo) {
-    TaskBuilder taskBuilder =
-        new SimpleTaskInfoBuilder(
-            convertListToSeq(requirements),
-            shellCommand,
-            role,
-            convertListToSeq(fetchUris),
-            Option.empty());
+
+    // If a container info is set we assume its Docker image defines an entrypoint.
+    TaskBuilder taskBuilder;
     if (containerInfo.isPresent()) {
+      taskBuilder =
+          SimpleTaskInfoBuilder$.MODULE$.create(
+              requirements,
+              DockerEntrypoint$.MODULE$.create(shellCommand),
+              fetchUris,
+              containerInfo.map(MesosAgentSpecTemplate.ContainerInfo::getDockerImage));
       taskBuilder = new ContainerInfoTaskInfoBuilder(agentName, taskBuilder, containerInfo.get());
+    } else {
+      taskBuilder =
+          SimpleTaskInfoBuilder$.MODULE$.create(
+              requirements, new Shell(shellCommand), fetchUris, Optional.empty());
     }
     return new LegacyLaunchRunTemplate(role, taskBuilder);
-  }
-
-  private static <T> Seq<T> convertListToSeq(List<T> inputList) {
-    return JavaConverters.asScalaIteratorConverter(inputList.iterator()).asScala().toSeq();
   }
 
   /**
