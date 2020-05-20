@@ -30,10 +30,12 @@ import org.jenkinsci.plugins.mesos.MesosCloud;
 import org.jenkinsci.plugins.mesos.MesosJenkinsAgent;
 import org.jenkinsci.plugins.mesos.TestUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @ExtendWith(TestUtils.JenkinsParameterResolver.class)
+@IntegrationTest
 public class MesosCloudProvisionTest {
 
   @RegisterExtension static ZookeeperServerExtension zkServer = new ZookeeperServerExtension();
@@ -142,6 +144,7 @@ public class MesosCloudProvisionTest {
   }
 
   @Test
+  @Timeout(value = 5, unit = TimeUnit.MINUTES)
   public void runSimpleBuild(TestUtils.JenkinsRule j) throws Exception {
 
     // Given: a configured Mesos Cloud.
